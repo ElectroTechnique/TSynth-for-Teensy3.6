@@ -39,6 +39,6 @@ Audio
 - USB Audio in/out—appears as 16 bit, 44.1 kHz  audio interface on PC
 
 Hardware
--Teensy 3.6 with SGTL5000 Audio Shield. Two 4061 multiplexers providing 32 channels from the pots into two ADCs. The rest of the pots and switches use remaining pins on Teensy.
+- Teensy 3.6 with SGTL5000 Audio Shield. Two 4061 multiplexers providing 32 channels from the pots into two ADCs. The rest of the pots and switches use remaining pins on Teensy.
 - Enclosure is laser cut acrylic with etched labels filled with yellow acrylic paint (this technique could be improved with experimentation), end cheeks are 3D printed.
 
