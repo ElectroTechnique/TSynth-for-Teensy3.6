@@ -30,7 +30,7 @@ AudioSynthWaveformModulated waveformMod2a;  //xy=521,458
 AudioSynthWaveformModulated waveformMod4b;  //xy=525,940
 AudioSynthWaveformModulated waveformMod3a;  //xy=532,678
 AudioSynthWaveformModulated waveformMod3b;  //xy=535,744
-AudioEffectDigitalCombine ringMod1;       //xy=663.8888549804688,223.888916015625
+AudioEffectDigitalCombine ringMod1;       //xy=663,223
 AudioEffectDigitalCombine ringMod2;       //xy=684,542
 AudioEffectDigitalCombine ringMod4;       //xy=686,1046
 AudioEffectDigitalCombine ringMod3;       //xy=687,803
@@ -55,12 +55,11 @@ AudioEffectEnvelope      vcaEnvelope3;   //xy=1315,823
 AudioEffectEnvelope      vcaEnvelope4;   //xy=1321,1045
 AudioEffectEnvelope      vcaEnvelope1;   //xy=1327,211
 AudioMixer4              voiceMixer;     //xy=1524,570
-AudioEffectChorus        chorusR;        //xy=1704,606
-AudioEffectChorus        chorusL;        //xy=1706,558
-AudioMixer4              chorusMixerR;         //xy=1848,625
-AudioMixer4              chorusMixerL;         //xy=1857,539
-AudioOutputUSB           usbAudio;       //xy=2356.11083984375,593.5556030273438
-AudioOutputI2S           i2s;            //xy=2364.22216796875,547.2222290039062
+AudioEffectEnsemble       ensemble;  //xy=1800,600
+AudioMixer4              effectMixerR;         //xy=1848,625
+AudioMixer4              effectMixerL;         //xy=1857,539
+AudioOutputUSB           usbAudio;       //xy=2356,593
+AudioOutputI2S           i2s;            //xy=2364,547
 AudioConnection          patchCord1(constant1Dc, vcfEnvelope2);
 AudioConnection          patchCord2(constant1Dc, vcfEnvelope3);
 AudioConnection          patchCord3(constant1Dc, vcfEnvelope4);
@@ -172,15 +171,14 @@ AudioConnection          patchCord108(vcaEnvelope2, 0, voiceMixer, 1);
 AudioConnection          patchCord109(vcaEnvelope3, 0, voiceMixer, 2);
 AudioConnection          patchCord110(vcaEnvelope4, 0, voiceMixer, 3);
 AudioConnection          patchCord111(vcaEnvelope1, 0, voiceMixer, 0);
-AudioConnection          patchCord112(voiceMixer, chorusL);
-AudioConnection          patchCord113(voiceMixer, chorusR);
-AudioConnection          patchCord114(voiceMixer, 0, chorusMixerL, 0);
-AudioConnection          patchCord115(voiceMixer, 0, chorusMixerR, 0);
-AudioConnection          patchCord116(chorusR, 0, chorusMixerR, 1);
-AudioConnection          patchCord117(chorusL, 0, chorusMixerL, 1);
-AudioConnection          patchCord118(chorusMixerR, 0, usbAudio, 1);
-AudioConnection          patchCord119(chorusMixerR, 0, i2s, 1);
-AudioConnection          patchCord120(chorusMixerL, 0, i2s, 0);
-AudioConnection          patchCord121(chorusMixerL, 0, usbAudio, 0);
-AudioControlSGTL5000     sgtl5000_1;     //xy=2353.8890380859375,505.5556640625
+AudioConnection          patchCord112(voiceMixer, ensemble);
+AudioConnection          patchCord113(ensemble, 0, effectMixerL, 1);
+AudioConnection          patchCord114(ensemble, 1, effectMixerR, 1);
+AudioConnection          patchCord115(voiceMixer, 0, effectMixerL, 0);
+AudioConnection          patchCord116(voiceMixer, 0, effectMixerR, 0);
+AudioConnection          patchCord117(effectMixerR, 0, usbAudio, 1);
+AudioConnection          patchCord118(effectMixerR, 0, i2s, 1);
+AudioConnection          patchCord119(effectMixerL, 0, i2s, 0);
+AudioConnection          patchCord120(effectMixerL, 0, usbAudio, 0);
+AudioControlSGTL5000     sgtl5000_1;     //xy=2353,505
 // GUItool: end automatically generated code
