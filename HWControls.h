@@ -53,9 +53,9 @@
 #define VCF_LFO_RETRIG_SW 37
 #define UNISON_SW 36
 #define TEMPO_SW 38
-#define ENTER_SW 32
+#define ENTER_SW 17
 #define SAVE_SW 30
-#define RECALL_SW 31
+#define RECALL_SW 24
 #define BACK_SW 29
 #define EFFECTAMT_POT A21
 #define EFFECTMIX_POT A22
@@ -65,6 +65,8 @@
 
 #define MUXCHANNELS 16
 #define QUANTISE_FACTOR 7
+
+#define DEBOUNCE 30
 
 static byte muxInput = 0;
 static int mux1ValuesPrev[MUXCHANNELS] = {};
@@ -79,20 +81,20 @@ static int fxMixPrevious = 0;
 static long encPrevious = 0;
 
 //Switches require debouncing
-Bounce pwmSourceSwitch = Bounce(PWM_SOURCE_SW, 30);  
-Bounce ringModSwitch = Bounce(RING_MOD_SW, 30); 
-Bounce vcoLFORetrigSwitch = Bounce(PITCH_LFO_RETRIG_SW, 30); 
-Bounce vcfLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, 30); 
-Bounce unisonSwitch = Bounce(UNISON_SW, 30); 
-Bounce tempoSwitch = Bounce(TEMPO_SW, 30); 
+Bounce pwmSourceSwitch = Bounce(PWM_SOURCE_SW, DEBOUNCE);  
+Bounce ringModSwitch = Bounce(RING_MOD_SW, DEBOUNCE); 
+Bounce vcoLFORetrigSwitch = Bounce(PITCH_LFO_RETRIG_SW, DEBOUNCE); 
+Bounce vcfLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, DEBOUNCE); 
+Bounce unisonSwitch = Bounce(UNISON_SW, DEBOUNCE); 
+Bounce tempoSwitch = Bounce(TEMPO_SW, DEBOUNCE); 
 
 //These are pushbuttons and require debouncing
-Bounce enterButton = Bounce(ENTER_SW, 30);  
-Bounce saveButton = Bounce(SAVE_SW, 30);  
-Bounce recallButton = Bounce(RECALL_SW, 30); 
-Bounce backButton = Bounce(BACK_SW, 30);  
+Bounce enterButton = Bounce(ENTER_SW, DEBOUNCE);  
+Bounce saveButton = Bounce(SAVE_SW, DEBOUNCE);  
+Bounce recallButton = Bounce(RECALL_SW, DEBOUNCE); 
+Bounce backButton = Bounce(BACK_SW, DEBOUNCE);  
 boolean reini = true;//Hack for recall button
-Encoder encoder(ENCODER_PINA, ENCODER_PINB);
+Encoder encoder(ENCODER_PINB, ENCODER_PINA);
 
 void setupHardware() {
   pinMode(MUX_0, OUTPUT);
