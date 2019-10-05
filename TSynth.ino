@@ -14,7 +14,6 @@
 #include "Parameters.h"
 #include "ST7735Display.h"
 #include "HWControls.h"
-#include "PatchHandler.h"
 
 //Teensy Audio Shield
 #define SDCARD_CS_PIN    10
@@ -29,7 +28,7 @@ USBHub hub2(myusb);
 MIDIDevice midi1(myusb);
 
 //MIDI 5 Pin DIN
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
+//MIDI_CREATE_INSTANCE(HardwareSerial, Serial4, MIDI);//RX - Pin 31
 
 struct VoiceAndNote {
   int note;
@@ -48,7 +47,7 @@ float previousMillis = millis();//For MIDI Clk Sync
 File patchFile;
 int count = 0;
 byte channel = MIDI_CHANNEL_OMNI;
-byte programNo = 1;
+char*  programNo = "1";
 int voiceToReturn = -1;//Initialise to 'null'
 long earliestTime = millis();//For voice allocation - initialise to now
 
@@ -60,7 +59,8 @@ void setup() {
 
   AudioMemory(30);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.4);
+  sgtl5000_1.volume(0.4);//Headphones
+  sgtl5000_1.lineOutLevel(29);//Line out
 
   // Configure SPI
   SPI.setMOSI(SDCARD_MOSI_PIN);
@@ -69,6 +69,9 @@ void setup() {
   cardStatus = card.init(SPI_FULL_SPEED, SDCARD_CS_PIN);
   if (cardStatus) {
     Serial.println("SD card is connected");
+    if (!SD.begin(SDCARD_CS_PIN)) {
+      Serial.println("SD card failed!");
+    }
   } else {
     Serial.println("SD card is not connected or unusable");
   }
@@ -185,16 +188,15 @@ void setup() {
   filterMixer3.gain(3, 0);//Not used
   filterMixer4.gain(3, 0);//Not used
 
-  chorusL.begin(delayLineL, CHORUS_DELAY_LENGTH_L, fxAmt);
-  chorusR.begin(delayLineR, CHORUS_DELAY_LENGTH_R, fxAmt);
+  ensemble.lfoRate(fxAmt);
 
-  chorusMixerL.gain(2, 0);
-  chorusMixerL.gain(3, 0);
-  chorusMixerR.gain(2, 0);
-  chorusMixerR.gain(3, 0);
+  effectMixerL.gain(2, 0);
+  effectMixerL.gain(3, 0);
+  effectMixerR.gain(2, 0);
+  effectMixerR.gain(3, 0);
 
   reinitialiseHW();
-  renderCurrentPatchPage(programNo, patchName);
+  showCurrentPatchPage(programNo, patchName);
 }
 
 void myNoteOn(byte channel, byte note, byte velocity) {
@@ -448,14 +450,14 @@ String getWaveformAStr(int value) {
       return "Sine";
     case WAVEFORM_SQUARE:
       return "Square";
-    case WAVEFORM_SAWTOOTH_REVERSE:
+    case WAVEFORM_SAWTOOTH:
       return "Sawtooth";
     case WAVEFORM_PULSE:
       return "Pulse";
     case WAVEFORM_TRIANGLE_VARIABLE:
       return "Var Triangle";
     case WAVEFORM_ARBITRARY:
-      return "USER";
+      return "User";
     default:
       return "ERRWAVEA";
   }
@@ -467,14 +469,14 @@ String getWaveformBStr(int value) {
       return "S & H";
     case WAVEFORM_SQUARE:
       return "Square";
-    case WAVEFORM_SAWTOOTH:
+    case WAVEFORM_SAWTOOTH_REVERSE:
       return "Ramp";
     case WAVEFORM_PULSE:
       return "Pulse";
     case WAVEFORM_TRIANGLE_VARIABLE:
       return "Var Triangle";
     case WAVEFORM_ARBITRARY:
-      return "USER";
+      return "User";
     default:
       return "ERRWAVEB";
   }
@@ -544,14 +546,14 @@ void setPwmMixerALFO(float value) {
   pwMixer2a.gain(0, value);
   pwMixer3a.gain(0, value);
   pwMixer4a.gain(0, value);
-  renderCurrentParameterPage("PWM1 LFO", String(value));
+  showCurrentParameterPage("1. PWM LFO", char(value));
 }
 void setPwmMixerBLFO(float value) {
   pwMixer1b.gain(0, value);
   pwMixer2b.gain(0, value);
   pwMixer3b.gain(0, value);
   pwMixer4b.gain(0, value);
-  renderCurrentParameterPage("PWM2 LFO", String(value));
+  showCurrentParameterPage("2. PWM LFO", char(value));
 }
 
 void setPwmMixerAPW(float value) {
@@ -559,7 +561,6 @@ void setPwmMixerAPW(float value) {
   pwMixer2a.gain(1, value);
   pwMixer3a.gain(1, value);
   pwMixer4a.gain(1, value);
-  renderCurrentParameterPage("PW1", String(value));
 }
 
 void setPwmMixerBPW(float value) {
@@ -567,7 +568,6 @@ void setPwmMixerBPW(float value) {
   pwMixer2b.gain(1, value);
   pwMixer3b.gain(1, value);
   pwMixer4b.gain(1, value);
-  renderCurrentParameterPage("PW2", String(value));
 }
 
 void setPwmMixerAFEnv(float value) {
@@ -575,7 +575,7 @@ void setPwmMixerAFEnv(float value) {
   pwMixer2a.gain(2, value);
   pwMixer3a.gain(2, value);
   pwMixer4a.gain(2, value);
-  renderCurrentParameterPage("PWM1 F Env", String(value));
+  showCurrentParameterPage("1. PWM F Env", char(value));
 }
 
 void setPwmMixerBFEnv(float value) {
@@ -583,20 +583,25 @@ void setPwmMixerBFEnv(float value) {
   pwMixer2b.gain(2, value);
   pwMixer3b.gain(2, value);
   pwMixer4b.gain(2, value);
-  renderCurrentParameterPage("PWM2 F Env", String(value));
+  showCurrentParameterPage("2. PWM F Env", char(value));
 }
 
 void updateUnison() {
   if (unison == 0) {
     allNotesOff();
-    renderCurrentParameterPage("Unison", "Off");
+    showCurrentParameterPage("Unison", "Off");
+  } else {
+    showCurrentParameterPage("Unison", "On");
   }
-  renderCurrentParameterPage("Unison", "On");
 }
 
 
+void updateVolume(float vol) {
+  showCurrentParameterPage("Volume", vol);
+}
+
 void updateGlide() {
-  renderCurrentParameterPage("Glide", String(glideSpeed) + "ms");
+  showCurrentParameterPage("Glide", String(int(glideSpeed * GLIDEFACTOR)) + " ms");
 }
 
 void updateWaveformA() {
@@ -604,7 +609,7 @@ void updateWaveformA() {
   waveformMod2a.begin(vcoWaveformA);
   waveformMod3a.begin(vcoWaveformA);
   waveformMod4a.begin(vcoWaveformA);
-  renderCurrentParameterPage("Osc1 Wave", getWaveformAStr(vcoWaveformA));
+  showCurrentParameterPage("1. Waveform", getWaveformAStr(vcoWaveformA));
 }
 
 void updateWaveformB() {
@@ -612,7 +617,7 @@ void updateWaveformB() {
   waveformMod2b.begin(vcoWaveformB);
   waveformMod3b.begin(vcoWaveformB);
   waveformMod4b.begin(vcoWaveformB);
-  renderCurrentParameterPage("Osc2 Wave", getWaveformBStr(vcoWaveformB));
+  showCurrentParameterPage("2. Waveform", getWaveformBStr(vcoWaveformB));
 }
 
 void updateOctaveA() {
@@ -623,20 +628,19 @@ void updateOctaveA() {
     updateVoice3();
     updateVoice4();
   }
-  renderCurrentParameterPage("Osc1 Octave", String(vcoOctaveA));
+  showCurrentParameterPage("1. Octave", (vcoOctaveA > 0 ? "+" : "") + String(vcoOctaveA));
 }
 
 void updateOctaveB() {
   //update waveforms with new frequencies if notes are on
   if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1) {
     updateVoice1();
-    updateVoice2();
     updateVoice3();
+    updateVoice2();
     updateVoice4();
   }
-  renderCurrentParameterPage("Osc2 Octave", String(vcoOctaveB));
+  showCurrentParameterPage("2. Octave", (vcoOctaveB > 0 ? "+" : "") + String(vcoOctaveB));
 }
-
 
 void updateDetune() {
   //update waveforms with new frequencies if notes are on
@@ -646,7 +650,7 @@ void updateDetune() {
     updateVoice3();
     updateVoice4();
   }
-  renderCurrentParameterPage("Detune", String(detune));
+  showCurrentParameterPage("Detune", String((1 - detune) * 100) + " %");
 }
 
 void updatePWMSource() {
@@ -657,7 +661,7 @@ void updatePWMSource() {
       setPwmMixerALFO(pwmAmtA);
       setPwmMixerBLFO(pwmAmtB);
     }
-    renderCurrentParameterPage("PWM Source", "LFO");
+    showCurrentParameterPage("PWM Source", "LFO");
   } else {
     setPwmMixerALFO(0);
     setPwmMixerBLFO(0);
@@ -665,7 +669,7 @@ void updatePWMSource() {
       setPwmMixerAFEnv(pwmAmtA);
       setPwmMixerBFEnv(pwmAmtB);
     }
-    renderCurrentParameterPage("PWM Source", "Filter Env");
+    showCurrentParameterPage("PWM Source", "Filter Env");
   }
 }
 
@@ -679,6 +683,7 @@ void updatePWMRate() {
     setPwmMixerBFEnv(0);
     setPwmMixerAPW(1);
     setPwmMixerBPW(1);
+    showCurrentParameterPage("PW Mode", "On");
   } else {
     setPwmMixerAPW(0);
     setPwmMixerBPW(0);
@@ -687,15 +692,16 @@ void updatePWMRate() {
       setPwmMixerBFEnv(0);
       setPwmMixerALFO(pwmAmtA);
       setPwmMixerBLFO(pwmAmtB);
+      showCurrentParameterPage("PWM Rate", String(pwmRate) + " Hz");
     } else {
       //Filter env mod - pwmRate does nothing
       setPwmMixerALFO(0);
       setPwmMixerBLFO(0);
       setPwmMixerAFEnv(pwmAmtA);
       setPwmMixerBFEnv(pwmAmtB);
+      showCurrentParameterPage("PWM Source", "Filter Env");
     }
   }
-  renderCurrentParameterPage("PWM Rate", String(pwmRate) + "Hz");
 }
 
 void updatePWMAmount() {
@@ -704,7 +710,7 @@ void updatePWMAmount() {
   pwB = 0;
   setPwmMixerALFO(pwmAmtA);
   setPwmMixerBLFO(pwmAmtB);
-  renderCurrentParameterPage("PWM Amt", String(pwmAmtA) + " " + String(pwmAmtB));
+  showCurrentParameterPage("PWM Amt", String(pwmAmtA) + " " + String(pwmAmtB));
 }
 
 void updatePWA() {
@@ -716,19 +722,21 @@ void updatePWA() {
     setPwmMixerBFEnv(0);
     setPwmMixerAPW(1);
     setPwmMixerBPW(1);
+    showCurrentParameterPage("1. PW Amt", pwA);
   } else {
     setPwmMixerAPW(0);
     setPwmMixerBPW(0);
     if (pwmSource == PWMSOURCELFO) {
       //PW alters PWM LFO amount for waveform A
       setPwmMixerALFO(pwmAmtA);
+      showCurrentParameterPage("1. PWM Amt", "LFO " + String(pwmAmtA));
     } else {
       //PW alters PWM FEnv amount for waveform A
       setPwmMixerAFEnv(pwmAmtA);
+      showCurrentParameterPage("1. PWM Amt", "F. Env " + String(pwmAmtA));
     }
   }
   pwa.amplitude(pwA);
-  renderCurrentParameterPage("Osc1 PW Amt", pwA);
 }
 
 void updatePWB() {
@@ -740,19 +748,21 @@ void updatePWB() {
     setPwmMixerBFEnv(0);
     setPwmMixerAPW(1);
     setPwmMixerBPW(1);
+    showCurrentParameterPage("2. PW Amt", pwB);
   } else {
     setPwmMixerAPW(0);
     setPwmMixerBPW(0);
     if (pwmSource == PWMSOURCELFO) {
       //PW alters PWM LFO amount for waveform B
       setPwmMixerBLFO(pwmAmtB);
+      showCurrentParameterPage("2. PWM Amt", "LFO " + String(pwmAmtB));
     } else {
       //PW alters PWM FEnv amount for waveform B
       setPwmMixerBFEnv(pwmAmtB);
+      showCurrentParameterPage("2. PWM Amt", "F. Env " + String(pwmAmtB));
     }
   }
   pwb.amplitude(pwB);
-  renderCurrentParameterPage("Osc2 PW Amt", pwB);
 }
 
 void updateVcoLevelA() {
@@ -760,7 +770,13 @@ void updateVcoLevelA() {
   waveformMixer2.gain(0, VCOALevel);
   waveformMixer3.gain(0, VCOALevel);
   waveformMixer4.gain(0, VCOALevel);
-  renderCurrentParameterPage("Osc1 Level", VCOALevel);
+  if (ringMod == 1) {
+    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+  }
+  showCurrentParameterPage("1. Level", VCOALevel);
 }
 
 
@@ -769,12 +785,18 @@ void updateVcoLevelB() {
   waveformMixer2.gain(1, VCOBLevel);
   waveformMixer3.gain(1, VCOBLevel);
   waveformMixer4.gain(1, VCOBLevel);
-  renderCurrentParameterPage("Osc2 Level", VCOBLevel);
+  if (ringMod == 1) {
+    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Ring Mod
+    waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+  }
+  showCurrentParameterPage("2. Level", VCOBLevel);
 }
 
 void updateNoiseLevel() {
   pink.amplitude(noiseLevel);
-  renderCurrentParameterPage("Noise Level", noiseLevel);
+  showCurrentParameterPage("Noise Level", noiseLevel);
 }
 
 void updateFilterFreq() {
@@ -782,7 +804,7 @@ void updateFilterFreq() {
   filter2.frequency(filterFreq);
   filter3.frequency(filterFreq);
   filter4.frequency(filterFreq);
-  renderCurrentParameterPage("Cutoff", String(filterFreq) + "Hz");
+  showCurrentParameterPage("Cutoff", String(int(filterFreq)) + " Hz");
 }
 
 
@@ -791,7 +813,7 @@ void updateFilterRes() {
   filter2.resonance(filterRes);
   filter3.resonance(filterRes);
   filter4.resonance(filterRes);
-  renderCurrentParameterPage("Resonance", filterRes);
+  showCurrentParameterPage("Resonance", filterRes);
 }
 
 void updateFilterMixer() {
@@ -799,7 +821,7 @@ void updateFilterMixer() {
   float BP = 0;
   float HP = 0;
   String filterStr;
-  if (filterMix > LINEAR_FILTERMIXER[125]) {
+  if (filterMix == LINEAR_FILTERMIXER[127]) {
     //BP mode
     LP = 0;
     BP = 1.0f;
@@ -830,7 +852,7 @@ void updateFilterMixer() {
   filterMixer4.gain(0, LP);
   filterMixer4.gain(1, BP);
   filterMixer4.gain(2, HP);
-  renderCurrentParameterPage("Filter Type", filterStr);
+  showCurrentParameterPage("Filter Type", filterStr);
 }
 
 void updateFilterEnv() {
@@ -838,7 +860,7 @@ void updateFilterEnv() {
   vcfModMixer2.gain(0, filterEnv);
   vcfModMixer3.gain(0, filterEnv);
   vcfModMixer4.gain(0, filterEnv);
-  renderCurrentParameterPage("Filter Env", String(filterEnv));
+  showCurrentParameterPage("Filter Env.", String(filterEnv));
 }
 
 void updateKeyTracking() {
@@ -846,45 +868,62 @@ void updateKeyTracking() {
   vcfModMixer2.gain(2, keytrackingAmount);
   vcfModMixer3.gain(2, keytrackingAmount);
   vcfModMixer4.gain(2, keytrackingAmount);
-  renderCurrentParameterPage("Key Track", String(keytrackingAmount));
+  showCurrentParameterPage("Key Tracking", String(keytrackingAmount));
 }
 
 void updateVcoLFOAmt() {
   vcoLfo.amplitude(vcoLfoAmt);
-  renderCurrentParameterPage("LFO Amt", String(vcoLfoAmt));
+  showCurrentParameterPage("LFO Amount", String(vcoLfoAmt));
+}
+
+void updateModWheel() {
+  vcoLfo.amplitude(vcoLfoAmt);
 }
 
 void updateVcoLFORate() {
   vcoLfo.frequency(vcoLfoRate);
-  renderCurrentParameterPage("LFO Rate", String(vcoLfoRate) + "Hz");
+  showCurrentParameterPage("LFO Rate", String(vcoLfoRate) + " Hz");
 }
 
 void updateVcoLFOWaveform() {
   vcoLfo.begin(vcoLFOWaveform);
-  renderCurrentParameterPage("Pitch LFO", getLFOWaveformStr(vcoLFOWaveform));
+  showCurrentParameterPage("Pitch LFO", getLFOWaveformStr(vcoLFOWaveform));
+}
+
+
+void updateVcoLFOMidiClkSync() {
+  showCurrentParameterPage("P. LFO Sync", vcoLFOMidiClkSync == 1 ? "On" : "Off");
 }
 
 void updateVcfLfoRate() {
   vcfLfo.frequency(vcfLfoRate);
-  renderCurrentParameterPage("LFO Rate", String(vcfLfoRate) + "ms");
+  if (vcfLFOMidiClkSync) {
+    showCurrentParameterPage("LFO Time Div", String(int(vcfLfoRate * 4)) + "/4");
+  } else {
+    showCurrentParameterPage("LFO Rate", String(vcfLfoRate) + " Hz");
+  }
 }
 
 void updateVcfLfoAmt() {
   vcfLfo.amplitude(vcfLfoAmt);
-  renderCurrentParameterPage("LFO Amt", String(vcfLfoAmt));
+  showCurrentParameterPage("LFO Amount", String(vcfLfoAmt));
 }
 
 void updateVcfLFOWaveform() {
   vcfLfo.begin(vcfLfoWaveform);
-  renderCurrentParameterPage("Filter LFO", getLFOWaveformStr(vcfLfoWaveform));
+  showCurrentParameterPage("Filter LFO", getLFOWaveformStr(vcfLfoWaveform));
 }
 
 void updateVcoLFORetrig() {
-  renderCurrentParameterPage("Pit LFO Retrig", vcoLfoRetrig == 1 ? "On" : "Off");
+  showCurrentParameterPage("P. LFO Retrig", vcoLfoRetrig == 1 ? "On" : "Off");
+}
+
+void updateVcfLFORetrig() {
+  showCurrentParameterPage("F. LFO Retrig", vcfLfoRetrig == 1 ? "On" : "Off");
 }
 
 void updateVcfLFOMidiClkSync() {
-  renderCurrentParameterPage("Fil LFO Clk Sync", vcfLFOMidiClkSync == 1 ? "On" : "Off");
+  showCurrentParameterPage("F. LFO Sync", vcfLFOMidiClkSync == 1 ? "On" : "Off");
 }
 
 void updateVcfAttack() {
@@ -892,7 +931,7 @@ void updateVcfAttack() {
   vcfEnvelope2.attack(vcfAttack);
   vcfEnvelope3.attack(vcfAttack);
   vcfEnvelope4.attack(vcfAttack);
-  renderCurrentParameterPage("Filter Att", String(vcfAttack) + "ms");
+  showCurrentParameterPage("Filter Attack", String(int(vcfAttack)) + " ms");
 }
 
 void updateVcfDecay() {
@@ -900,7 +939,7 @@ void updateVcfDecay() {
   vcfEnvelope2.decay(vcfDecay);
   vcfEnvelope3.decay(vcfDecay);
   vcfEnvelope4.decay(vcfDecay);
-  renderCurrentParameterPage("Filter Dec", String(vcfDecay) + "ms");
+  showCurrentParameterPage("Filter Decay", String(int(vcfDecay)) + " ms");
 }
 
 void updateVcfSustain() {
@@ -908,7 +947,7 @@ void updateVcfSustain() {
   vcfEnvelope2.sustain(vcfSustain);
   vcfEnvelope3.sustain(vcfSustain);
   vcfEnvelope4.sustain(vcfSustain);
-  renderCurrentParameterPage("Filter Sus", String(vcfSustain));
+  showCurrentParameterPage("Filter Sust.", String(vcfSustain));
 }
 
 void updateVcfRelease() {
@@ -916,7 +955,7 @@ void updateVcfRelease() {
   vcfEnvelope2.release(vcfRelease);
   vcfEnvelope3.release(vcfRelease);
   vcfEnvelope4.release(vcfRelease);
-  renderCurrentParameterPage("Filter Rel", String(vcfRelease) + "ms");
+  showCurrentParameterPage("Filter Rel.", String(int(vcfRelease)) + " ms");
 }
 
 void updateVcaAttack() {
@@ -924,7 +963,7 @@ void updateVcaAttack() {
   vcaEnvelope2.attack(vcaAttack);
   vcaEnvelope3.attack(vcaAttack);
   vcaEnvelope4.attack(vcaAttack);
-  renderCurrentParameterPage("Attack", String(vcaAttack) + "ms");
+  showCurrentParameterPage("Attack", String(int(vcaAttack)) + " ms");
 }
 
 void updateVcaDecay() {
@@ -932,7 +971,7 @@ void updateVcaDecay() {
   vcaEnvelope2.decay(vcaDecay);
   vcaEnvelope3.decay(vcaDecay);
   vcaEnvelope4.decay(vcaDecay);
-  renderCurrentParameterPage("Decay", String(vcaDecay) + "ms");
+  showCurrentParameterPage("Decay", String(int(vcaDecay)) + " ms");
 }
 
 void updateVcaSustain() {
@@ -940,7 +979,7 @@ void updateVcaSustain() {
   vcaEnvelope2.sustain(vcaSustain);
   vcaEnvelope3.sustain(vcaSustain);
   vcaEnvelope4.sustain(vcaSustain);
-  renderCurrentParameterPage("Sustain", String(vcaSustain));
+  showCurrentParameterPage("Sustain", String(vcaSustain));
 }
 
 void updateVcaRelease() {
@@ -948,7 +987,7 @@ void updateVcaRelease() {
   vcaEnvelope2.release(vcaRelease);
   vcaEnvelope3.release(vcaRelease);
   vcaEnvelope4.release(vcaRelease);
-  renderCurrentParameterPage("Release", String(vcaRelease) + "ms");
+  showCurrentParameterPage("Release", String(int(vcaRelease)) + " ms");
 }
 
 void updateRingMod() {
@@ -957,11 +996,11 @@ void updateRingMod() {
     ringMod2.setCombineMode(AudioEffectDigitalCombine::XOR);
     ringMod3.setCombineMode(AudioEffectDigitalCombine::XOR);
     ringMod4.setCombineMode(AudioEffectDigitalCombine::XOR);
-    waveformMixer1.gain(3, RINGMODLEVEL);//Ring Mod
-    waveformMixer2.gain(3, RINGMODLEVEL);//Ring Mod
-    waveformMixer3.gain(3, RINGMODLEVEL);//Ring Mod
-    waveformMixer4.gain(3, RINGMODLEVEL);//Ring Mod
-    renderCurrentParameterPage("Ring Mod", "On");
+    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
+    waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
+    waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
+    waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
+    showCurrentParameterPage("Ring Mod", "On");
   } else {
     ringMod1.setCombineMode(AudioEffectDigitalCombine::OFF);
     ringMod2.setCombineMode(AudioEffectDigitalCombine::OFF);
@@ -971,26 +1010,25 @@ void updateRingMod() {
     waveformMixer2.gain(3, 0);//Ring Mod
     waveformMixer3.gain(3, 0);//Ring Mod
     waveformMixer4.gain(3, 0);//Ring Mod
-    renderCurrentParameterPage("Ring Mod", "Off");
+    showCurrentParameterPage("Ring Mod", "Off");
   }
 }
 
 void updateFXAmt() {
-  chorusL.voices(fxAmt);
-  chorusR.voices(fxAmt);
-  renderCurrentParameterPage("Effect Amt", String(fxAmt));
+  ensemble.lfoRate(fxAmt);
+  showCurrentParameterPage("Effect Amt", String(fxAmt) + " Hz");
 }
 
 void updateFXMix() {
-  chorusMixerL.gain(0, 1.0 - fxMix); //Dry
-  chorusMixerL.gain(1, fxMix);//Wet
-  chorusMixerR.gain(0, 1.0 - fxMix); //Dry
-  chorusMixerR.gain(1, fxMix);//Wet
-  renderCurrentParameterPage("Effect Mix", String(fxMix));
+  effectMixerL.gain(0, 1.0 - fxMix); //Dry
+  effectMixerL.gain(1, fxMix);//Wet
+  effectMixerR.gain(0, 1.0 - fxMix); //Dry
+  effectMixerR.gain(1, fxMix);//Wet
+  showCurrentParameterPage("Effect Mix", String(fxMix));
 }
 
 void updatePatchname() {
-  renderCurrentPatchPage(programNo, patchName);
+  showCurrentPatchPage(programNo, patchName);
 }
 
 void myPitchBend(byte channel, int bend) {
@@ -998,11 +1036,13 @@ void myPitchBend(byte channel, int bend) {
 }
 
 void myControlChange(byte channel, byte control, byte value) {
-  Serial.println("MIDI: " + String(control) + ":" + String(value));
+  Serial.println("MIDI: " + String(control) + ":" + char(value));
   AudioNoInterrupts();
   switch (control) {
     case CCvolume:
-      sgtl5000_1.volume(0.8 * LINEAR[value]);
+      sgtl5000_1.volume(0.8 * LINEAR[value]);//Headphones
+      //sgtl5000_1.lineOutLevel(31 - (18 * LINEAR[value])); //Line out
+      updateVolume(LINEAR[value]);
       break;
 
     case CCunison:
@@ -1114,7 +1154,7 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCmodwheel:
       vcoLfoAmt = POWER[value] * MODWHEELFACTOR;//Less from mod wheel
-      updateVcoLFOAmt();
+      updateModWheel();
       break;
 
     case CCvcolfoamt:
@@ -1126,7 +1166,7 @@ void myControlChange(byte channel, byte control, byte value) {
       if (vcoLFOMidiClkSync == 1) {
         vcoLfoRate = getLFOTempoRate(value);
       } else {
-        vcoLfoRate = 20 * POWER[value];
+        vcoLfoRate = LFOMAXRATE * POWER[value];
       }
       updateVcoLFORate();
       break;
@@ -1150,7 +1190,7 @@ void myControlChange(byte channel, byte control, byte value) {
       if (vcfLFOMidiClkSync == 1) {
         vcfLfoRate = getLFOTempoRate(value);
       } else {
-        vcfLfoRate = 30 * POWER[value];
+        vcfLfoRate = LFOMAXRATE * POWER[value];
       }
       updateVcfLfoRate();
       break;
@@ -1167,10 +1207,13 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCvcflforetrig:
       value > 0 ? vcfLfoRetrig = 1 : vcfLfoRetrig = 0;
+      updateVcfLFORetrig();
       break;
 
+    //MIDI Only
     case CCvcoLFOMidiClkSync:
       value > 0 ? vcoLFOMidiClkSync = 1 : vcoLFOMidiClkSync = 0;
+      updateVcoLFOMidiClkSync();
       break;
 
     case CCvcfattack:
@@ -1219,7 +1262,7 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCfxamt:
-      fxAmt = CHORUS_VOICES[value];
+      fxAmt = ENSEMBLE_LFO[value];
       updateFXAmt();
       break;
 
@@ -1254,40 +1297,32 @@ void myMIDIClock() {
   if (count < 24)count++;//prevent eventual overflow
 }
 
-void printPatches(File dir) {
+void printPatches(File file) {
   while (true) {
-    File patch =  dir.openNextFile();
-    if (! patch) {
-      // no more files
+    String data[NO_OF_PARAMS];    //Array of data read in
+    File patchFile =  file.openNextFile();
+    if (! patchFile) {
       break;
     }
-    Serial.print(patch.name());
-    if (patch.isDirectory()) {
-      Serial.println("/");
-      printPatches(patch);
+    if (patchFile.isDirectory()) {
+      printPatches(patchFile);
     } else {
-      String data[NO_OF_PARAMS];    //Array of data read in
-      recallPatchData(patch, data);
-      Serial.println(" " + data[0]);
+      recallPatchData(patchFile, data);
+      Serial.println(String(patchFile.name()) + ":" + data[0]);
+      //load patch
+      programNo = patchFile.name();
+      currentPatchName = data[0];
     }
-    patch.close();
+    patchFile.close();
   }
 }
 
-int recallAvailablePatches() {
-  if (!SD.begin(SDCARD_CS_PIN)) {
-    Serial.println("SD card failed!");
-    return;
-  }
+void recallAvailablePatches() {
   printPatches(SD.open("/"));
 }
 
-void recallPatch(byte program) {
-  if (!SD.begin(SDCARD_CS_PIN)) {
-    Serial.println("SD card failed!");
-    return;
-  }
-  patchFile = SD.open(program);
+void recallPatch(char* programNo) {
+  patchFile = SD.open(programNo);
   if (!patchFile) {
     Serial.println("File not found");
   } else {
@@ -1298,11 +1333,7 @@ void recallPatch(byte program) {
   }
 }
 
-void savePatch(byte programNo) {
-  if (!SD.begin(SDCARD_CS_PIN)) {
-    Serial.println("SD card failed!");
-    return;
-  }
+void savePatch(char* programNo) {
   if (SD.exists(programNo)) {
     SD.remove(programNo);
   }
@@ -1310,15 +1341,18 @@ void savePatch(byte programNo) {
   if (patchFile) {
     Serial.print("Writing Patch:");
     Serial.println(programNo);
-    renderCurrentParameterPage("Writing Patch", String(programNo));
+    showCurrentParameterPage("Writing Patch", String(programNo));
+    Serial.println(getCurrentPatchData());
     patchFile.println(getCurrentPatchData());
     patchFile.close();
+  } else {
+    Serial.print("Error writing Patch:");
+    Serial.println(programNo);
   }
 }
 
 void recallPatchData(File patchFile, String data[]) {
   //Read patch data from file and set current patch parameters
-
   size_t n;      // Length of returned field with delimiter.
   char str[20];  // Must hold longest field with delimiter and zero byte.
   int i = 0;
@@ -1326,7 +1360,6 @@ void recallPatchData(File patchFile, String data[]) {
     n = readField(&patchFile, str, sizeof(str), ",\n");
     // done if Error or at EOF.
     if (n == 0) break;
-
     // Print the type of delimiter.
     if (str[n - 1] == ',' || str[n - 1] == '\n') {
       //        Serial.print(str[n - 1] == ',' ? F("comma: ") : F("endl:  "));
@@ -1337,9 +1370,9 @@ void recallPatchData(File patchFile, String data[]) {
       //        Serial.print(patchFile.available() ? F("error: ") : F("eof:   "));
     }
     // Print the field.
-    //      Serial.print(i);
-    //      Serial.print(" - ");
-    //      Serial.println(str);
+    Serial.print(i);
+    Serial.print(" - ");
+    Serial.println(str);
     data[i++] = String(str);
   }
 }
@@ -1410,7 +1443,6 @@ void setCurrentPatchData(String data[]) {
   fxMix = data[45].toFloat();
 
   updatePatchname();
-  updateDisplay = false;//prevent rapid update of display
   updateUnison();
   updateWaveformA();
   updateWaveformB();
@@ -1447,7 +1479,6 @@ void setCurrentPatchData(String data[]) {
   updateRingMod();
   updateFXAmt();
   updateFXMix();
-  updateDisplay = true;
   Serial.print("Set Patch: ");
   Serial.println(patchName);
 }
@@ -1466,10 +1497,10 @@ void checkMux() {
     mux1ValuesPrev[muxInput] = mux1Read;
     mux1Read = (mux1Read >> 3); //Change range to 0-127
 
-    Serial.print("MUX1:");
-    Serial.print(muxInput);
-    Serial.print(" :");
-    Serial.println(mux1Read);
+    //    Serial.print("MUX1:");
+    //    Serial.print(muxInput);
+    //    Serial.print(" :");
+    //    Serial.println(mux1Read);
 
     switch (muxInput) {
       case MUX1_octaveA:
@@ -1526,10 +1557,10 @@ void checkMux() {
   if (mux2Read > (mux2ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux2Read < (mux2ValuesPrev[muxInput] - QUANTISE_FACTOR)) {
     mux2ValuesPrev[muxInput] = mux2Read;
     mux2Read = (mux2Read >> 3); //Change range to 0-127
-    Serial.print("MUX2:");
-    Serial.print(muxInput);
-    Serial.print(" :");
-    Serial.println(mux2Read);
+    //    Serial.print("MUX2:");
+    //    Serial.print(muxInput);
+    //    Serial.print(" :");
+    //    Serial.println(mux2Read);
 
     switch (muxInput) {
       case MUX2_vcflfoamt:
@@ -1597,14 +1628,12 @@ void checkFxPots() {
     fxAmtPrevious = fxAmtRead;
     fxAmtRead = (fxAmtRead >> 3); //Change range to 0-127
     myControlChange(channel, CCfxamt, fxAmtRead);
-    Serial.println("EFFECTAMT_POT");
   }
   fxMixRead = analogRead(EFFECTMIX_POT);
   if (fxMixRead > (fxMixPrevious + QUANTISE_FACTOR) || fxMixRead < (fxMixPrevious - QUANTISE_FACTOR)) {
     fxMixPrevious = fxMixRead;
     fxMixRead = (fxMixRead >> 3); //Change range to 0-127
     myControlChange(channel, CCfxmix, fxMixRead);
-    Serial.println("EFFECTMIX_POT");
   }
 }
 
@@ -1613,22 +1642,18 @@ void checkSwitches() {
   if (pwmSourceSwitch.risingEdge()) {
     pwmSource = PWMSOURCEFENV;
     myControlChange(channel, CCpwmSource, pwmSource);
-    Serial.println("PWM_SOURCE_SW: " + String(pwmSource));
   } else if (pwmSourceSwitch.fallingEdge()) {
     pwmSource = PWMSOURCELFO;
     myControlChange(channel, CCpwmSource, pwmSource);
-    Serial.println("PWM_SOURCE_SW: " + String(pwmSource));
   }
 
   unisonSwitch.update();
   if (unisonSwitch.risingEdge()) {
     unison = 1;
     myControlChange(channel, CCunison, unison);
-    Serial.println("UNISON_SW: " + String(unison));
   } else if (unisonSwitch.fallingEdge()) {
     unison = 0;
     myControlChange(channel, CCunison, unison);
-    Serial.println("UNISON_SW: " + String(unison));
   }
 
   ringModSwitch.update();
@@ -1639,29 +1664,24 @@ void checkSwitches() {
   } else if (ringModSwitch.fallingEdge()) {
     ringMod = 0;
     myControlChange(channel, CCringmod, ringMod);
-    Serial.println("RING_MOD_SW: " + String(ringMod));
   }
 
   vcoLFORetrigSwitch.update();
   if (vcoLFORetrigSwitch.risingEdge()) {
     vcoLfoRetrig = 1;
     myControlChange(channel, CCvcolforetrig, vcoLfoRetrig);
-    Serial.println("PITCH_LFO_RETRIG_SW: " + String(vcoLfoRetrig));
   } else if (vcoLFORetrigSwitch.fallingEdge()) {
     vcoLfoRetrig = 0;
     myControlChange(channel, CCvcolforetrig, vcoLfoRetrig);
-    Serial.println("PITCH_LFO_RETRIG_SW: " + String(vcoLfoRetrig));
   }
 
   vcfLFORetrigSwitch.update();
   if (vcfLFORetrigSwitch.risingEdge()) {
     vcfLfoRetrig = 1;
     myControlChange(channel, CCvcflforetrig, vcfLfoRetrig);
-    Serial.println("VCF_LFO_RETRIG_SW: " + String(vcfLfoRetrig));
   } else if (vcfLFORetrigSwitch.fallingEdge()) {
     vcfLfoRetrig = 0;
     myControlChange(channel, CCvcflforetrig, vcfLfoRetrig);
-    Serial.println("VCF_LFO_RETRIG_SW: " + String(vcfLfoRetrig));
   }
 
   tempoSwitch.update();
@@ -1672,27 +1692,23 @@ void checkSwitches() {
   } else  if (tempoSwitch.fallingEdge()) {
     vcfLFOMidiClkSync = 0;
     myControlChange(channel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
-    Serial.println("TEMPO_SW: " + String(vcfLFOMidiClkSync));
   }
 
   saveButton.update();
   if (saveButton.fallingEdge()) {
-    Serial.println("SAVE_SW");
-    
     savePatch(programNo);
   }
 
   recallButton.update();
   if (recallButton.read() == LOW && recallButton.duration() > INITIALISE_DURATION) {
     //If recall held for 1.5s, set current patch to match current hardware state
-    Serial.println("Recall Held");
     //Reinitialise all hardware values to force them to be re-read if different
     reinitialiseHW();
     recallButton.write(HIGH);//Come out of this state
     reini = true;//Hack
   } else if (recallButton.risingEdge()) {
     if (!reini) {
-      recallAvailablePatches();
+      //recallAvailablePatches();
       recallPatch(programNo);
     } else {
       reini = false;
@@ -1710,13 +1726,8 @@ void checkSwitches() {
   }
 }
 
-void checkDisplay() {
-  if (timeOut()) {
-    renderCurrentPatchPage(programNo, patchName);
-  }
-}
-
 void reinitialiseHW() {
+  showCurrentParameterPage("Reinitialise", " ", 1000);
   //This reinialises the previous hardware values to force a re-read
   muxInput = 0;
   for (int i = 0; i < MUXCHANNELS; i++) {
@@ -1727,13 +1738,15 @@ void reinitialiseHW() {
   fxMixPrevious = -99;
   //Read switch state
   pwmSource = pwmSourceSwitch.read();
+  updatePWMSource();
   ringMod = ringModSwitch.read();
+  updateRingMod();
   vcoLfoRetrig = vcoLFORetrigSwitch.read();
   vcfLfoRetrig = vcfLFORetrigSwitch.read();
   unison = unisonSwitch.read();
   vcfLFOMidiClkSync = tempoSwitch.read();
-  renderCurrentParameterPage(programNo, INITPATCHNAME);
   Serial.println("Reinitialise HW");
+  patchName = INITPATCHNAME;
 }
 
 void checkEncoder() {
@@ -1753,15 +1766,20 @@ void loop() {
   myusb.Task();
   midi1.read();//USB HOST MIDI Class Compliant
   usbMIDI.read();//USB Client MIDI
-  //MIDI.read();//MIDI 5 Pin DIN
+  //  MIDI.read();//MIDI 5 Pin DIN
 
   checkMux();
   checkFxPots();
   checkSwitches();
   checkEncoder();
-  checkDisplay();
-  //  Serial.print("CPU:");
-  //  Serial.print(AudioProcessorUsageMax());
-  //  Serial.print("  MEM:");
-  //  Serial.println(AudioMemoryUsageMax());
+
+  //  if (Serial4.available() > 0) {
+  //    Serial.print("UART received: ");
+  //    Serial.println(Serial4.read(), HEX);
+  //  }
+  //
+  //    Serial.print("CPU:");
+  //    Serial.print(AudioProcessorUsageMax());
+  //    Serial.print("  MEM:");
+  //    Serial.println(AudioMemoryUsageMax());
 }
