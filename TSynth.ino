@@ -12,6 +12,16 @@
 #include "AudioPatching.h"
 #include "Constants.h"
 #include "Parameters.h"
+#define PARAMETER  0
+#define RECALL  1
+#define SAVE  2
+#define REINITIALISE  3
+#define PATCH  4
+#define PATCHNAMING  5
+#define DELETE  6
+
+volatile unsigned int state = PARAMETER;
+#include "PatchMgr.h"
 #include "ST7735Display.h"
 #include "HWControls.h"
 
@@ -28,7 +38,7 @@ USBHub hub2(myusb);
 MIDIDevice midi1(myusb);
 
 //MIDI 5 Pin DIN
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial4, MIDI);//RX - Pin 31
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial4, MIDI);//RX - Pin 31
 
 struct VoiceAndNote {
   int note;
@@ -44,10 +54,10 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
 
 int  prevNote = 48;//Initialised to middle value
 float previousMillis = millis();//For MIDI Clk Sync
-File patchFile;
+
 int count = 0;
 byte channel = MIDI_CHANNEL_OMNI;
-char*  programNo = "1";
+int  patchNo = 1;
 int voiceToReturn = -1;//Initialise to 'null'
 long earliestTime = millis();//For voice allocation - initialise to now
 
@@ -71,6 +81,9 @@ void setup() {
     Serial.println("SD card is connected");
     if (!SD.begin(SDCARD_CS_PIN)) {
       Serial.println("SD card failed!");
+    } else {
+      //Get patch numbers and names from SD card
+      getPatches(SD.open("/"));
     }
   } else {
     Serial.println("SD card is not connected or unusable");
@@ -84,8 +97,9 @@ void setup() {
   midi1.setHandleNoteOn(myNoteOn);
   midi1.setHandlePitchChange(myPitchBend);
   midi1.setHandleProgramChange(myProgramChange);
-  // midi1.setHandleClock(myMIDIClock);
-  Serial.println("USB HOST MIDI Class Compliant");
+  midi1.setHandleClock(myMIDIClock);
+  midi1.setHandleStart(myMIDIClockStart);
+  Serial.println("USB HOST MIDI Class Compliant Listening");
 
   //USB Client MIDI
   usbMIDI.setHandleControlChange(myControlChange);
@@ -94,17 +108,20 @@ void setup() {
   usbMIDI.setHandlePitchChange(myPitchBend);
   usbMIDI.setHandleProgramChange(myProgramChange);
   usbMIDI.setHandleClock(myMIDIClock);
-  Serial.println("USB Client MIDI");
+  usbMIDI.setHandleStart(myMIDIClockStart);
+  Serial.println("USB Client MIDI Listening");
 
   //MIDI 5 Pin DIN
-  //  MIDI.begin();
-  //  MIDI.setHandleNoteOn(myNoteOn);
-  //  MIDI.setHandleNoteOff(myNoteOff);
-  //  MIDI.setHandlePitchBend(myPitchBend);
-  //  MIDI.setHandleControlChange(myControlChange);
-  //  MIDI.setHandleProgramChange(myProgramChange);
-  // MIDI.setHandleClock(myMIDIClock);
-  //  Serial.println("MIDI DIN");
+  //TODO - Doesn't like Midi Clk signals from Ableton
+  MIDI.begin();
+  MIDI.setHandleNoteOn(myNoteOn);
+  MIDI.setHandleNoteOff(myNoteOff);
+  MIDI.setHandlePitchBend(myPitchBend);
+  MIDI.setHandleControlChange(myControlChange);
+  MIDI.setHandleProgramChange(myProgramChange);
+  MIDI.setHandleClock(myMIDIClock);
+  MIDI.setHandleStart(myMIDIClockStart);
+  Serial.println("MIDI In DIN Listening");
 
   constant1Dc.amplitude(CONSTANTONE);
 
@@ -195,8 +212,7 @@ void setup() {
   effectMixerR.gain(2, 0);
   effectMixerR.gain(3, 0);
 
-  reinitialiseHW();
-  showCurrentPatchPage(programNo, patchName);
+  reinitialiseToPanel();
 }
 
 void myNoteOn(byte channel, byte note, byte velocity) {
@@ -204,8 +220,6 @@ void myNoteOn(byte channel, byte note, byte velocity) {
   if (note + vcoOctaveA < 0 || note + vcoOctaveA > 127 || note + vcoOctaveB < 0 || note + vcoOctaveB > 127) return;
 
   AudioNoInterrupts();
-  //TODO NEED SEPARATE KEYTRACKING FOR EACH VOICE
-  keytracking.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
   if (glideSpeed > 0) {
     glide.amplitude((prevNote - note) * DIV12);//Set glide to previous note frequency
     glide.amplitude(0, glideSpeed * GLIDEFACTOR);//Glide to current note
@@ -223,6 +237,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
     switch (getVoiceNo(-1)) {
       case 1:
         //Serial.println("ON 1");
+        keytracking1.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
         voices[0].note = note;
         voices[0].timeOn = millis();
         updateVoice1();
@@ -231,6 +246,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         break;
       case 2:
         //Serial.println("ON 2");
+        keytracking2.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
         voices[1].note = note;
         voices[1].timeOn = millis();
         updateVoice2();
@@ -239,6 +255,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         break;
       case 3:
         //Serial.println("ON 3");
+        keytracking3.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
         voices[2].note = note;
         voices[2].timeOn = millis();
         updateVoice3();
@@ -247,6 +264,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         break;
       case 4:
         //Serial.println("ON 4");
+        keytracking4.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
         voices[3].note = note;
         voices[3].timeOn = millis();
         updateVoice4();
@@ -256,6 +274,10 @@ void myNoteOn(byte channel, byte note, byte velocity) {
     }
   } else {
     //UNISON MODE
+    keytracking1.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+    keytracking2.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+    keytracking3.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+    keytracking4.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
     voices[0].note = note;
     voices[0].timeOn = millis();
     updateVoice1();
@@ -453,9 +475,9 @@ String getWaveformAStr(int value) {
     case WAVEFORM_SAWTOOTH:
       return "Sawtooth";
     case WAVEFORM_PULSE:
-      return "Pulse";
+      return "Var. Pulse";
     case WAVEFORM_TRIANGLE_VARIABLE:
-      return "Var Triangle";
+      return "Var. Triangle";
     case WAVEFORM_ARBITRARY:
       return "User";
     default:
@@ -472,9 +494,9 @@ String getWaveformBStr(int value) {
     case WAVEFORM_SAWTOOTH_REVERSE:
       return "Ramp";
     case WAVEFORM_PULSE:
-      return "Pulse";
+      return "Var. Pulse";
     case WAVEFORM_TRIANGLE_VARIABLE:
-      return "Var Triangle";
+      return "Var. Triangle";
     case WAVEFORM_ARBITRARY:
       return "User";
     default:
@@ -546,14 +568,14 @@ void setPwmMixerALFO(float value) {
   pwMixer2a.gain(0, value);
   pwMixer3a.gain(0, value);
   pwMixer4a.gain(0, value);
-  showCurrentParameterPage("1. PWM LFO", char(value));
+  showCurrentParameterPage("1. PWM LFO", String(value));
 }
 void setPwmMixerBLFO(float value) {
   pwMixer1b.gain(0, value);
   pwMixer2b.gain(0, value);
   pwMixer3b.gain(0, value);
   pwMixer4b.gain(0, value);
-  showCurrentParameterPage("2. PWM LFO", char(value));
+  showCurrentParameterPage("2. PWM LFO", String(value));
 }
 
 void setPwmMixerAPW(float value) {
@@ -575,7 +597,7 @@ void setPwmMixerAFEnv(float value) {
   pwMixer2a.gain(2, value);
   pwMixer3a.gain(2, value);
   pwMixer4a.gain(2, value);
-  showCurrentParameterPage("1. PWM F Env", char(value));
+  showCurrentParameterPage("1. PWM F Env", String(value));
 }
 
 void setPwmMixerBFEnv(float value) {
@@ -583,7 +605,7 @@ void setPwmMixerBFEnv(float value) {
   pwMixer2b.gain(2, value);
   pwMixer3b.gain(2, value);
   pwMixer4b.gain(2, value);
-  showCurrentParameterPage("2. PWM F Env", char(value));
+  showCurrentParameterPage("2. PWM F Env", String(value));
 }
 
 void updateUnison() {
@@ -594,7 +616,6 @@ void updateUnison() {
     showCurrentParameterPage("Unison", "On");
   }
 }
-
 
 void updateVolume(float vol) {
   showCurrentParameterPage("Volume", vol);
@@ -786,7 +807,7 @@ void updateVcoLevelB() {
   waveformMixer3.gain(1, VCOBLevel);
   waveformMixer4.gain(1, VCOBLevel);
   if (ringMod == 1) {
-    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Ring Mod
+    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
@@ -890,7 +911,7 @@ void updateVcoLFOWaveform() {
   showCurrentParameterPage("Pitch LFO", getLFOWaveformStr(vcoLFOWaveform));
 }
 
-
+//MIDI CC only
 void updateVcoLFOMidiClkSync() {
   showCurrentParameterPage("P. LFO Sync", vcoLFOMidiClkSync == 1 ? "On" : "Off");
 }
@@ -898,15 +919,15 @@ void updateVcoLFOMidiClkSync() {
 void updateVcfLfoRate() {
   vcfLfo.frequency(vcfLfoRate);
   if (vcfLFOMidiClkSync) {
-    showCurrentParameterPage("LFO Time Div", String(int(vcfLfoRate * 4)) + "/4");
+    showCurrentParameterPage("LFO Time Div", vcfLFOTimeDivStr);
   } else {
-    showCurrentParameterPage("LFO Rate", String(vcfLfoRate) + " Hz");
+    showCurrentParameterPage("F. LFO Rate", String(vcfLfoRate) + " Hz");
   }
 }
 
 void updateVcfLfoAmt() {
   vcfLfo.amplitude(vcfLfoAmt);
-  showCurrentParameterPage("LFO Amount", String(vcfLfoAmt));
+  showCurrentParameterPage("F. LFO Amt", String(vcfLfoAmt));
 }
 
 void updateVcfLFOWaveform() {
@@ -923,7 +944,7 @@ void updateVcfLFORetrig() {
 }
 
 void updateVcfLFOMidiClkSync() {
-  showCurrentParameterPage("F. LFO Sync", vcfLFOMidiClkSync == 1 ? "On" : "Off");
+  showCurrentParameterPage("Tempo Sync", vcfLFOMidiClkSync == 1 ? "On" : "Off");
 }
 
 void updateVcfAttack() {
@@ -947,7 +968,7 @@ void updateVcfSustain() {
   vcfEnvelope2.sustain(vcfSustain);
   vcfEnvelope3.sustain(vcfSustain);
   vcfEnvelope4.sustain(vcfSustain);
-  showCurrentParameterPage("Filter Sust.", String(vcfSustain));
+  showCurrentParameterPage("Filter Sustain", String(vcfSustain));
 }
 
 void updateVcfRelease() {
@@ -955,7 +976,7 @@ void updateVcfRelease() {
   vcfEnvelope2.release(vcfRelease);
   vcfEnvelope3.release(vcfRelease);
   vcfEnvelope4.release(vcfRelease);
-  showCurrentParameterPage("Filter Rel.", String(int(vcfRelease)) + " ms");
+  showCurrentParameterPage("Filter Release", String(int(vcfRelease)) + " ms");
 }
 
 void updateVcaAttack() {
@@ -1028,7 +1049,7 @@ void updateFXMix() {
 }
 
 void updatePatchname() {
-  showCurrentPatchPage(programNo, patchName);
+  showPatchPage(String(patchNo), patchName);
 }
 
 void myPitchBend(byte channel, int bend) {
@@ -1036,7 +1057,7 @@ void myPitchBend(byte channel, int bend) {
 }
 
 void myControlChange(byte channel, byte control, byte value) {
-  Serial.println("MIDI: " + String(control) + ":" + char(value));
+  //Serial.println("MIDI: " + String(control) + ":" + String(value));
   AudioNoInterrupts();
   switch (control) {
     case CCvolume:
@@ -1092,7 +1113,7 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCpwmAmt:
-      //NO FRONT PANEL CONTROL - MIDI ONLY
+      //NO FRONT PANEL CONTROL - MIDI CC ONLY
       //Uses combination of PWMRate, PWa and PWb
       pwmAmtA =  LINEAR[value];
       pwmAmtB =  LINEAR[value];
@@ -1165,6 +1186,7 @@ void myControlChange(byte channel, byte control, byte value) {
     case CCvcoLfoRate:
       if (vcoLFOMidiClkSync == 1) {
         vcoLfoRate = getLFOTempoRate(value);
+        vcoLFOTimeDivStr = LFOTEMPOSTR[value];
       } else {
         vcoLfoRate = LFOMAXRATE * POWER[value];
       }
@@ -1189,6 +1211,7 @@ void myControlChange(byte channel, byte control, byte value) {
     case CCvcflforate:
       if (vcfLFOMidiClkSync == 1) {
         vcfLfoRate = getLFOTempoRate(value);
+        vcfLFOTimeDivStr = LFOTEMPOSTR[value];
       } else {
         vcfLfoRate = LFOMAXRATE * POWER[value];
       }
@@ -1279,50 +1302,43 @@ void myControlChange(byte channel, byte control, byte value) {
 }
 
 void myProgramChange(byte channel, byte program) {
-  Serial.print("Pgm:");
-  Serial.println(program);
-  recallPatch(program);
+  state = PATCH;
+  Serial.print("MIDI Pgm Change:");
+  Serial.println(String(program + 1));
+  patchNo = program + 1;
+  recallPatch(String(program + 1));
+  state = PARAMETER;
+}
+
+void myMIDIClockStart() {
+  //Resync LFOs when MIDI Clock starts.
+  //When there's a jump to a different
+  //part of a track, such as in a DAW, the DAW must have same
+  //rhythmic quantisation as Tempo TS.
+  if (vcoLFOMidiClkSync == 1) {
+    vcoLfo.sync();
+  }
+  if (vcfLFOMidiClkSync == 1 ) {
+    vcfLfo.sync();
+  }
 }
 
 void myMIDIClock() {
+  //This recalculates theLFO frequencies if the tempo changes (MIDI cLock is 24ppq)
   if ((vcoLFOMidiClkSync == 1 || vcfLFOMidiClkSync == 1) && count > 23) {
     float timeNow = millis();
     midiClkTimeInterval = (timeNow - previousMillis);
     lfoSyncFreq = 1000.0 / midiClkTimeInterval;
     previousMillis = timeNow;
-    if (vcoLFOMidiClkSync == 1) vcoLfo.frequency(lfoSyncFreq * lfoTempoValue); //MIDI only
+    if (vcoLFOMidiClkSync == 1) vcoLfo.frequency(lfoSyncFreq * lfoTempoValue); //MIDI CC only
     if (vcfLFOMidiClkSync == 1) vcfLfo.frequency(lfoSyncFreq * lfoTempoValue);
     count = 0;
   }
   if (count < 24)count++;//prevent eventual overflow
 }
 
-void printPatches(File file) {
-  while (true) {
-    String data[NO_OF_PARAMS];    //Array of data read in
-    File patchFile =  file.openNextFile();
-    if (! patchFile) {
-      break;
-    }
-    if (patchFile.isDirectory()) {
-      printPatches(patchFile);
-    } else {
-      recallPatchData(patchFile, data);
-      Serial.println(String(patchFile.name()) + ":" + data[0]);
-      //load patch
-      programNo = patchFile.name();
-      currentPatchName = data[0];
-    }
-    patchFile.close();
-  }
-}
-
-void recallAvailablePatches() {
-  printPatches(SD.open("/"));
-}
-
-void recallPatch(char* programNo) {
-  patchFile = SD.open(programNo);
+void recallPatch(String patchNo) {
+  File patchFile = SD.open(patchNo);
   if (!patchFile) {
     Serial.println("File not found");
   } else {
@@ -1331,67 +1347,6 @@ void recallPatch(char* programNo) {
     setCurrentPatchData(data);
     patchFile.close();
   }
-}
-
-void savePatch(char* programNo) {
-  if (SD.exists(programNo)) {
-    SD.remove(programNo);
-  }
-  patchFile = SD.open(programNo, FILE_WRITE);
-  if (patchFile) {
-    Serial.print("Writing Patch:");
-    Serial.println(programNo);
-    showCurrentParameterPage("Writing Patch", String(programNo));
-    Serial.println(getCurrentPatchData());
-    patchFile.println(getCurrentPatchData());
-    patchFile.close();
-  } else {
-    Serial.print("Error writing Patch:");
-    Serial.println(programNo);
-  }
-}
-
-void recallPatchData(File patchFile, String data[]) {
-  //Read patch data from file and set current patch parameters
-  size_t n;      // Length of returned field with delimiter.
-  char str[20];  // Must hold longest field with delimiter and zero byte.
-  int i = 0;
-  while (patchFile.available() && i < NO_OF_PARAMS) {
-    n = readField(&patchFile, str, sizeof(str), ",\n");
-    // done if Error or at EOF.
-    if (n == 0) break;
-    // Print the type of delimiter.
-    if (str[n - 1] == ',' || str[n - 1] == '\n') {
-      //        Serial.print(str[n - 1] == ',' ? F("comma: ") : F("endl:  "));
-      // Remove the delimiter.
-      str[n - 1] = 0;
-    } else {
-      // At eof, too long, or read error.  Too long is error.
-      //        Serial.print(patchFile.available() ? F("error: ") : F("eof:   "));
-    }
-    // Print the field.
-    Serial.print(i);
-    Serial.print(" - ");
-    Serial.println(str);
-    data[i++] = String(str);
-  }
-}
-
-size_t readField(File * file, char* str, size_t size, char* delim) {
-  char ch;
-  size_t n = 0;
-  while ((n + 1) < size && file->read(&ch, 1) == 1) {
-    // Delete CR.
-    if (ch == '\r') {
-      continue;
-    }
-    str[n++] = ch;
-    if (strchr(delim, ch)) {
-      break;
-    }
-  }
-  str[n] = '\0';
-  return n;
 }
 
 void setCurrentPatchData(String data[]) {
@@ -1425,7 +1380,7 @@ void setCurrentPatchData(String data[]) {
   vcoLfoRate = data[27].toFloat();
   vcoLFOWaveform = data[28].toFloat();
   vcoLfoRetrig = data[29].toInt();
-  vcoLFOMidiClkSync = data[30].toFloat();//MIDI Only
+  vcoLFOMidiClkSync = data[30].toFloat();//MIDI CC Only
   vcfLfoRate = data[31].toFloat();
   vcfLfoRetrig = data[32].toInt();
   vcfLFOMidiClkSync = data[33].toFloat();
@@ -1497,11 +1452,6 @@ void checkMux() {
     mux1ValuesPrev[muxInput] = mux1Read;
     mux1Read = (mux1Read >> 3); //Change range to 0-127
 
-    //    Serial.print("MUX1:");
-    //    Serial.print(muxInput);
-    //    Serial.print(" :");
-    //    Serial.println(mux1Read);
-
     switch (muxInput) {
       case MUX1_octaveA:
         myControlChange(channel, CCoctaveA, mux1Read);
@@ -1557,10 +1507,6 @@ void checkMux() {
   if (mux2Read > (mux2ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux2Read < (mux2ValuesPrev[muxInput] - QUANTISE_FACTOR)) {
     mux2ValuesPrev[muxInput] = mux2Read;
     mux2Read = (mux2Read >> 3); //Change range to 0-127
-    //    Serial.print("MUX2:");
-    //    Serial.print(muxInput);
-    //    Serial.print(" :");
-    //    Serial.println(mux2Read);
 
     switch (muxInput) {
       case MUX2_vcflfoamt:
@@ -1688,28 +1634,71 @@ void checkSwitches() {
   if (tempoSwitch.risingEdge()) {
     vcfLFOMidiClkSync = 1;
     myControlChange(channel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
-    Serial.println("TEMPO_SW: " + String(vcfLFOMidiClkSync));
   } else  if (tempoSwitch.fallingEdge()) {
     vcfLFOMidiClkSync = 0;
     myControlChange(channel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
   }
 
   saveButton.update();
-  if (saveButton.fallingEdge()) {
-    savePatch(programNo);
+  if (saveButton.read() == LOW && saveButton.duration() > INITIALISE_DURATION) {
+    state = DELETE;
+    saveButton.write(HIGH);//Come out of this state
+    del = true;//Hack
+  } else if (saveButton.risingEdge()) {
+    if (!del) {
+      switch (state) {
+        case PARAMETER:
+          getPatches(SD.open("/"));//Reload patches from SD
+          patches.push({patches.size() + 1, INITPATCHNAME});
+          state = SAVE;
+          break;
+        case SAVE:
+          //Save as new patch with INITIALPATCH name - bypassing patch renaming
+          patchName = patches.last().patchName;
+          savePatch(String(patches.last().patchNo), getCurrentPatchData());
+          showPatchPage(patches.last().patchNo, patches.last().patchName);
+          getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved
+          state = PARAMETER;
+          break;
+        case PATCHNAMING:
+          //Save renamed patch
+          //sort patches so new patch is saved at end
+          patchName = newPatchName + currentCharacter;
+          getPatches(SD.open("/"));
+          patches.push({patchNo, patchName});
+          printBuffer();
+          savePatch(String(patchNo), getCurrentPatchData());
+          state = PARAMETER;
+          break;
+      }
+    } else {
+      del = false;
+    }
   }
+
 
   recallButton.update();
   if (recallButton.read() == LOW && recallButton.duration() > INITIALISE_DURATION) {
     //If recall held for 1.5s, set current patch to match current hardware state
     //Reinitialise all hardware values to force them to be re-read if different
-    reinitialiseHW();
+    state = REINITIALISE;
+    reinitialiseToPanel();
     recallButton.write(HIGH);//Come out of this state
     reini = true;//Hack
-  } else if (recallButton.risingEdge()) {
+  } else if (recallButton.risingEdge()) {//cannot be fallingEdge because holding button won't work
     if (!reini) {
-      //recallAvailablePatches();
-      recallPatch(programNo);
+      switch (state) {
+        case PARAMETER:
+          state = RECALL;
+          break;
+        case RECALL:
+          state = PATCH;
+          //Recall the current patch
+          patchNo = patches.first().patchNo;
+          recallPatch(String(patchNo));
+          state = PARAMETER;
+          break;
+      }
     } else {
       reini = false;
     }
@@ -1717,25 +1706,67 @@ void checkSwitches() {
 
   backButton.update();
   if (backButton.fallingEdge()) {
-    Serial.println("BACK_SW");
+    switch (state) {
+      case RECALL:
+        state = PARAMETER;
+        break;
+      case SAVE:
+        state = PARAMETER;
+        getPatches(SD.open("/"));
+        break;
+      case PATCHNAMING:
+        state = SAVE;
+        break;
+      case DELETE:
+        state = PARAMETER;
+        break;
+    }
   }
 
   enterButton.update();
   if (enterButton.fallingEdge()) {
-    Serial.println("ENTER_SW");
+    switch (state) {
+      case PARAMETER:
+      case RECALL:
+        state = PATCH;
+        patchNo = patches.first().patchNo;
+        recallPatch(String(patchNo));
+        state = PARAMETER;
+        break;
+      case SAVE:
+        showRenamingPage(patches.last().patchName);
+        state = PATCHNAMING;
+        break;
+      case PATCHNAMING:
+        //TODO
+        newPatchName = newPatchName + currentCharacter;
+        charIndex = 0;
+        break;
+      case DELETE:
+        state = PATCH;
+        if (patches.size() > 0) {
+          deletePatch(String(patches.first().patchNo));
+          getPatches(SD.open("/"));
+          patchNo = patches.first().patchNo;
+          recallPatch(String(patchNo));
+          state = PARAMETER;
+        }
+        resortPatches();//Make patch Nos consecutive on SD
+        getPatches(SD.open("/"));
+        break;
+    }
   }
 }
 
-void reinitialiseHW() {
-  showCurrentParameterPage("Reinitialise", " ", 1000);
+void reinitialiseToPanel() {
   //This reinialises the previous hardware values to force a re-read
   muxInput = 0;
   for (int i = 0; i < MUXCHANNELS; i++) {
-    mux1ValuesPrev[i] = -99;
-    mux2ValuesPrev[i] = -99;
+    mux1ValuesPrev[i] = -9999;
+    mux2ValuesPrev[i] = -9999;
   }
-  fxAmtPrevious = -99;
-  fxMixPrevious = -99;
+  fxAmtPrevious = -9999;
+  fxMixPrevious = -9999;
   //Read switch state
   pwmSource = pwmSourceSwitch.read();
   updatePWMSource();
@@ -1745,19 +1776,65 @@ void reinitialiseHW() {
   vcfLfoRetrig = vcfLFORetrigSwitch.read();
   unison = unisonSwitch.read();
   vcfLFOMidiClkSync = tempoSwitch.read();
-  Serial.println("Reinitialise HW");
   patchName = INITPATCHNAME;
+  showPatchPage("Current", patchName);
 }
 
 void checkEncoder() {
   //Encoder works relatively inc and dec values
-  //Detent encoder goes up in 3, hence +/-2
+  //Detent encoder goes up in more than 1 step, hence +/-2
   long encRead = encoder.read();
   if (encRead > encPrevious + 2) {
-    incrementEnc();
+    switch (state) {
+      case PARAMETER:
+        state = PATCH;
+        patches.push(patches.shift());
+        patchNo = patches.first().patchNo;
+        recallPatch(String(patchNo));
+        state = PARAMETER;
+        break;
+      case RECALL:
+        patches.push(patches.shift());
+        break;
+      case SAVE:
+        patches.push(patches.shift());
+        break;
+      case PATCHNAMING:
+        if (charIndex == 63)charIndex = 0;
+        currentCharacter = CHARACTERS[charIndex++];
+        showRenamingPage(patchName + currentCharacter);
+        break;
+      case DELETE:
+        patches.push(patches.shift());
+        printBuffer();
+        break;
+    }
     encPrevious = encRead;
   } else if (encRead < encPrevious - 2) {
-    decrementEnc();
+    switch (state) {
+      case PARAMETER:
+        state = PATCH;
+        patches.unshift(patches.pop());
+        patchNo = patches.first().patchNo;
+        recallPatch(String(patchNo));
+        state = PARAMETER;
+        break;
+      case RECALL:
+        patches.unshift(patches.pop());
+        break;
+      case SAVE:
+        patches.unshift(patches.pop());
+        break;
+      case PATCHNAMING:
+        if (charIndex == 0)charIndex = 63;
+        currentCharacter = CHARACTERS[charIndex--];
+        showRenamingPage(patchName + currentCharacter);
+        break;
+      case DELETE:
+        patches.unshift(patches.pop());
+        printBuffer();
+        break;
+    }
     encPrevious = encRead;
   }
 }
@@ -1766,17 +1843,18 @@ void loop() {
   myusb.Task();
   midi1.read();//USB HOST MIDI Class Compliant
   usbMIDI.read();//USB Client MIDI
-  //  MIDI.read();//MIDI 5 Pin DIN
+  MIDI.read();//MIDI 5 Pin DIN
 
   checkMux();
   checkFxPots();
   checkSwitches();
   checkEncoder();
 
-  //  if (Serial4.available() > 0) {
-  //    Serial.print("UART received: ");
-  //    Serial.println(Serial4.read(), HEX);
-  //  }
+//Monitor MIDI In DIN
+//  if (Serial4.available() > 0) {
+//    Serial.print("UART received: ");
+//    Serial.println(Serial4.read(), HEX);
+//  }
   //
   //    Serial.print("CPU:");
   //    Serial.print(AudioProcessorUsageMax());

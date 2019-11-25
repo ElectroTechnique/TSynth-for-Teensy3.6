@@ -20,7 +20,10 @@ AudioSynthWaveform       vcoLfo;         //xy=122,111
 AudioSynthWaveformDc     glide;          //xy=124,152
 AudioSynthWaveformDc     pitchBend;      //xy=128,74
 AudioSynthWaveform       vcfLfo;         //xy=166,632
-AudioSynthWaveformDc     keytracking;    //xy=176,745
+AudioSynthWaveformDc     keytracking1;    //xy=176,745
+AudioSynthWaveformDc     keytracking2;    //xy=196,745
+AudioSynthWaveformDc     keytracking3;    //xy=216,745
+AudioSynthWaveformDc     keytracking4;    //xy=236,745
 AudioMixer4              vcoModMixer;    //xy=296,95
 AudioSynthWaveformModulated waveformMod1b;  //xy=503,170
 AudioSynthWaveformModulated waveformMod1a;  //xy=507,114
@@ -87,10 +90,10 @@ AudioConnection          patchCord24(vcfLfo, 0, vcfModMixer1, 1);
 AudioConnection          patchCord25(vcfLfo, 0, vcfModMixer2, 1);
 AudioConnection          patchCord26(vcfLfo, 0, vcfModMixer3, 1);
 AudioConnection          patchCord27(vcfLfo, 0, vcfModMixer4, 1);
-AudioConnection          patchCord28(keytracking, 0, vcfModMixer1, 2);
-AudioConnection          patchCord29(keytracking, 0, vcfModMixer2, 2);
-AudioConnection          patchCord30(keytracking, 0, vcfModMixer3, 2);
-AudioConnection          patchCord31(keytracking, 0, vcfModMixer4, 2);
+AudioConnection          patchCord28(keytracking1, 0, vcfModMixer1, 2);
+AudioConnection          patchCord29(keytracking2, 0, vcfModMixer2, 2);
+AudioConnection          patchCord30(keytracking3, 0, vcfModMixer3, 2);
+AudioConnection          patchCord31(keytracking4, 0, vcfModMixer4, 2);
 AudioConnection          patchCord32(pink, 0, waveformMixer1, 2);
 AudioConnection          patchCord33(pink, 0, waveformMixer2, 2);
 AudioConnection          patchCord34(pink, 0, waveformMixer3, 2);

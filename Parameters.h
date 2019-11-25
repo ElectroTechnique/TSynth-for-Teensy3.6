@@ -34,9 +34,11 @@ float vcoLfoRate = 4;
 int vcoLFOWaveform = WAVEFORM_SINE;
 int vcoLfoRetrig = 0;
 int vcoLFOMidiClkSync = 0;//MIDI Only
+String vcoLFOTimeDivStr = "";//For display
 float vcfLfoRate = 2;
 int vcfLfoRetrig = 0;
 int vcfLFOMidiClkSync = 0;
+String vcfLFOTimeDivStr = "";//For display
 float vcfLfoAmt = 0;
 int vcfLfoWaveform = WAVEFORM_SINE;
 

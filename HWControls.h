@@ -81,20 +81,21 @@ static int fxMixPrevious = 0;
 static long encPrevious = 0;
 
 //Switches require debouncing
-Bounce pwmSourceSwitch = Bounce(PWM_SOURCE_SW, DEBOUNCE);  
-Bounce ringModSwitch = Bounce(RING_MOD_SW, DEBOUNCE); 
-Bounce vcoLFORetrigSwitch = Bounce(PITCH_LFO_RETRIG_SW, DEBOUNCE); 
-Bounce vcfLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, DEBOUNCE); 
-Bounce unisonSwitch = Bounce(UNISON_SW, DEBOUNCE); 
-Bounce tempoSwitch = Bounce(TEMPO_SW, DEBOUNCE); 
+Bounce pwmSourceSwitch = Bounce(PWM_SOURCE_SW, DEBOUNCE);
+Bounce ringModSwitch = Bounce(RING_MOD_SW, DEBOUNCE);
+Bounce vcoLFORetrigSwitch = Bounce(PITCH_LFO_RETRIG_SW, DEBOUNCE);
+Bounce vcfLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, DEBOUNCE);
+Bounce unisonSwitch = Bounce(UNISON_SW, DEBOUNCE);
+Bounce tempoSwitch = Bounce(TEMPO_SW, DEBOUNCE);
 
 //These are pushbuttons and require debouncing
-Bounce enterButton = Bounce(ENTER_SW, DEBOUNCE);  
-Bounce saveButton = Bounce(SAVE_SW, DEBOUNCE);  
-Bounce recallButton = Bounce(RECALL_SW, DEBOUNCE); 
-Bounce backButton = Bounce(BACK_SW, DEBOUNCE);  
+Bounce enterButton = Bounce(ENTER_SW, DEBOUNCE);
+Bounce saveButton = Bounce(SAVE_SW, DEBOUNCE);
+boolean del = true;//Hack for save button
+Bounce recallButton = Bounce(RECALL_SW, DEBOUNCE);
+Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
 boolean reini = true;//Hack for recall button
-Encoder encoder(ENCODER_PINB, ENCODER_PINA);
+Encoder encoder(ENCODER_PINA, ENCODER_PINB);
 
 void setupHardware() {
   pinMode(MUX_0, OUTPUT);
@@ -113,12 +114,4 @@ void setupHardware() {
   pinMode(SAVE_SW, INPUT_PULLUP);
   pinMode(RECALL_SW, INPUT_PULLUP);
   pinMode(BACK_SW, INPUT_PULLUP);
-}
-
-void incrementEnc() {
-  Serial.println("incrementEnc");
-}
-
-void decrementEnc() {
-  Serial.println("decrementEnc");
 }
