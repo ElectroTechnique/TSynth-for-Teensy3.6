@@ -28,8 +28,8 @@ Amplifier
 Programmer
 - 160x80 IPS colour display
 - Encoder with button for data entry, Back button for menu navigation
-- Save and Recall buttons for storing patches, holding Recall initialises the current patch to match the panel controls
-- The programmer makes the synth very flexible with possibilities for changing User waveforms, alternative filters, alternative effects with further parameter settings.
+- Save and Recall buttons for storing patches, holding Recall initialises the current patch to match the panel controls. Holding the Save button takes you into a patch deletion page.
+- The programmer makes the synth very flexible with future possibilities for changing User waveforms, alternative filters, alternative effects with further parameter settings.
 
 MIDI
 - USB HOST MIDI Class Compliant (direct connection to MIDI controller, no PC needed)
