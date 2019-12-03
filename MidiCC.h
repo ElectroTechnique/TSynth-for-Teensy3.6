@@ -8,7 +8,7 @@
     102-119
 */
 #define   CCmodwheel  1 //vco LFO amount - less from mod wheel
-#define   CCvcolfoamt  3 //vco LFO amount
+#define   CCvcolfoamt  3 //vco LFO amount - panel control
 #define   CCglide 5
 #define   CCvolume  7
 #define   CCvcowaveformA  14

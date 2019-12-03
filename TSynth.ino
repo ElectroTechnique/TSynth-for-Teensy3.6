@@ -25,7 +25,7 @@ volatile unsigned int state = PARAMETER;
 #include "ST7735Display.h"
 #include "HWControls.h"
 
-//Teensy Audio Shield
+//Teensy Audio Shield SD card
 #define SDCARD_CS_PIN    10
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
@@ -62,7 +62,6 @@ int voiceToReturn = -1;//Initialise to 'null'
 long earliestTime = millis();//For voice allocation - initialise to now
 
 void setup() {
-  Serial.begin(115200);
   //ST7735 Display
   setupDisplay();
   setupHardware();
@@ -112,15 +111,15 @@ void setup() {
   Serial.println("USB Client MIDI Listening");
 
   //MIDI 5 Pin DIN
-  //TODO - Doesn't like Midi Clk signals from Ableton
   MIDI.begin();
   MIDI.setHandleNoteOn(myNoteOn);
   MIDI.setHandleNoteOff(myNoteOff);
   MIDI.setHandlePitchBend(myPitchBend);
   MIDI.setHandleControlChange(myControlChange);
   MIDI.setHandleProgramChange(myProgramChange);
-  MIDI.setHandleClock(myMIDIClock);
-  MIDI.setHandleStart(myMIDIClockStart);
+  //Doesn't like continuous Midi Clock signals from DAW, works with USB Midi fine
+  //MIDI.setHandleClock(myMIDIClock);
+  //MIDI.setHandleStart(myMIDIClockStart);
   Serial.println("MIDI In DIN Listening");
 
   constant1Dc.amplitude(CONSTANTONE);
@@ -1174,7 +1173,7 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCmodwheel:
-      vcoLfoAmt = POWER[value] * MODWHEELFACTOR;//Less from mod wheel
+      vcoLfoAmt = POWER[value] * MODWHEELFACTOR;//Less LFO amount from mod wheel
       updateModWheel();
       break;
 
@@ -1653,24 +1652,22 @@ void checkSwitches() {
           state = SAVE;
           break;
         case SAVE:
-
-//TODO: When in SAVE, patches can be chosen to save over
-        
-          //Save as new patch with INITIALPATCH name - bypassing patch renaming
+          //Save as new patch with INITIALPATCH or overwrite existing keeping name - bypassing patch renaming
           patchName = patches.last().patchName;
           savePatch(String(patches.last().patchNo), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
           getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved
+          renamedPatch = "";
           state = PARAMETER;
           break;
         case PATCHNAMING:
           //Save renamed patch
           //sort patches so new patch is saved at end
-          patchName = renamedPatch + currentCharacter;
-          getPatches(SD.open("/"));
-          patches.push({patchNo, patchName});
-          printBuffer();
-          savePatch(String(patchNo), getCurrentPatchData());
+          patchName = renamedPatch;
+          savePatch(String(patches.last().patchNo), getCurrentPatchData());
+          showPatchPage(patches.last().patchNo, patchName);
+          getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved
+          renamedPatch = "";
           state = PARAMETER;
           break;
       }
@@ -1743,9 +1740,10 @@ void checkSwitches() {
         state = PATCHNAMING;
         break;
       case PATCHNAMING:
-        //TODO: Patch No is wrongly chosen as current when it should be new
-        renamedPatch.concat(String(currentCharacter));
-        charIndex = 0;
+        if (renamedPatch.length() < 15) {
+          renamedPatch.concat(String(currentCharacter));
+          charIndex = 0;
+        }
         break;
       case DELETE:
         state = PATCH;
@@ -1812,7 +1810,6 @@ void checkEncoder() {
         break;
       case DELETE:
         patches.push(patches.shift());
-        printBuffer();
         break;
     }
     encPrevious = encRead;
@@ -1838,7 +1835,6 @@ void checkEncoder() {
         break;
       case DELETE:
         patches.unshift(patches.pop());
-        printBuffer();
         break;
     }
     encPrevious = encRead;

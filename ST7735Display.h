@@ -46,7 +46,7 @@ void renderBootUpPage() {
   tft.setTextColor(ST7735_RED);
   tft.setFont(&FreeSans9pt7b);
   tft.setCursor(110, 95);
-  tft.println("V0.98");
+  tft.println("V0.99");
 }
 
 void renderCurrentPatchPage() {

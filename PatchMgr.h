@@ -1,22 +1,27 @@
 /*
-  Read all patch nos and names from sd card at start up and store in circular buffer
-  PATCHES_LIMIT are available, all are initialised to 'Initial Patch' with initialised hw settings
+  TSynth patch saving and recall works like an analogue polysynth from the late 70s (Prophet 5).
+  When you recall a patch, all the front panel controls will be different values from those saved in the patch. Moving them will cause a jump to the current value.
+
+BACK
+Cancels current mode such as save, recall, delete and rename patches
 
   RECALL
+ Recall shows list of patches. Use encoder to move through list. 
+ Enter button on encoder chooses highlighted patch or press Recall again. 
+ Recall also recalls the current patch settings if the panel controls have been altered. 
+ Holding Recall for 1.5s will initialise the synth with all the current panel control settings - the synth sounds the same as the controls are set.
 
-  Show list of all patches on SD card. Default to current patch number. Circular buffer of patches.
-  Encoder selects patch and ENTER to load. BACK cancels.
 
   SAVE
-  Default to new patch number at end of patches. ENTER to save, then encoder allows alphanumeric selection of name. Hold ENTER to save and finish.
-  Encoder cycles through patches to overwrite. ENTER overwrites. BACK cancels.
-
-  DELETE
-  Hold ENTER on current patch and press again to confirm deletion - this renumbers patches. BACK cancels.
+ Save will save the current settings to a new patch at the end of the list or you can use the encoder to overwrite an existing patch. 
+ Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name. 
+ Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again. 
 */
+
+//Agileware CircularBuffer available in libraries manager
 #include <CircularBuffer.h>
 
-const char CHARACTERS[63] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',' '};
+const char CHARACTERS[63] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' '};
 unsigned int charIndex = 0;
 char currentCharacter = 0;
 String renamedPatch = "";
@@ -28,7 +33,8 @@ struct PatchNoAndName {
 
 CircularBuffer<PatchNoAndName, PATCHES_LIMIT> patches;
 
-void printBuffer() {
+//Utility for debugging
+void printPatchesCircularBuffer() {
   if (patches.isEmpty()) {
     Serial.println("empty");
   } else {
@@ -109,7 +115,6 @@ void getPatches(File file) {
     } else {
       recallPatchData(patchFile, data);
       patches.push(PatchNoAndName{atoi(patchFile.name()), data[0]});
-      printBuffer();
       Serial.println(String(patchFile.name()) + ":" + data[0]);
     }
     patchFile.close();
@@ -163,12 +168,3 @@ void resortPatches() {
   }
   deletePatch(patches.size() + 1); //delete final patch still on SD
 }
-
-//void reorderPatches() {
-//  if (patches.size() < 1)return;
-//  while (patches.first().patchNo != 1) {
-//    patches.push(patches.shift());
-//  }
-//  Serial.println("reorderPatches");
-//  printBuffer();
-//}
