@@ -510,7 +510,7 @@ float getLFOTempoRate(int value) {
 }
 
 int getVCOWaveformA(int value, int currentValue) {
-  //Dead zones in between values to avoid instability
+  //Overlapping zones in between values to avoid instability
   if (value >= 0 && value < 20) {
     return WAVEFORM_SINE;
   } else if (value >= 21 && value < 41) {
@@ -528,7 +528,7 @@ int getVCOWaveformA(int value, int currentValue) {
   }
 }
 int getVCOWaveformB(int value, int currentValue) {
-  //Dead zones in between values to avoid instability
+  //Overlapping zones in between values to avoid instability
   if (value >= 0 && value < 20) {
     return WAVEFORM_SAMPLE_HOLD;
   } else if (value >= 21 && value < 41) {
@@ -547,7 +547,7 @@ int getVCOWaveformB(int value, int currentValue) {
 }
 
 int getVCOOctave(int value, int currentValue) {
-  //Dead zones in between values to avoid instability
+  //Overlapping zones in between values to avoid instability
   if (value >= 0 && value < 24) {
     return -24;
   } else if (value >= 25 && value < 50) {
@@ -1114,7 +1114,7 @@ void myControlChange(byte channel, byte control, byte value) {
 
     case CCpwmAmt:
       //NO FRONT PANEL CONTROL - MIDI CC ONLY
-      //Uses combination of PWMRate, PWa and PWb
+      //Total PWM amount for both oscillators
       pwmAmtA =  LINEAR[value];
       pwmAmtB =  LINEAR[value];
       updatePWMAmount();
@@ -1653,6 +1653,9 @@ void checkSwitches() {
           state = SAVE;
           break;
         case SAVE:
+
+//TODO: When in SAVE, patches can be chosen to save over
+        
           //Save as new patch with INITIALPATCH name - bypassing patch renaming
           patchName = patches.last().patchName;
           savePatch(String(patches.last().patchNo), getCurrentPatchData());
@@ -1663,7 +1666,7 @@ void checkSwitches() {
         case PATCHNAMING:
           //Save renamed patch
           //sort patches so new patch is saved at end
-          patchName = newPatchName + currentCharacter;
+          patchName = renamedPatch + currentCharacter;
           getPatches(SD.open("/"));
           patches.push({patchNo, patchName});
           printBuffer();
@@ -1711,10 +1714,12 @@ void checkSwitches() {
         state = PARAMETER;
         break;
       case SAVE:
+        renamedPatch = "";
         state = PARAMETER;
         getPatches(SD.open("/"));
         break;
       case PATCHNAMING:
+        renamedPatch = "";
         state = SAVE;
         break;
       case DELETE:
@@ -1738,8 +1743,8 @@ void checkSwitches() {
         state = PATCHNAMING;
         break;
       case PATCHNAMING:
-        //TODO
-        newPatchName = newPatchName + currentCharacter;
+        //TODO: Patch No is wrongly chosen as current when it should be new
+        renamedPatch.concat(String(currentCharacter));
         charIndex = 0;
         break;
       case DELETE:
@@ -1777,14 +1782,15 @@ void reinitialiseToPanel() {
   unison = unisonSwitch.read();
   vcfLFOMidiClkSync = tempoSwitch.read();
   patchName = INITPATCHNAME;
-  showPatchPage("Current", patchName);
+  showPatchPage("Current", "Panel Settings");
 }
 
 void checkEncoder() {
-  //Encoder works relatively inc and dec values
-  //Detent encoder goes up in more than 1 step, hence +/-2
+  //Encoder works with relative inc and dec values
+  //Detent encoder goes up in 4 steps, hence +/-3
+
   long encRead = encoder.read();
-  if (encRead > encPrevious + 2) {
+  if (encRead > encPrevious + 3) {
     switch (state) {
       case PARAMETER:
         state = PATCH;
@@ -1802,7 +1808,7 @@ void checkEncoder() {
       case PATCHNAMING:
         if (charIndex == 63)charIndex = 0;
         currentCharacter = CHARACTERS[charIndex++];
-        showRenamingPage(patchName + currentCharacter);
+        showRenamingPage(renamedPatch + currentCharacter);
         break;
       case DELETE:
         patches.push(patches.shift());
@@ -1810,7 +1816,7 @@ void checkEncoder() {
         break;
     }
     encPrevious = encRead;
-  } else if (encRead < encPrevious - 2) {
+  } else if (encRead < encPrevious - 3) {
     switch (state) {
       case PARAMETER:
         state = PATCH;
@@ -1826,9 +1832,9 @@ void checkEncoder() {
         patches.unshift(patches.pop());
         break;
       case PATCHNAMING:
-        if (charIndex == 0)charIndex = 63;
+        if (charIndex == -1)charIndex = 62;
         currentCharacter = CHARACTERS[charIndex--];
-        showRenamingPage(patchName + currentCharacter);
+        showRenamingPage(renamedPatch + currentCharacter);
         break;
       case DELETE:
         patches.unshift(patches.pop());
@@ -1850,14 +1856,14 @@ void loop() {
   checkSwitches();
   checkEncoder();
 
-//Monitor MIDI In DIN
-//  if (Serial4.available() > 0) {
-//    Serial.print("UART received: ");
-//    Serial.println(Serial4.read(), HEX);
-//  }
-  //
-  //    Serial.print("CPU:");
-  //    Serial.print(AudioProcessorUsageMax());
-  //    Serial.print("  MEM:");
-  //    Serial.println(AudioMemoryUsageMax());
+  //Monitor MIDI In DIN
+  //  if (Serial4.available() > 0) {
+  //    Serial.print("UART received: ");
+  //    Serial.println(Serial4.read(), HEX);
+  //  }
+
+  //      Serial.print("CPU:");
+  //      Serial.print(AudioProcessorUsageMax());
+  //      Serial.print("  MEM:");
+  //      Serial.println(AudioMemoryUsageMax());
 }

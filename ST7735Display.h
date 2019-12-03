@@ -46,7 +46,7 @@ void renderBootUpPage() {
   tft.setTextColor(ST7735_RED);
   tft.setFont(&FreeSans9pt7b);
   tft.setCursor(110, 95);
-  tft.println("V0.97");
+  tft.println("V0.98");
 }
 
 void renderCurrentPatchPage() {
@@ -153,7 +153,7 @@ void renderPatchNamingPage() {
   tft.setTextColor(ST7735_WHITE);
   tft.setCursor(5, 90);
   tft.println(newPatchName);
-  tft.drawFastHLine(tft.getCursorX(), 94, 14, ST7735_WHITE);
+  //tft.drawFastHLine(tft.getCursorX(), 94, 14, ST7735_WHITE);
 }
 
 void renderRecallPage() {
