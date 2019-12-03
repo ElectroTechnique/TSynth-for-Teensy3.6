@@ -44,3 +44,13 @@ Hardware
 - Teensy 3.6 with SGTL5000 Audio Shield. Two 4061 multiplexers providing 32 channels from the pots into two ADCs. The rest of the pots and switches use remaining pins on Teensy.
 - Enclosure is laser cut acrylic with etched labels filled with yellow acrylic paint (this technique could be improved with experimentation), end cheeks are 3D printed.
 
+
+USE
+
+TSynth patch saving and recall works like an analogue polysynth from the late 70s (Prophet 5). When you recall a patch, all the front panel controls will be different values from those saved in the patch. Moving them will cause a jump to the current value.
+
+- Back button cancels current mode such as save, recall, delete and rename patches.
+
+- Recall shows list of patches. Use encoder to move through list. Enter button on encoder chooses highlighted patch or press Recall again. Recall also recalls the current patch settings if the panel controls have been altered. Holding Recall for 1.5s will initialise the synth with all the current panel control settings - the synth sounds the same as the controls are set.
+
+- Save will save the current settings to a new patch at the end of the list or you can use the encoder to overwrite an existing patch. Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name. Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again.
