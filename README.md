@@ -1,7 +1,7 @@
 # TSynth
 Teensy 3.6 based synthesizer using PJRC Audio Board and Audio Lib
 
-More details at PJRC Forum https://www.youtube.com/redirect?q=https%3A%2F%2Fforum.pjrc.com%2Fthreads%2F57418-TSynth-Two-Oscillator-Polysynth&event=video_description&v=jmnZkLp9bjI&redir_token=YrY5PhZMRgDk-zFijMkkrkQBzFF8MTU3NTQ0NTg2M0AxNTc1MzU5NDYz
+More details at PJRC Forum https://forum.pjrc.com/threads/57418-TSynth-Two-Oscillator-Polysynth
 
 Specifications
 
@@ -17,13 +17,13 @@ Filter
 - State variable 12dB filter (SVF) with continuous mix between LP and HP (provides notch filter) and BP
 - Cutoff freq and resonance
 - Cutoff can be modulated by dedicated ADSR envelope, dedicated LFO and key tracking
-- LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock  (tempo) with variable delay per bar
+- LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock (tempo) with variable time division delay (1,3/4,1/2,1/4,1/8...)
 
 Amplifier
 - Dedicated ADSR envelope
 - Glide (up to 1 octave range) with variable time
 - Volume for DAC output
-- Effect amount and mix  - currently for stereo chorus but could be set up to allow choices in programmer
+- Effect amount and mix  - currently for stereo ensemble chorus rate and mix but could be set up to allow choices in programmer
 
 Programmer
 - 160x80 IPS colour display
