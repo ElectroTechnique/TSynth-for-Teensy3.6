@@ -3,6 +3,8 @@ Teensy 3.6 based synthesizer using PJRC Audio Board and Audio Lib
 
 More details at PJRC Forum https://forum.pjrc.com/threads/57418-TSynth-Two-Oscillator-Polysynth
 
+Please feel free to fix any bad practice and wrongness - I am not a fan of c programming. The synth does work reliably however.
+
 Specifications
 
 Oscillators
