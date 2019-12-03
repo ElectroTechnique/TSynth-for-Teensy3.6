@@ -1,6 +1,8 @@
 # TSynth
 Teensy 3.6 based synthesizer using PJRC Audio Board and Audio Lib
 
+More details at PJRC Forum https://www.youtube.com/redirect?q=https%3A%2F%2Fforum.pjrc.com%2Fthreads%2F57418-TSynth-Two-Oscillator-Polysynth&event=video_description&v=jmnZkLp9bjI&redir_token=YrY5PhZMRgDk-zFijMkkrkQBzFF8MTU3NTQ0NTg2M0AxNTc1MzU5NDYz
+
 Specifications
 
 Oscillators
