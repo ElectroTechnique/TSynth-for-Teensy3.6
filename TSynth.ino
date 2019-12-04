@@ -442,50 +442,18 @@ int getLFOWaveform(int value, int currentValue) {
   }
 }
 
-String getLFOWaveformStr(int value) {
+String getWaveformStr(int value) {
   switch (value) {
+    case WAVEFORM_SAMPLE_HOLD:
+      return "Sample & Hold";
     case WAVEFORM_SINE:
       return "Sine";
+    case WAVEFORM_SQUARE:
+      return "Square";
     case WAVEFORM_TRIANGLE:
       return "Triangle";
-    case WAVEFORM_SAWTOOTH_REVERSE:
-      return "Sawtooth";
-    case WAVEFORM_SAWTOOTH:
-      return "Ramp";
-    case WAVEFORM_SQUARE:
-      return "Square";
-    case WAVEFORM_SAMPLE_HOLD:
-      return "S & H";
-    default:
-      return "ERRLFOWAVE";
-  }
-}
-
-String getWaveformAStr(int value) {
-  switch (value) {
-    case WAVEFORM_SINE:
-      return "Sine";
-    case WAVEFORM_SQUARE:
-      return "Square";
     case WAVEFORM_SAWTOOTH:
       return "Sawtooth";
-    case WAVEFORM_PULSE:
-      return "Var. Pulse";
-    case WAVEFORM_TRIANGLE_VARIABLE:
-      return "Var. Triangle";
-    case WAVEFORM_ARBITRARY:
-      return "User";
-    default:
-      return "ERRWAVEA";
-  }
-}
-
-String getWaveformBStr(int value) {
-  switch (value) {
-    case WAVEFORM_SAMPLE_HOLD:
-      return "S & H";
-    case WAVEFORM_SQUARE:
-      return "Square";
     case WAVEFORM_SAWTOOTH_REVERSE:
       return "Ramp";
     case WAVEFORM_PULSE:
@@ -495,7 +463,7 @@ String getWaveformBStr(int value) {
     case WAVEFORM_ARBITRARY:
       return "User";
     default:
-      return "ERRWAVEB";
+      return "ERR_WAVE";
   }
 }
 
@@ -511,7 +479,7 @@ int getVCOWaveformA(int value, int currentValue) {
   } else if (value >= 21 && value < 41) {
     return WAVEFORM_SQUARE;
   } else if (value >= 42 && value < 62) {
-    return WAVEFORM_SAWTOOTH;
+    return WAVEFORM_SAWTOOTH_REVERSE;
   } else if (value >= 63 && value < 84) {
     return WAVEFORM_PULSE;
   } else if (value >= 85 && value < 106) {
@@ -529,7 +497,7 @@ int getVCOWaveformB(int value, int currentValue) {
   } else if (value >= 21 && value < 41) {
     return WAVEFORM_SQUARE;
   } else if (value >= 42 && value < 62) {
-    return WAVEFORM_SAWTOOTH_REVERSE;
+    return WAVEFORM_SAWTOOTH;
   } else if (value >= 63 && value < 84) {
     return WAVEFORM_PULSE;
   } else if (value >= 85 && value < 106) {
@@ -625,7 +593,7 @@ void updateWaveformA() {
   waveformMod2a.begin(vcoWaveformA);
   waveformMod3a.begin(vcoWaveformA);
   waveformMod4a.begin(vcoWaveformA);
-  showCurrentParameterPage("1. Waveform", getWaveformAStr(vcoWaveformA));
+  showCurrentParameterPage("1. Waveform", getWaveformStr(vcoWaveformA));
 }
 
 void updateWaveformB() {
@@ -633,7 +601,7 @@ void updateWaveformB() {
   waveformMod2b.begin(vcoWaveformB);
   waveformMod3b.begin(vcoWaveformB);
   waveformMod4b.begin(vcoWaveformB);
-  showCurrentParameterPage("2. Waveform", getWaveformBStr(vcoWaveformB));
+  showCurrentParameterPage("2. Waveform", getWaveformStr(vcoWaveformB));
 }
 
 void updateOctaveA() {
@@ -903,7 +871,7 @@ void updateVcoLFORate() {
 
 void updateVcoLFOWaveform() {
   vcoLfo.begin(vcoLFOWaveform);
-  showCurrentParameterPage("Pitch LFO", getLFOWaveformStr(vcoLFOWaveform));
+  showCurrentParameterPage("Pitch LFO", getWaveformStr(vcoLFOWaveform));
 }
 
 //MIDI CC only
@@ -927,7 +895,7 @@ void updateVcfLfoAmt() {
 
 void updateVcfLFOWaveform() {
   vcfLfo.begin(vcfLfoWaveform);
-  showCurrentParameterPage("Filter LFO", getLFOWaveformStr(vcfLfoWaveform));
+  showCurrentParameterPage("Filter LFO", getWaveformStr(vcfLfoWaveform));
 }
 
 void updateVcoLFORetrig() {
