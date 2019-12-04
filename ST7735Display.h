@@ -11,6 +11,7 @@
 
 #include <ST7735_t3.h> // Hardware-specific library for T3.x
 
+#include "Fonts/Org_01.h"
 #include "Fonts/FreeSansBold18pt7b.h"
 #include "Fonts/FreeSans12pt7b.h"
 #include "Fonts/FreeSans9pt7b.h"
@@ -35,17 +36,26 @@ void startTimer() {
 
 void renderBootUpPage() {
   tft.fillScreen(ST7735_BLACK);
-  tft.setFont(&FreeSansBoldOblique24pt7b);
-  tft.setCursor(5, 75);
+  tft.fillRect(17, 30, 46, 11, ST7735_YELLOW);
+  tft.drawRect(63, 30, 61, 11, ST7735_YELLOW);
+  tft.setCursor(20, 31);
+  tft.setFont(&Org_01);
+  tft.setTextSize(1);
+  tft.setTextColor(ST7735_BLACK);
+  tft.println("ELECTRO");
   tft.setTextColor(ST7735_YELLOW);
+  tft.setCursor(66, 37);
+  tft.println("TECHNIQUE");
+  tft.setFont(&FreeSansBoldOblique24pt7b);
+  tft.setCursor(5, 82);
   tft.setTextSize(1);
   tft.println("T");
   tft.setFont(&FreeSansOblique24pt7b);
-  tft.setCursor(28, 75);
+  tft.setCursor(30, 82);
   tft.println("Synth");
   tft.setTextColor(ST7735_RED);
   tft.setFont(&FreeSans9pt7b);
-  tft.setCursor(110, 95);
+  tft.setCursor(110, 100);
   tft.println("V0.99");
 }
 
@@ -62,7 +72,6 @@ void renderCurrentPatchPage() {
   tft.setTextColor(ST7735_WHITE);
   tft.println(currentPatchName);
 }
-
 
 void renderCurrentParameterPage() {
   switch (state) {
@@ -96,7 +105,6 @@ void renderDeletePatchPage() {
   tft.setCursor(35, 78);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.last().patchName);
-
   tft.fillRect(0, 87, tft.width(), 21, 0xA000);
   tft.setCursor(0, 100);
   tft.setTextColor(ST7735_YELLOW);
@@ -117,11 +125,10 @@ void renderSavePage() {
   tft.setFont(&FreeSans9pt7b);
   tft.setCursor(0, 78);
   tft.setTextColor(ST7735_YELLOW);
-  tft.println(patches[patches.size()-2].patchNo);
+  tft.println(patches[patches.size() - 2].patchNo);
   tft.setCursor(35, 78);
   tft.setTextColor(ST7735_WHITE);
-  tft.println(patches[patches.size()-2].patchName);
-
+  tft.println(patches[patches.size() - 2].patchName);
   tft.fillRect(0, 87, tft.width(), 21, 0xA000);
   tft.setCursor(0, 100);
   tft.setTextColor(ST7735_YELLOW);
@@ -136,9 +143,9 @@ void renderReinitialisePage() {
   tft.setFont(&FreeSans12pt7b);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
-  tft.setCursor(5, 53);
+  tft.setCursor(15, 53);
   tft.println("Reinitialise");
-  tft.setCursor(5, 90);
+  tft.setCursor(15, 90);
   tft.println("to current");
 }
 
@@ -153,7 +160,6 @@ void renderPatchNamingPage() {
   tft.setTextColor(ST7735_WHITE);
   tft.setCursor(5, 90);
   tft.println(newPatchName);
-  //tft.drawFastHLine(tft.getCursorX(), 94, 14, ST7735_WHITE);
 }
 
 void renderRecallPage() {

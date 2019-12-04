@@ -307,25 +307,21 @@ void myNoteOff(byte channel, byte note, byte velocity) {
   if (unison == 0) {
     switch (getVoiceNo(note)) {
       case 1:
-        //Serial.println("OFF 1");
         vcfEnvelope1.noteOff();
         vcaEnvelope1.noteOff();
         voices[0].note = -1;
         break;
       case 2:
-        //Serial.println("OFF 2");
         vcfEnvelope2.noteOff();
         vcaEnvelope2.noteOff();
         voices[1].note = -1;
         break;
       case 3:
-        //Serial.println("OFF 3");
         vcfEnvelope3.noteOff();
         vcaEnvelope3.noteOff();
         voices[2].note = -1;
         break;
       case 4:
-        // Serial.println("OFF 4");
         vcfEnvelope4.noteOff();
         vcaEnvelope4.noteOff();
         voices[3].note = -1;
