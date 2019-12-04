@@ -54,3 +54,7 @@ TSynth patch saving and recall works like an analogue polysynth from the late 70
 - Recall shows list of patches. Use encoder to move through list. Enter button on encoder chooses highlighted patch or press Recall again. Recall also recalls the current patch settings if the panel controls have been altered. Holding Recall for 1.5s will initialise the synth with all the current panel control settings - the synth sounds the same as the controls are set.
 
 - Save will save the current settings to a new patch at the end of the list or you can use the encoder to overwrite an existing patch. Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name. Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again.
+
+KNOWN ISSUES
+- Plugging in a MIDI controller may alter current patch settings. Arturia Minilab sends its current panel control settings when plugged in, causing MIDI CC messages to be received by TSynth.
+- MIDI In DIN doesn't like MIDI Clock signals which get mixed up with note on/off and CC messages, so it's set not to listen to MIDI Clock. MIDI Host and client USB is fine.
