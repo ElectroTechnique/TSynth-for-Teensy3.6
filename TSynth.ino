@@ -83,6 +83,11 @@ void setup() {
     } else {
       //Get patch numbers and names from SD card
       getPatches(SD.open("/"));
+      if (patches.size() == 0) {
+        //save an initialialised patch to SD card
+        savePatch("1", INITPATCH);
+        getPatches(SD.open("/"));
+      }
     }
   } else {
     Serial.println("SD card is not connected or unusable");
@@ -1716,10 +1721,10 @@ void checkSwitches() {
           getPatches(SD.open("/"));
           patchNo = patches.first().patchNo;
           recallPatch(String(patchNo));
-          state = PARAMETER;
+          resortPatches();//Make patch Nos consecutive on SD
+          getPatches(SD.open("/"));
         }
-        resortPatches();//Make patch Nos consecutive on SD
-        getPatches(SD.open("/"));
+        state = PARAMETER;
         break;
     }
   }

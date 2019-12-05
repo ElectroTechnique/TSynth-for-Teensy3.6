@@ -2,20 +2,20 @@
   TSynth patch saving and recall works like an analogue polysynth from the late 70s (Prophet 5).
   When you recall a patch, all the front panel controls will be different values from those saved in the patch. Moving them will cause a jump to the current value.
 
-BACK
-Cancels current mode such as save, recall, delete and rename patches
+  BACK
+  Cancels current mode such as save, recall, delete and rename patches
 
   RECALL
- Recall shows list of patches. Use encoder to move through list. 
- Enter button on encoder chooses highlighted patch or press Recall again. 
- Recall also recalls the current patch settings if the panel controls have been altered. 
- Holding Recall for 1.5s will initialise the synth with all the current panel control settings - the synth sounds the same as the controls are set.
+  Recall shows list of patches. Use encoder to move through list.
+  Enter button on encoder chooses highlighted patch or press Recall again.
+  Recall also recalls the current patch settings if the panel controls have been altered.
+  Holding Recall for 1.5s will initialise the synth with all the current panel control settings - the synth sounds the same as the controls are set.
 
 
   SAVE
- Save will save the current settings to a new patch at the end of the list or you can use the encoder to overwrite an existing patch. 
- Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name. 
- Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again. 
+  Save will save the current settings to a new patch at the end of the list or you can use the encoder to overwrite an existing patch.
+  Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name.
+  Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again.
 */
 
 //Agileware CircularBuffer available in libraries manager
@@ -122,12 +122,11 @@ void getPatches(File file) {
 }
 
 void deletePatch(String patchNo) {
-  if (SD.exists(patchNo)) {
+  //Don't delete last patch
+  if (SD.exists(patchNo) && patches.size() > 1) {
     SD.remove(patchNo);
-    Serial.println("Deleting:" + patchNo);
   }
 }
-
 
 void savePatch(String patchNo, String patchData) {
   Serial.print("savePatch Patch No:");

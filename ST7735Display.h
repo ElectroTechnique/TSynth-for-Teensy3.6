@@ -182,10 +182,10 @@ void renderRecallPage() {
 
   tft.setCursor(0, 98);
   tft.setTextColor(ST7735_YELLOW);
-  tft.println(patches[1].patchNo);
+  patches.size() > 1 ? tft.println(patches[1].patchNo) : tft.println(patches.last().patchNo);
   tft.setCursor(35, 98);
   tft.setTextColor(ST7735_WHITE);
-  tft.println(patches[1].patchName);
+  patches.size() > 1 ? tft.println(patches[1].patchName) : tft.println(patches.last().patchName);
 }
 
 void showRenamingPage(String newName) {
