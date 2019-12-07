@@ -21,6 +21,7 @@
 #define   CCringmod 24
 #define   CCoctaveA 26
 #define   CCoctaveB 27
+#define   CCpitchenv 28
 #define   CCvcolforetrig  30
 #define   CCvcflforetrig  31
 #define   CCfilterres 71

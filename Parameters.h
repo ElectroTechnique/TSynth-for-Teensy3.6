@@ -14,7 +14,7 @@ float keytrackingAmount = 0.7;
 float glideSpeed = 0;
 int vcoOctaveA = 0;
 int vcoOctaveB = 12;
-
+float pitchEnv = 0;
 int vcoWaveformA = WAVEFORM_SQUARE;
 int vcoWaveformB = WAVEFORM_SAWTOOTH_REVERSE;
 float pwmAmtA = 1;

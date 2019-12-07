@@ -24,7 +24,15 @@ AudioSynthWaveformDc     keytracking1;    //xy=176,745
 AudioSynthWaveformDc     keytracking2;    //xy=196,745
 AudioSynthWaveformDc     keytracking3;    //xy=216,745
 AudioSynthWaveformDc     keytracking4;    //xy=236,745
-AudioMixer4              vcoModMixer;    //xy=296,95
+AudioMixer4              vcoGlobalModMixer;    //xy=296,95
+AudioMixer4              vcoModMixer1a;         //xy=550,165
+AudioMixer4              vcoModMixer1b;         //xy=550,195
+AudioMixer4              vcoModMixer2a;         //xy=550,205
+AudioMixer4              vcoModMixer2b;         //xy=550,225
+AudioMixer4              vcoModMixer3a;         //xy=550,245
+AudioMixer4              vcoModMixer3b;         //xy=550,265
+AudioMixer4              vcoModMixer4a;         //xy=550,285
+AudioMixer4              vcoModMixer4b;         //xy=550,305
 AudioSynthWaveformModulated waveformMod1b;  //xy=503,170
 AudioSynthWaveformModulated waveformMod1a;  //xy=507,114
 AudioSynthWaveformModulated waveformMod2b;  //xy=513,550
@@ -83,9 +91,9 @@ AudioConnection          patchCord17(pwb, 0, pwMixer1b, 1);
 AudioConnection          patchCord18(pwb, 0, pwMixer2b, 1);
 AudioConnection          patchCord19(pwb, 0, pwMixer3b, 1);
 AudioConnection          patchCord20(pwb, 0, pwMixer4b, 1);
-AudioConnection          patchCord21(vcoLfo, 0, vcoModMixer, 1);
-AudioConnection          patchCord22(glide, 0, vcoModMixer, 2);
-AudioConnection          patchCord23(pitchBend, 0, vcoModMixer, 0);
+AudioConnection          patchCord21(vcoLfo, 0, vcoGlobalModMixer, 1);
+AudioConnection          patchCord22(glide, 0, vcoGlobalModMixer, 2);
+AudioConnection          patchCord23(pitchBend, 0, vcoGlobalModMixer, 0);
 AudioConnection          patchCord24(vcfLfo, 0, vcfModMixer1, 1);
 AudioConnection          patchCord25(vcfLfo, 0, vcfModMixer2, 1);
 AudioConnection          patchCord26(vcfLfo, 0, vcfModMixer3, 1);
@@ -101,14 +109,34 @@ AudioConnection          patchCord35(pink, 0, waveformMixer4, 2);
 AudioConnection          patchCord36(pwMixer1a, 0, waveformMod1a, 1);
 AudioConnection          patchCord37(pwMixer1b, 0, waveformMod1b, 1);
 AudioConnection          patchCord38(pwMixer1b, 0, waveformMod3b, 1);
-AudioConnection          patchCord39(vcoModMixer, 0, waveformMod1a, 0);
-AudioConnection          patchCord40(vcoModMixer, 0, waveformMod1b, 0);
-AudioConnection          patchCord41(vcoModMixer, 0, waveformMod2a, 0);
-AudioConnection          patchCord42(vcoModMixer, 0, waveformMod2b, 0);
-AudioConnection          patchCord43(vcoModMixer, 0, waveformMod3a, 0);
-AudioConnection          patchCord44(vcoModMixer, 0, waveformMod3b, 0);
-AudioConnection          patchCord45(vcoModMixer, 0, waveformMod4a, 0);
-AudioConnection          patchCord46(vcoModMixer, 0, waveformMod4b, 0);
+
+AudioConnection          patchCord39(vcoGlobalModMixer, 0, vcoModMixer1a, 0);
+AudioConnection          patchCord40(vcoGlobalModMixer, 0, vcoModMixer1b, 0);
+AudioConnection          patchCord41(vcoGlobalModMixer, 0, vcoModMixer2a, 0);
+AudioConnection          patchCord42(vcoGlobalModMixer, 0, vcoModMixer2b, 0);
+AudioConnection          patchCord43(vcoGlobalModMixer, 0, vcoModMixer3a, 0);
+AudioConnection          patchCord44(vcoGlobalModMixer, 0, vcoModMixer3b, 0);
+AudioConnection          patchCord45(vcoGlobalModMixer, 0, vcoModMixer4a, 0);
+AudioConnection          patchCord46(vcoGlobalModMixer, 0, vcoModMixer4b, 0);
+
+AudioConnection          patchCord121(vcoModMixer1a, 0, waveformMod1a, 0);
+AudioConnection          patchCord122(vcoModMixer1b, 0, waveformMod1b, 0);
+AudioConnection          patchCord123(vcoModMixer2a, 0, waveformMod2a, 0);
+AudioConnection          patchCord124(vcoModMixer2b, 0, waveformMod2b, 0);
+AudioConnection          patchCord125(vcoModMixer3a, 0, waveformMod3a, 0);
+AudioConnection          patchCord126(vcoModMixer3b, 0, waveformMod3b, 0);
+AudioConnection          patchCord127(vcoModMixer4a, 0, waveformMod4a, 0);
+AudioConnection          patchCord128(vcoModMixer4b, 0, waveformMod4b, 0);
+
+AudioConnection          patchCord129(vcfEnvelope1, 0, vcoModMixer1a, 1);
+AudioConnection          patchCord130(vcfEnvelope1, 0, vcoModMixer1b, 1);
+AudioConnection          patchCord131(vcfEnvelope2, 0, vcoModMixer2a, 1);
+AudioConnection          patchCord132(vcfEnvelope2, 0, vcoModMixer2b, 1);
+AudioConnection          patchCord133(vcfEnvelope3, 0, vcoModMixer3a, 1);
+AudioConnection          patchCord134(vcfEnvelope3, 0, vcoModMixer3b, 1);
+AudioConnection          patchCord135(vcfEnvelope4, 0, vcoModMixer4a, 1);
+AudioConnection          patchCord136(vcfEnvelope4, 0, vcoModMixer4b, 1);
+
 AudioConnection          patchCord47(pwMixer4b, 0, waveformMod4b, 1);
 AudioConnection          patchCord48(pwMixer4a, 0, waveformMod4a, 1);
 AudioConnection          patchCord49(pwMixer2a, 0, waveformMod2a, 1);

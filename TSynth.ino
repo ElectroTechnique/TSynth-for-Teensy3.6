@@ -88,6 +88,8 @@ void setup() {
         savePatch("1", INITPATCH);
         getPatches(SD.open("/"));
       }
+      //set to last patch
+      patches.unshift(patches.pop());
     }
   } else {
     Serial.println("SD card is not connected or unusable");
@@ -852,6 +854,18 @@ void updateFilterEnv() {
   showCurrentParameterPage("Filter Env.", String(filterEnv));
 }
 
+void updatePitchEnv() {
+  vcoModMixer1a.gain(1, pitchEnv);
+  vcoModMixer1b.gain(1, pitchEnv);
+  vcoModMixer2a.gain(1, pitchEnv);
+  vcoModMixer2b.gain(1, pitchEnv);
+  vcoModMixer3a.gain(1, pitchEnv);
+  vcoModMixer3b.gain(1, pitchEnv);
+  vcoModMixer4a.gain(1, pitchEnv);
+  vcoModMixer4b.gain(1, pitchEnv);
+  showCurrentParameterPage("Pitch Env Amt", String(pitchEnv));
+}
+
 void updateKeyTracking() {
   vcfModMixer1.gain(2, keytrackingAmount);
   vcfModMixer2.gain(2, keytrackingAmount);
@@ -1042,6 +1056,13 @@ void myControlChange(byte channel, byte control, byte value) {
     case CCglide:
       glideSpeed = LINEAR[value];
       updateGlide();
+      break;
+
+    case CCpitchenv:
+      //The pitch envelope amount has a large 'zero zone' in the centre
+      //to make it easier to ensure that it is off when adjusted.
+      pitchEnv = PITCHENVAMOUNT[value] * VCOMODMIXERMAX;
+      updatePitchEnv();
       break;
 
     case CCvcowaveformA:
@@ -1364,6 +1385,7 @@ void setCurrentPatchData(String data[]) {
   vcaRelease = data[43].toFloat();
   fxAmt = data[44].toFloat();
   fxMix = data[45].toFloat();
+  pitchEnv = data[46].toFloat();
 
   updatePatchname();
   updateUnison();
@@ -1371,6 +1393,7 @@ void setCurrentPatchData(String data[]) {
   updateWaveformB();
   updateOctaveA();
   updateOctaveB();
+  updatePitchEnv();
   updateDetune();
   updatePWMSource();
   updatePWMAmount();
@@ -1410,7 +1433,7 @@ String getCurrentPatchData() {
   return patchName + "," + String(VCOALevel)  + "," + String(VCOBLevel)  + "," + String(noiseLevel)  + "," + String(unison) + "," + String(ringMod) + "," + String(detune) + "," + String(lfoSyncFreq) + "," + String(midiClkTimeInterval) + "," + String(lfoTempoValue)  + "," + String(keytrackingAmount)  + "," + String(glideSpeed)  + "," + String(vcoOctaveA)  + "," + String(vcoOctaveB)  + "," + String(vcoWaveformA)  + "," + String(vcoWaveformB)  + "," +
          String(pwmSource)  + "," + String(pwmAmtA)  + "," + String(pwmAmtB)  + "," + String(pwmRate)  + "," + String(pwA)  + "," + String(pwB)  + "," + String(filterRes)  + "," + String(filterFreq)  + "," + String(filterMix)  + "," + String(filterEnv)  + "," + String(vcoLfoAmt)  + "," + String(vcoLfoRate)  + "," + String(vcoLFOWaveform)  + "," + String(vcoLfoRetrig)  + "," + String(vcoLFOMidiClkSync)  + "," + String(vcfLfoRate)  + "," +
          vcfLfoRetrig  + "," + vcfLFOMidiClkSync  + "," + vcfLfoAmt  + "," + vcfLfoWaveform  + "," + vcfAttack  + "," + vcfDecay  + "," + vcfSustain  + "," + vcfRelease  + "," + vcaAttack  + "," + vcaDecay  + "," + vcaSustain  + "," + vcaRelease  + "," +
-         String(fxAmt)  + "," + String(fxMix);
+         String(fxAmt)  + "," + String(fxMix) + "," + String(pitchEnv);
 }
 
 void checkMux() {
@@ -1616,9 +1639,11 @@ void checkSwitches() {
     if (!del) {
       switch (state) {
         case PARAMETER:
-          getPatches(SD.open("/"));//Reload patches from SD
-          patches.push({patches.size() + 1, INITPATCHNAME});
-          state = SAVE;
+          if (patches.size() < PATCHES_LIMIT) {
+            getPatches(SD.open("/"));//Reload patches from SD
+            patches.push({patches.size() + 1, INITPATCHNAME});
+            state = SAVE;
+          }
           break;
         case SAVE:
           //Save as new patch with INITIALPATCH or overwrite existing keeping name - bypassing patch renaming
