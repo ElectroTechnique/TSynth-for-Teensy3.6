@@ -131,6 +131,11 @@ void setup() {
 
   constant1Dc.amplitude(CONSTANTONE);
 
+  noiseMixer.gain(0, CONSTANTONE);
+  noiseMixer.gain(1, CONSTANTONE);
+  noiseMixer.gain(2, 0);
+  noiseMixer.gain(3, 0);
+
   voiceMixer.gain(0, VOICEMIXERLEVEL);
   voiceMixer.gain(1, VOICEMIXERLEVEL);
   voiceMixer.gain(2, VOICEMIXERLEVEL);
@@ -786,8 +791,20 @@ void updateVcoLevelB() {
 }
 
 void updateNoiseLevel() {
-  pink.amplitude(noiseLevel);
-  showCurrentParameterPage("Noise Level", noiseLevel);
+  if (noiseLevel > 0) {
+    pink.amplitude(noiseLevel);
+    white.amplitude(0.0f);
+    showCurrentParameterPage("Noise Level", "Pink " + String(noiseLevel));
+  } else if (noiseLevel < 0) {
+    pink.amplitude(0.0f);
+    white.amplitude(abs(noiseLevel));
+    showCurrentParameterPage("Noise Level", "White " + String(abs(noiseLevel)));
+  } else {
+    pink.amplitude(noiseLevel);
+    white.amplitude(noiseLevel);
+    showCurrentParameterPage("Noise Level", "Off");
+  }
+
 }
 
 void updateFilterFreq() {
@@ -1061,7 +1078,7 @@ void myControlChange(byte channel, byte control, byte value) {
     case CCpitchenv:
       //The pitch envelope amount has a large 'zero zone' in the centre
       //to make it easier to ensure that it is off when adjusted.
-      pitchEnv = PITCHENVAMOUNT[value] * VCOMODMIXERMAX;
+      pitchEnv = LINEARCENTREZERO[value] * VCOMODMIXERMAX;
       updatePitchEnv();
       break;
 
@@ -1132,7 +1149,7 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCnoiseLevel:
-      noiseLevel = LINEAR[value];
+      noiseLevel = LINEARCENTREZERO[value];
       updateNoiseLevel();
       break;
 
@@ -1852,8 +1869,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-  //      Serial.print("CPU:");
-  //      Serial.print(AudioProcessorUsageMax());
-  //      Serial.print("  MEM:");
-  //      Serial.println(AudioMemoryUsageMax());
+//        Serial.print("CPU:");
+//        Serial.print(AudioProcessorUsageMax());
+//        Serial.print("  MEM:");
+//        Serial.println(AudioMemoryUsageMax());
 }
