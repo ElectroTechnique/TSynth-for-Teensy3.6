@@ -8,15 +8,16 @@ Specifications
 Oscillators
 - Four voice polyphony (last note priority), two oscillators per voice, detunable with +/- 2 octaves range, Sine/Sample & Hold (like tuned noise)/Square/Sawtooth/Ramp/PWM/Var Triangle/User waveforms and level
 - Pulse Width/Var Triangle can be set for each oscillator with PWM by dedicated LFO or from the filter envelope
-- Pink noise with level
+- Pink or white noise level
 - Dedicated LFO for pitch mod (can be retriggered by note on) , Sine/Triangle/Sawtooth/Ramp/Square/S&H waveforms
+- Pitch can be modulated by dedicated filter envelope (+/-)
 - XOR ‘Ring Mod’ (creates lots of harmonics with certain waveforms)
 - Unison with all eight oscillators detunable from each other
 
 Filter
 - State variable 12dB filter (SVF) with continuous mix between LP and HP (provides notch filter) and BP
 - Cutoff freq and resonance
-- Cutoff can be modulated by dedicated ADSR envelope, dedicated LFO and key tracking
+- Cutoff can be modulated by dedicated ADSR envelope (+/-), dedicated LFO and key tracking
 - LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock (tempo) with variable time division delay (1,3/4,1/2,1/4,1/8...)
 
 Amplifier
