@@ -10,7 +10,7 @@ Oscillators
 - Pulse Width/Var Triangle can be set for each oscillator with PWM by dedicated LFO or from the filter envelope
 - Pink or white noise level
 - Dedicated LFO for pitch mod (can be retriggered by note on) , Sine/Triangle/Sawtooth/Ramp/Square/S&H waveforms
-- Pitch can be modulated by dedicated filter envelope (+/-)
+- Pitch can be modulated by filter envelope (+/-)
 - XOR ‘Ring Mod’ (creates lots of harmonics with certain waveforms)
 - Unison with all eight oscillators detunable from each other
 
