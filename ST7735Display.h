@@ -26,6 +26,8 @@ String currentPgmNum = "";
 String currentPatchName = "";
 String newPatchName = "";
 
+boolean voiceOn[NO_OF_VOICES] = {false, false, false, false};
+
 unsigned long timer = 0;
 
 void startTimer() {
@@ -66,8 +68,38 @@ void renderCurrentPatchPage() {
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
   tft.println(currentPgmNum);
+
+  tft.drawRect(120, 28, 12, 12 , ST7735_BLUE);
+  tft.drawRect(135, 28, 12, 12 , ST7735_BLUE);
+  tft.drawRect(120, 43, 12, 12 , ST7735_BLUE);
+  tft.drawRect(135, 43, 12, 12 , ST7735_BLUE);
+
+  tft.setTextColor(ST7735_BLACK);
+  tft.setFont(&Org_01);
+  if (voiceOn[0]) {
+    tft.fillRect(122, 30, 8, 8 , ST7735_BLUE);
+    tft.setCursor(125, 36);
+    tft.println("1");
+  }
+  if (voiceOn[1]) {
+    tft.fillRect(137, 30, 8, 8 , ST7735_BLUE);
+    tft.setCursor(138, 36);
+    tft.println("2");
+  }
+  if (voiceOn[2]) {
+    tft.fillRect(122, 45, 8, 8 , ST7735_BLUE);
+    tft.setCursor(124, 51);
+    tft.println("3");
+  }
+  if (voiceOn[3]) {
+    tft.fillRect(137, 45, 8, 8 , ST7735_BLUE);
+    tft.setCursor(138, 51);
+    tft.println("4");
+  }
+
   tft.drawFastHLine(10, 62, tft.width() - 20, ST7735_RED);
   tft.setFont(&FreeSans12pt7b);
+  tft.setTextColor(ST7735_YELLOW);
   tft.setCursor(1, 90);
   tft.setTextColor(ST7735_WHITE);
   tft.println(currentPatchName);

@@ -254,6 +254,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         updateVoice1();
         vcfEnvelope1.noteOn();
         vcaEnvelope1.noteOn();
+        voiceOn[0] = true;
         break;
       case 2:
         //Serial.println("ON 2");
@@ -263,6 +264,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         updateVoice2();
         vcfEnvelope2.noteOn();
         vcaEnvelope2.noteOn();
+        voiceOn[1] = true;
         break;
       case 3:
         //Serial.println("ON 3");
@@ -272,6 +274,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         updateVoice3();
         vcfEnvelope3.noteOn();
         vcaEnvelope3.noteOn();
+        voiceOn[2] = true;
         break;
       case 4:
         //Serial.println("ON 4");
@@ -281,6 +284,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         updateVoice4();
         vcfEnvelope4.noteOn();
         vcaEnvelope4.noteOn();
+        voiceOn[3] = true;
         break;
     }
   } else {
@@ -310,6 +314,11 @@ void myNoteOn(byte channel, byte note, byte velocity) {
     vcaEnvelope2.noteOn();
     vcaEnvelope3.noteOn();
     vcaEnvelope4.noteOn();
+
+    voiceOn[0] = true;
+    voiceOn[1] = true;
+    voiceOn[2] = true;
+    voiceOn[3] = true;
   }
   AudioInterrupts();
 }
@@ -322,21 +331,25 @@ void myNoteOff(byte channel, byte note, byte velocity) {
         vcfEnvelope1.noteOff();
         vcaEnvelope1.noteOff();
         voices[0].note = -1;
+        voiceOn[0] = false;
         break;
       case 2:
         vcfEnvelope2.noteOff();
         vcaEnvelope2.noteOff();
         voices[1].note = -1;
+        voiceOn[1] = false;
         break;
       case 3:
         vcfEnvelope3.noteOff();
         vcaEnvelope3.noteOff();
         voices[2].note = -1;
+        voiceOn[2] = false;
         break;
       case 4:
         vcfEnvelope4.noteOff();
         vcaEnvelope4.noteOff();
         voices[3].note = -1;
+        voiceOn[3] = false;
         break;
     }
   } else {
@@ -360,6 +373,11 @@ void allNotesOff() {
   voices[1].note = -1;
   voices[2].note = -1;
   voices[3].note = -1;
+
+  voiceOn[0] = false;
+  voiceOn[1] = false;
+  voiceOn[2] = false;
+  voiceOn[3] = false;
 }
 
 int getVoiceNo(int note) {
@@ -1791,7 +1809,7 @@ void reinitialiseToPanel() {
   unison = unisonSwitch.read();
   vcfLFOMidiClkSync = tempoSwitch.read();
   patchName = INITPATCHNAME;
-  showPatchPage("Current", "Panel Settings");
+  showPatchPage("Initial", "Panel Settings");
 }
 
 void checkEncoder() {
@@ -1869,8 +1887,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-//        Serial.print("CPU:");
-//        Serial.print(AudioProcessorUsageMax());
-//        Serial.print("  MEM:");
-//        Serial.println(AudioMemoryUsageMax());
+  //        Serial.print("CPU:");
+  //        Serial.print(AudioProcessorUsageMax());
+  //        Serial.print("  MEM:");
+  //        Serial.println(AudioMemoryUsageMax());
 }
