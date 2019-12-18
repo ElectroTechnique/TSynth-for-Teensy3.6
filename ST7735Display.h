@@ -25,6 +25,7 @@ String currentValue = "";
 String currentPgmNum = "";
 String currentPatchName = "";
 String newPatchName = "";
+int paramType = PARAMETER;
 
 boolean voiceOn[NO_OF_VOICES] = {false, false, false, false};
 
@@ -38,16 +39,17 @@ void startTimer() {
 
 void renderBootUpPage() {
   tft.fillScreen(ST7735_BLACK);
-  tft.fillRect(17, 30, 46, 11, ST7735_YELLOW);
-  tft.drawRect(63, 30, 61, 11, ST7735_YELLOW);
+  tft.drawRect(17, 30, 46, 11, ST7735_WHITE);
+  tft.fillRect(63, 30, 61, 11, ST7735_WHITE);
   tft.setCursor(20, 31);
   tft.setFont(&Org_01);
   tft.setTextSize(1);
-  tft.setTextColor(ST7735_BLACK);
+  tft.setTextColor(ST7735_WHITE);
   tft.println("ELECTRO");
-  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextColor(ST7735_BLACK);
   tft.setCursor(66, 37);
   tft.println("TECHNIQUE");
+  tft.setTextColor(ST7735_YELLOW);
   tft.setFont(&FreeSansBoldOblique24pt7b);
   tft.setCursor(5, 82);
   tft.setTextSize(1);
@@ -58,7 +60,7 @@ void renderBootUpPage() {
   tft.setTextColor(ST7735_RED);
   tft.setFont(&FreeSans9pt7b);
   tft.setCursor(110, 100);
-  tft.println("V0.99");
+  tft.println("V1.0");
 }
 
 void renderCurrentPatchPage() {
@@ -105,6 +107,26 @@ void renderCurrentPatchPage() {
   tft.println(currentPatchName);
 }
 
+void renderPulseWidth(float value) {
+  tft.drawFastVLine(110, 74, 21, ST7735_CYAN);
+  tft.drawFastHLine(110, 74, 13 + (value * 13), ST7735_CYAN);
+  tft.drawFastVLine(123 + (value * 13), 74, 20, ST7735_CYAN);
+  tft.drawFastHLine(123 + (value * 13), 94, 13 - (value * 13), ST7735_CYAN);
+  tft.drawFastVLine(136, 74, 21, ST7735_CYAN);
+}
+
+void renderVarTriangle(float value) {
+  tft.drawLine(110, 94, 123 + (value * 13), 74, ST7735_CYAN);
+  tft.drawLine(123 + (value * 13), 74, 136, 94, ST7735_CYAN);
+}
+
+void renderEnv(float att, float dec, float sus, float rel) {
+  tft.drawLine(110, 94, 110 + (att * 13), 74, ST7735_CYAN);
+  tft.drawLine(110 + (att * 13), 74.0, 110 + ((att  + dec) * 13), 94 - (sus * 20), ST7735_CYAN);
+  tft.drawFastHLine(110 + ((att + dec) * 13), 94 - (sus * 20), 30 - ((att  + dec) * 13), ST7735_CYAN);
+  tft.drawLine(139, 94 - (sus * 20), 139 + (rel * 13), 94, ST7735_CYAN);
+}
+
 void renderCurrentParameterPage() {
   switch (state) {
     case PARAMETER:
@@ -118,6 +140,20 @@ void renderCurrentParameterPage() {
       tft.setCursor(1, 90);
       tft.setTextColor(ST7735_WHITE);
       tft.println(currentValue);
+      switch (paramType) {
+        case PULSE:
+          //   renderPulseWidth(strtof(currentValue,NULL));
+          break;
+        case VAR_TRI:
+          //     renderVarTriangle(strtof(currentValue,NULL));
+          break;
+        case FILTER_ENV:
+          renderEnv(vcfAttack * 0.0001, vcfDecay * 0.0001, vcfSustain, vcfRelease * 0.0001);
+          break;
+        case AMP_ENV:
+          renderEnv(vcaAttack * 0.0001, vcaDecay * 0.0001, vcaSustain, vcaRelease * 0.0001);
+          break;
+      }
       break;
   }
 }
@@ -175,10 +211,10 @@ void renderReinitialisePage() {
   tft.setFont(&FreeSans12pt7b);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
-  tft.setCursor(15, 53);
-  tft.println("Reinitialise");
-  tft.setCursor(15, 90);
-  tft.println("to current");
+  tft.setCursor(5, 53);
+  tft.println("Initialise to");
+  tft.setCursor(5, 90);
+  tft.println("panel setting");
 }
 
 void renderPatchNamingPage() {
@@ -224,10 +260,15 @@ void showRenamingPage(String newName) {
   newPatchName = newName;
 }
 
-void showCurrentParameterPage(String param, String val) {
+void showCurrentParameterPage(String param, String val, int pType) {
   currentParameter = param;
   currentValue = val;
+  paramType = pType;
   startTimer();
+}
+
+void showCurrentParameterPage(String param, String val) {
+  showCurrentParameterPage(param, val, PARAMETER);
 }
 
 void showPatchPage(String number, String patchName) {

@@ -20,6 +20,11 @@
 #define PATCHNAMING  5
 #define DELETE  6
 
+#define PULSE  1
+#define VAR_TRI  2
+#define FILTER_ENV  3
+#define AMP_ENV  4
+
 volatile unsigned int state = PARAMETER;
 #include "PatchMgr.h"
 #include "ST7735Display.h"
@@ -80,6 +85,7 @@ void setup() {
     Serial.println("SD card is connected");
     if (!SD.begin(SDCARD_CS_PIN)) {
       Serial.println("SD card failed!");
+      showPatchPage("   SD card ", "    Failed");
     } else {
       //Get patch numbers and names from SD card
       getPatches(SD.open("/"));
@@ -88,11 +94,11 @@ void setup() {
         savePatch("1", INITPATCH);
         getPatches(SD.open("/"));
       }
-      //set to last patch
-      patches.unshift(patches.pop());
     }
   } else {
     Serial.println("SD card is not connected or unusable");
+    reinitialiseToPanel();
+    showPatchPage("SD card not", "conn'd or usable");
   }
 
   //USB HOST MIDI Class Compliant
@@ -223,7 +229,8 @@ void setup() {
   effectMixerR.gain(2, 0);
   effectMixerR.gain(3, 0);
 
-  reinitialiseToPanel();
+  //reinitialiseToPanel();
+  recallPatch(String(patchNo));
 }
 
 void myNoteOn(byte channel, byte note, byte velocity) {
@@ -969,7 +976,11 @@ void updateVcfAttack() {
   vcfEnvelope2.attack(vcfAttack);
   vcfEnvelope3.attack(vcfAttack);
   vcfEnvelope4.attack(vcfAttack);
-  showCurrentParameterPage("Filter Attack", String(int(vcfAttack)) + " ms");
+  if (vcfAttack < 1000) {
+    showCurrentParameterPage("Filter Attack", String(int(vcfAttack)) + " ms", FILTER_ENV);
+  } else {
+    showCurrentParameterPage("Filter Attack", String(vcfAttack * 0.001) + " s", FILTER_ENV);
+  }
 }
 
 void updateVcfDecay() {
@@ -977,7 +988,11 @@ void updateVcfDecay() {
   vcfEnvelope2.decay(vcfDecay);
   vcfEnvelope3.decay(vcfDecay);
   vcfEnvelope4.decay(vcfDecay);
-  showCurrentParameterPage("Filter Decay", String(int(vcfDecay)) + " ms");
+  if (vcfDecay < 1000) {
+    showCurrentParameterPage("Filter Decay", String(int(vcfDecay)) + " ms", FILTER_ENV);
+  } else {
+    showCurrentParameterPage("Filter Decay", String(vcfDecay * 0.001) + " s", FILTER_ENV);
+  }
 }
 
 void updateVcfSustain() {
@@ -985,7 +1000,7 @@ void updateVcfSustain() {
   vcfEnvelope2.sustain(vcfSustain);
   vcfEnvelope3.sustain(vcfSustain);
   vcfEnvelope4.sustain(vcfSustain);
-  showCurrentParameterPage("Filter Sustain", String(vcfSustain));
+  showCurrentParameterPage("Filter Sustain", String(vcfSustain), FILTER_ENV);
 }
 
 void updateVcfRelease() {
@@ -993,7 +1008,11 @@ void updateVcfRelease() {
   vcfEnvelope2.release(vcfRelease);
   vcfEnvelope3.release(vcfRelease);
   vcfEnvelope4.release(vcfRelease);
-  showCurrentParameterPage("Filter Release", String(int(vcfRelease)) + " ms");
+  if (vcfRelease < 1000) {
+    showCurrentParameterPage("Filter Release", String(int(vcfRelease)) + " ms", FILTER_ENV);
+  } else {
+    showCurrentParameterPage("Filter Release", String(vcfRelease * 0.001) + " s", FILTER_ENV);
+  }
 }
 
 void updateVcaAttack() {
@@ -1001,7 +1020,11 @@ void updateVcaAttack() {
   vcaEnvelope2.attack(vcaAttack);
   vcaEnvelope3.attack(vcaAttack);
   vcaEnvelope4.attack(vcaAttack);
-  showCurrentParameterPage("Attack", String(int(vcaAttack)) + " ms");
+  if (vcaAttack < 1000) {
+    showCurrentParameterPage("Attack", String(int(vcaAttack)) + " ms", AMP_ENV);
+  } else {
+    showCurrentParameterPage("Attack", String(vcaAttack * 0.001) + " s", AMP_ENV);
+  }
 }
 
 void updateVcaDecay() {
@@ -1009,7 +1032,11 @@ void updateVcaDecay() {
   vcaEnvelope2.decay(vcaDecay);
   vcaEnvelope3.decay(vcaDecay);
   vcaEnvelope4.decay(vcaDecay);
-  showCurrentParameterPage("Decay", String(int(vcaDecay)) + " ms");
+  if (vcaDecay < 1000) {
+    showCurrentParameterPage("Decay", String(int(vcaDecay)) + " ms", AMP_ENV);
+  } else {
+    showCurrentParameterPage("Decay", String(vcaDecay * 0.001) + " s", AMP_ENV);
+  }
 }
 
 void updateVcaSustain() {
@@ -1017,7 +1044,7 @@ void updateVcaSustain() {
   vcaEnvelope2.sustain(vcaSustain);
   vcaEnvelope3.sustain(vcaSustain);
   vcaEnvelope4.sustain(vcaSustain);
-  showCurrentParameterPage("Sustain", String(vcaSustain));
+  showCurrentParameterPage("Sustain", String(vcaSustain), AMP_ENV);
 }
 
 void updateVcaRelease() {
@@ -1025,7 +1052,11 @@ void updateVcaRelease() {
   vcaEnvelope2.release(vcaRelease);
   vcaEnvelope3.release(vcaRelease);
   vcaEnvelope4.release(vcaRelease);
-  showCurrentParameterPage("Release", String(int(vcaRelease)) + " ms");
+  if (vcaRelease < 1000) {
+    showCurrentParameterPage("Release", String(int(vcaRelease)) + " ms", AMP_ENV);
+  } else {
+    showCurrentParameterPage("Release", String(vcaRelease * 0.001) + " s", AMP_ENV);
+  }
 }
 
 void updateRingMod() {
@@ -1121,7 +1152,7 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCdetune:
-      detune = 1 -  (0.05 * LINEAR[value]);//up to 5% freq
+      detune = 1 -  (MAXDETUNE * LINEAR[value]);
       updateDetune();
       break;
 
@@ -1145,12 +1176,14 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCpwA:
+      //Limited to 95% otherwise pulse wave goes silent
       pwA = (1.90 * LINEAR[value]) - 0.95;
       pwmAmtA =  LINEAR[value];
       updatePWA();
       break;
 
     case CCpwB:
+      //Limited to 95% otherwise pulse wave goes silent
       pwB =  (1.90 * LINEAR[value]) - 0.95;
       pwmAmtB = LINEAR[value];
       updatePWB();
@@ -1338,7 +1371,7 @@ void myMIDIClockStart() {
   //Resync LFOs when MIDI Clock starts.
   //When there's a jump to a different
   //part of a track, such as in a DAW, the DAW must have same
-  //rhythmic quantisation as Tempo TS.
+  //rhythmic quantisation as Tempo Div.
   if (vcoLFOMidiClkSync == 1) {
     vcoLfo.sync();
   }
@@ -1685,7 +1718,7 @@ void checkSwitches() {
           patchName = patches.last().patchName;
           savePatch(String(patches.last().patchNo), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
-          getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved
+          getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
           renamedPatch = "";
           state = PARAMETER;
           break;
@@ -1695,7 +1728,7 @@ void checkSwitches() {
           patchName = renamedPatch;
           savePatch(String(patches.last().patchNo), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patchName);
-          getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved
+          getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
           renamedPatch = "";
           state = PARAMETER;
           break;
@@ -1734,23 +1767,32 @@ void checkSwitches() {
   }
 
   backButton.update();
-  if (backButton.fallingEdge()) {
-    switch (state) {
-      case RECALL:
-        state = PARAMETER;
-        break;
-      case SAVE:
-        renamedPatch = "";
-        state = PARAMETER;
-        getPatches(SD.open("/"));
-        break;
-      case PATCHNAMING:
-        renamedPatch = "";
-        state = SAVE;
-        break;
-      case DELETE:
-        state = PARAMETER;
-        break;
+  if (backButton.read() == LOW && backButton.duration() > INITIALISE_DURATION) {
+    //If Back button held for 1.5s, Panic - all notes off
+    allNotesOff();
+    backButton.write(HIGH);//Come out of this state
+    panic = true;//Hack
+  } else if (backButton.risingEdge()) {//cannot be fallingEdge because holding button won't work
+    if (!panic) {
+      switch (state) {
+        case RECALL:
+          state = PARAMETER;
+          break;
+        case SAVE:
+          renamedPatch = "";
+          state = PARAMETER;
+          getPatches(SD.open("/"));
+          break;
+        case PATCHNAMING:
+          renamedPatch = "";
+          state = SAVE;
+          break;
+        case DELETE:
+          state = PARAMETER;
+          break;
+      }
+    } else {
+      panic = false;
     }
   }
 
@@ -1769,9 +1811,11 @@ void checkSwitches() {
         state = PATCHNAMING;
         break;
       case PATCHNAMING:
-        if (renamedPatch.length() < 15) {
+        if (renamedPatch.length() < 16) {
           renamedPatch.concat(String(currentCharacter));
           charIndex = 0;
+          currentCharacter = CHARACTERS[charIndex];
+          showRenamingPage(renamedPatch);
         }
         break;
       case DELETE:

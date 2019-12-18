@@ -93,8 +93,9 @@ Bounce enterButton = Bounce(ENTER_SW, DEBOUNCE);
 Bounce saveButton = Bounce(SAVE_SW, DEBOUNCE);
 boolean del = true;//Hack for save button
 Bounce recallButton = Bounce(RECALL_SW, DEBOUNCE);
-Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
 boolean reini = true;//Hack for recall button
+Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
+boolean panic = true;//Hack for back button
 Encoder encoder(ENCODER_PINA, ENCODER_PINB);
 
 void setupHardware() {

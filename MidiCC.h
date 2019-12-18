@@ -1,12 +1,5 @@
 //MIDI CC control numbers
-/*  Undefined
-    3
-    9
-    14-15
-    20-31
-    85-90
-    102-119
-*/
+//These broadly follow standard CC assignments
 #define   CCmodwheel  1 //vco LFO amount - less from mod wheel
 #define   CCvcolfoamt  3 //vco LFO amount - panel control
 #define   CCglide 5
@@ -18,12 +11,12 @@
 #define   CCvcoLevelA 20
 #define   CCvcoLevelB 21
 #define   CCnoiseLevel  23
-#define   CCringmod 24
+#define   CCringmod 24//Off/On
 #define   CCoctaveA 26
 #define   CCoctaveB 27
 #define   CCpitchenv 28
-#define   CCvcolforetrig  30
-#define   CCvcflforetrig  31
+#define   CCvcolforetrig  30//Off/On
+#define   CCvcflforetrig  31//Off/On
 #define   CCfilterres 71
 #define   CCvcarelease  72
 #define   CCvcaattack 73
@@ -47,8 +40,8 @@
 #define   CCdetune  94
 #define   CCvcoLfoRate  102
 #define   CCvcoLfoWaveform  103
-#define   CCvcfLFOMidiClkSync 104
-#define   CCvcoLFOMidiClkSync 105//MIDI Only
-#define   CCpwmSource 106
-#define   CCallnotesoff 123
-#define   CCunison  126
+#define   CCvcfLFOMidiClkSync 104//Off/On
+#define   CCvcoLFOMidiClkSync 105//Off/On - MIDI Only
+#define   CCpwmSource 106//LFO/Filter Env
+#define   CCallnotesoff 123//Panic button
+#define   CCunison  126//Off/On
