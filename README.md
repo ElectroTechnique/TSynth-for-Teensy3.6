@@ -6,7 +6,7 @@ More details at PJRC Forum https://forum.pjrc.com/threads/57418-TSynth-Two-Oscil
 Specifications
 
 Oscillators
-- Four voice polyphony (last note priority), two oscillators per voice, detunable with +/- 2 octaves range, Sine/Sample & Hold (like tuned noise)/Square/Sawtooth/Ramp/PWM/Var Triangle/User waveforms and level
+- Six voice polyphony (last note priority), two oscillators per voice, detunable with +/- 2 octaves range, Sine/Sample & Hold (like tuned noise)/Square/Sawtooth/Ramp/PWM/Var Triangle/User waveforms and level
 - Pulse Width/Var Triangle can be set for each oscillator with PWM by dedicated LFO or from the filter envelope
 - Pink or white noise level
 - Dedicated LFO for pitch mod (can be retriggered by note on) , Sine/Triangle/Sawtooth/Ramp/Square/S&H waveforms
