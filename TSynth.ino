@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <EEPROM.h>
 #include <SerialFlash.h>
 #include <MIDI.h>
 #include <USBHost_t36.h>
@@ -54,6 +55,8 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
   { -1, 0},
   { -1, 0},
   { -1, 0},
+  { -1, 0},
+  { -1, 0},
   { -1, 0}
 };
 
@@ -71,9 +74,9 @@ void setup() {
   setupDisplay();
   setupHardware();
 
-  AudioMemory(30);
+  AudioMemory(48);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.4);//Headphones
+  sgtl5000_1.volume(0.5);//Headphones
   sgtl5000_1.lineOutLevel(29);//Line out
 
   // Configure SPI
@@ -100,6 +103,10 @@ void setup() {
     reinitialiseToPanel();
     showPatchPage("SD card not", "conn'd or usable");
   }
+
+  //Read MIDI Channel from EEPROM
+//  midiChannel = EEPROM.read(0);
+//  if (midiChannel == 0) midiChannel = MIDI_CHANNEL_OMNI;
 
   //USB HOST MIDI Class Compliant
   delay(200);//Wait to turn on USB Host
@@ -142,10 +149,20 @@ void setup() {
   noiseMixer.gain(2, 0);
   noiseMixer.gain(3, 0);
 
-  voiceMixer.gain(0, VOICEMIXERLEVEL);
-  voiceMixer.gain(1, VOICEMIXERLEVEL);
-  voiceMixer.gain(2, VOICEMIXERLEVEL);
-  voiceMixer.gain(3, VOICEMIXERLEVEL);
+  voiceMixer1.gain(0, VOICEMIXERLEVEL);
+  voiceMixer1.gain(1, VOICEMIXERLEVEL);
+  voiceMixer1.gain(2, VOICEMIXERLEVEL);
+  voiceMixer1.gain(3, VOICEMIXERLEVEL);
+
+  voiceMixer2.gain(0, VOICEMIXERLEVEL);
+  voiceMixer2.gain(1, VOICEMIXERLEVEL);
+  voiceMixer2.gain(2, 0);
+  voiceMixer2.gain(3, 0);
+
+  voiceMixerM.gain(0, VOICEMIXERLEVEL);
+  voiceMixerM.gain(1, VOICEMIXERLEVEL);
+  voiceMixerM.gain(2, 0);
+  voiceMixerM.gain(3, 0);
 
   pwmLfo.amplitude(CONSTANTONE);
   pwmLfo.begin(PWMWAVEFORM);//
@@ -194,10 +211,34 @@ void setup() {
   waveformMod4b.arbitraryWaveform(PARABOLIC_WAVE, 172.0);
   waveformMod4b.begin(vcoWaveformB);
 
+  waveformMod5a.amplitude(CONSTANTONE);
+  waveformMod5a.frequency(440);
+  waveformMod5a.frequencyModulation(VCOLFOOCTAVERANGE);
+  waveformMod5a.arbitraryWaveform(HARMONIC_WAVE, 172.0);
+  waveformMod5a.begin(vcoWaveformA);
+  waveformMod5b.amplitude(CONSTANTONE);
+  waveformMod5b.frequency(440);
+  waveformMod5b.frequencyModulation(VCOLFOOCTAVERANGE);
+  waveformMod5b.arbitraryWaveform(PARABOLIC_WAVE, 172.0);
+  waveformMod5b.begin(vcoWaveformB);
+
+  waveformMod6a.amplitude(CONSTANTONE);
+  waveformMod6a.frequency(440);
+  waveformMod6a.frequencyModulation(VCOLFOOCTAVERANGE);
+  waveformMod6a.arbitraryWaveform(HARMONIC_WAVE, 172.0);
+  waveformMod6a.begin(vcoWaveformA);
+  waveformMod6b.amplitude(CONSTANTONE);
+  waveformMod6b.frequency(440);
+  waveformMod6b.frequencyModulation(VCOLFOOCTAVERANGE);
+  waveformMod6b.arbitraryWaveform(PARABOLIC_WAVE, 172.0);
+  waveformMod6b.begin(vcoWaveformB);
+
   filter1.octaveControl(FILTEROCTAVERANGE);
   filter2.octaveControl(FILTEROCTAVERANGE);
   filter3.octaveControl(FILTEROCTAVERANGE);
   filter4.octaveControl(FILTEROCTAVERANGE);
+  filter5.octaveControl(FILTEROCTAVERANGE);
+  filter6.octaveControl(FILTEROCTAVERANGE);
 
   waveformMixer1.gain(2, CONSTANTONE);//Noise
   waveformMixer1.gain(3, 0);//Ring Mod
@@ -207,6 +248,10 @@ void setup() {
   waveformMixer3.gain(3, 0);//Ring Mod
   waveformMixer4.gain(2, CONSTANTONE);//Noise
   waveformMixer4.gain(3, 0);//Ring Mod
+  waveformMixer5.gain(2, CONSTANTONE);//Noise
+  waveformMixer5.gain(3, 0);//Ring Mod
+  waveformMixer6.gain(2, CONSTANTONE);//Noise
+  waveformMixer6.gain(3, 0);//Ring Mod
 
   vcfModMixer1.gain(1, CONSTANTONE);//LFO
   vcfModMixer1.gain(3, 0);//Not used
@@ -216,11 +261,17 @@ void setup() {
   vcfModMixer3.gain(3, 0);//Not used
   vcfModMixer4.gain(1, CONSTANTONE);//LFO
   vcfModMixer4.gain(3, 0); //Not used
+  vcfModMixer5.gain(1, CONSTANTONE);//LFO
+  vcfModMixer5.gain(3, 0);//Not used
+  vcfModMixer6.gain(1, CONSTANTONE);//LFO
+  vcfModMixer6.gain(3, 0); //Not used
 
   filterMixer1.gain(3, 0);//Not used
   filterMixer2.gain(3, 0);//Not used
   filterMixer3.gain(3, 0);//Not used
   filterMixer4.gain(3, 0);//Not used
+  filterMixer5.gain(3, 0);//Not used
+  filterMixer6.gain(3, 0);//Not used
 
   ensemble.lfoRate(fxAmt);
 
@@ -294,6 +345,26 @@ void myNoteOn(byte channel, byte note, byte velocity) {
         vcaEnvelope4.noteOn();
         voiceOn[3] = true;
         break;
+      case 5:
+        //Serial.println("ON 5");
+        keytracking5.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        voices[4].note = note;
+        voices[4].timeOn = millis();
+        updateVoice5();
+        vcfEnvelope5.noteOn();
+        vcaEnvelope5.noteOn();
+        voiceOn[4] = true;
+        break;
+      case 6:
+        //Serial.println("ON 6");
+        keytracking6.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        voices[5].note = note;
+        voices[5].timeOn = millis();
+        updateVoice6();
+        vcfEnvelope6.noteOn();
+        vcaEnvelope6.noteOn();
+        voiceOn[5] = true;
+        break;
     }
   } else {
     //UNISON MODE
@@ -301,6 +372,8 @@ void myNoteOn(byte channel, byte note, byte velocity) {
     keytracking2.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
     keytracking3.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
     keytracking4.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+    keytracking5.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+    keytracking6.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
     voices[0].note = note;
     voices[0].timeOn = millis();
     updateVoice1();
@@ -313,20 +386,33 @@ void myNoteOn(byte channel, byte note, byte velocity) {
     voices[3].note = note;
     voices[3].timeOn = millis();
     updateVoice4();
+    voices[4].note = note;
+    voices[4].timeOn = millis();
+    updateVoice5();
+    voices[5].note = note;
+    voices[5].timeOn = millis();
+    updateVoice6();
 
     vcfEnvelope1.noteOn();
     vcfEnvelope2.noteOn();
     vcfEnvelope3.noteOn();
     vcfEnvelope4.noteOn();
+    vcfEnvelope5.noteOn();
+    vcfEnvelope6.noteOn();
+
     vcaEnvelope1.noteOn();
     vcaEnvelope2.noteOn();
     vcaEnvelope3.noteOn();
     vcaEnvelope4.noteOn();
+    vcaEnvelope5.noteOn();
+    vcaEnvelope6.noteOn();
 
     voiceOn[0] = true;
     voiceOn[1] = true;
     voiceOn[2] = true;
     voiceOn[3] = true;
+    voiceOn[4] = true;
+    voiceOn[5] = true;
   }
   AudioInterrupts();
 }
@@ -360,6 +446,18 @@ void myNoteOff(byte channel, byte note, byte velocity) {
         voices[3].note = -1;
         voiceOn[3] = false;
         break;
+      case 5:
+        vcfEnvelope5.noteOff();
+        vcaEnvelope5.noteOff();
+        voices[4].note = -1;
+        voiceOn[4] = false;
+        break;
+      case 6:
+        vcfEnvelope6.noteOff();
+        vcaEnvelope6.noteOff();
+        voices[5].note = -1;
+        voiceOn[5] = false;
+        break;
     }
   } else {
     //UNISON MODE
@@ -377,16 +475,24 @@ void allNotesOff() {
   vcaEnvelope3.noteOff();
   vcfEnvelope4.noteOff();
   vcaEnvelope4.noteOff();
+  vcfEnvelope5.noteOff();
+  vcaEnvelope5.noteOff();
+  vcfEnvelope6.noteOff();
+  vcaEnvelope6.noteOff();
 
   voices[0].note = -1;
   voices[1].note = -1;
   voices[2].note = -1;
   voices[3].note = -1;
+  voices[4].note = -1;
+  voices[5].note = -1;
 
   voiceOn[0] = false;
   voiceOn[1] = false;
   voiceOn[2] = false;
   voiceOn[3] = false;
+  voiceOn[4] = false;
+  voiceOn[5] = false;
 }
 
 int getVoiceNo(int note) {
@@ -428,7 +534,7 @@ int getVoiceNo(int note) {
 void updateVoice1() {
   waveformMod1a.frequency(NOTEFREQS[voices[0].note + vcoOctaveA]);
   if (unison == 1) {
-    waveformMod1b.frequency(NOTEFREQS[voices[0].note + vcoOctaveB] * (detune + ((1 - detune) * 0.14)));
+    waveformMod1b.frequency(NOTEFREQS[voices[0].note + vcoOctaveB] * (detune + ((1 - detune) * 0.09)));
   } else {
     waveformMod1b.frequency(NOTEFREQS[voices[0].note + vcoOctaveB] * detune);
   }
@@ -436,8 +542,8 @@ void updateVoice1() {
 
 void updateVoice2() {
   if (unison == 1) {
-    waveformMod2a.frequency(NOTEFREQS[voices[1].note + vcoOctaveA] * (detune + ((1 - detune) * 0.28)));
-    waveformMod2b.frequency(NOTEFREQS[voices[1].note + vcoOctaveB] * (detune + ((1 - detune) * 0.42)));
+    waveformMod2a.frequency(NOTEFREQS[voices[1].note + vcoOctaveA] * (detune + ((1 - detune) * 0.18)));
+    waveformMod2b.frequency(NOTEFREQS[voices[1].note + vcoOctaveB] * (detune + ((1 - detune) * 0.27)));
   } else {
     waveformMod2a.frequency(NOTEFREQS[voices[1].note + vcoOctaveA]);
     waveformMod2b.frequency(NOTEFREQS[voices[1].note + vcoOctaveB] * detune);
@@ -446,21 +552,39 @@ void updateVoice2() {
 
 void updateVoice3() {
   if (unison == 1) {
-    waveformMod3a.frequency(NOTEFREQS[voices[2].note + vcoOctaveA] * (detune + ((1 - detune) * 0.56)));
-    waveformMod3b.frequency(NOTEFREQS[voices[2].note + vcoOctaveB] * (detune + ((1 - detune) * 0.71)));
+    waveformMod3a.frequency(NOTEFREQS[voices[2].note + vcoOctaveA] * (detune + ((1 - detune) * 0.36)));
+    waveformMod3b.frequency(NOTEFREQS[voices[2].note + vcoOctaveB] * (detune + ((1 - detune) * 0.46)));
   } else {
     waveformMod3a.frequency(NOTEFREQS[voices[2].note + vcoOctaveA]);
     waveformMod3b.frequency(NOTEFREQS[voices[2].note + vcoOctaveB] * detune);
   }
-}
-
-void updateVoice4() {
+}void updateVoice4() {
   if (unison == 1) {
-    waveformMod4a.frequency(NOTEFREQS[voices[3].note + vcoOctaveA] * (detune + ((1 - detune) * 0.86)));
+    waveformMod4a.frequency(NOTEFREQS[voices[3].note + vcoOctaveA] * (detune + ((1 - detune) * 0.55)));
+    waveformMod4b.frequency(NOTEFREQS[voices[3].note + vcoOctaveB] * (detune + ((1 - detune) * 0.64)));
   } else {
     waveformMod4a.frequency(NOTEFREQS[voices[3].note + vcoOctaveA]);
+    waveformMod4b.frequency(NOTEFREQS[voices[3].note + vcoOctaveB] * detune);
   }
-  waveformMod4b.frequency(NOTEFREQS[voices[3].note + vcoOctaveB] * detune);
+}
+
+void updateVoice5() {
+  if (unison == 1) {
+    waveformMod5a.frequency(NOTEFREQS[voices[4].note + vcoOctaveA] * (detune + ((1 - detune) * 0.73)));
+    waveformMod5b.frequency(NOTEFREQS[voices[4].note + vcoOctaveB] * (detune + ((1 - detune) * 0.82)));
+  } else {
+    waveformMod5a.frequency(NOTEFREQS[voices[4].note + vcoOctaveA]);
+    waveformMod5b.frequency(NOTEFREQS[voices[4].note + vcoOctaveB] * detune);
+  }
+}
+
+void updateVoice6() {
+  if (unison == 1) {
+    waveformMod6a.frequency(NOTEFREQS[voices[5].note + vcoOctaveA] * (detune + ((1 - detune) * 0.90)));
+  } else {
+    waveformMod6a.frequency(NOTEFREQS[voices[5].note + vcoOctaveA]);
+  }
+  waveformMod6b.frequency(NOTEFREQS[voices[5].note + vcoOctaveB] * detune);
 }
 
 int getLFOWaveform(int value, int currentValue) {
@@ -570,6 +694,8 @@ void setPwmMixerALFO(float value) {
   pwMixer2a.gain(0, value);
   pwMixer3a.gain(0, value);
   pwMixer4a.gain(0, value);
+  pwMixer5a.gain(0, value);
+  pwMixer6a.gain(0, value);
   showCurrentParameterPage("1. PWM LFO", String(value));
 }
 void setPwmMixerBLFO(float value) {
@@ -577,6 +703,8 @@ void setPwmMixerBLFO(float value) {
   pwMixer2b.gain(0, value);
   pwMixer3b.gain(0, value);
   pwMixer4b.gain(0, value);
+  pwMixer5b.gain(0, value);
+  pwMixer6b.gain(0, value);
   showCurrentParameterPage("2. PWM LFO", String(value));
 }
 
@@ -585,6 +713,8 @@ void setPwmMixerAPW(float value) {
   pwMixer2a.gain(1, value);
   pwMixer3a.gain(1, value);
   pwMixer4a.gain(1, value);
+  pwMixer5a.gain(1, value);
+  pwMixer6a.gain(1, value);
 }
 
 void setPwmMixerBPW(float value) {
@@ -592,6 +722,8 @@ void setPwmMixerBPW(float value) {
   pwMixer2b.gain(1, value);
   pwMixer3b.gain(1, value);
   pwMixer4b.gain(1, value);
+  pwMixer5b.gain(1, value);
+  pwMixer6b.gain(1, value);
 }
 
 void setPwmMixerAFEnv(float value) {
@@ -599,6 +731,8 @@ void setPwmMixerAFEnv(float value) {
   pwMixer2a.gain(2, value);
   pwMixer3a.gain(2, value);
   pwMixer4a.gain(2, value);
+  pwMixer5a.gain(2, value);
+  pwMixer6a.gain(2, value);
   showCurrentParameterPage("1. PWM F Env", String(value));
 }
 
@@ -607,6 +741,8 @@ void setPwmMixerBFEnv(float value) {
   pwMixer2b.gain(2, value);
   pwMixer3b.gain(2, value);
   pwMixer4b.gain(2, value);
+  pwMixer5b.gain(2, value);
+  pwMixer6b.gain(2, value);
   showCurrentParameterPage("2. PWM F Env", String(value));
 }
 
@@ -632,6 +768,8 @@ void updateWaveformA() {
   waveformMod2a.begin(vcoWaveformA);
   waveformMod3a.begin(vcoWaveformA);
   waveformMod4a.begin(vcoWaveformA);
+  waveformMod5a.begin(vcoWaveformA);
+  waveformMod6a.begin(vcoWaveformA);
   showCurrentParameterPage("1. Waveform", getWaveformStr(vcoWaveformA));
 }
 
@@ -640,38 +778,46 @@ void updateWaveformB() {
   waveformMod2b.begin(vcoWaveformB);
   waveformMod3b.begin(vcoWaveformB);
   waveformMod4b.begin(vcoWaveformB);
+  waveformMod5b.begin(vcoWaveformB);
+  waveformMod6b.begin(vcoWaveformB);
   showCurrentParameterPage("2. Waveform", getWaveformStr(vcoWaveformB));
 }
 
 void updateOctaveA() {
   //update waveforms with new frequencies if notes are on
-  if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1) {
+  if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1) {
     updateVoice1();
     updateVoice2();
     updateVoice3();
     updateVoice4();
+    updateVoice5();
+    updateVoice6();
   }
   showCurrentParameterPage("1. Octave", (vcoOctaveA > 0 ? "+" : "") + String(vcoOctaveA));
 }
 
 void updateOctaveB() {
   //update waveforms with new frequencies if notes are on
-  if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1) {
+  if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1) {
     updateVoice1();
     updateVoice3();
     updateVoice2();
     updateVoice4();
+    updateVoice5();
+    updateVoice6();
   }
   showCurrentParameterPage("2. Octave", (vcoOctaveB > 0 ? "+" : "") + String(vcoOctaveB));
 }
 
 void updateDetune() {
   //update waveforms with new frequencies if notes are on
-  if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1) {
+  if (voices[0].note != -1 ||  voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1) {
     updateVoice1();
     updateVoice2();
     updateVoice3();
     updateVoice4();
+    updateVoice5();
+    updateVoice6();
   }
   showCurrentParameterPage("Detune", String((1 - detune) * 100) + " %");
 }
@@ -801,11 +947,15 @@ void updateVcoLevelA() {
   waveformMixer2.gain(0, VCOALevel);
   waveformMixer3.gain(0, VCOALevel);
   waveformMixer4.gain(0, VCOALevel);
+  waveformMixer5.gain(0, VCOALevel);
+  waveformMixer6.gain(0, VCOALevel);
   if (ringMod == 1) {
     waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
   }
   showCurrentParameterPage("1. Level", VCOALevel);
 }
@@ -816,11 +966,15 @@ void updateVcoLevelB() {
   waveformMixer2.gain(1, VCOBLevel);
   waveformMixer3.gain(1, VCOBLevel);
   waveformMixer4.gain(1, VCOBLevel);
+  waveformMixer5.gain(1, VCOBLevel);
+  waveformMixer6.gain(1, VCOBLevel);
   if (ringMod == 1) {
     waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
     waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
+    waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0f);//Ring Mod
   }
   showCurrentParameterPage("2. Level", VCOBLevel);
 }
@@ -847,6 +1001,8 @@ void updateFilterFreq() {
   filter2.frequency(filterFreq);
   filter3.frequency(filterFreq);
   filter4.frequency(filterFreq);
+  filter5.frequency(filterFreq);
+  filter6.frequency(filterFreq);
   showCurrentParameterPage("Cutoff", String(int(filterFreq)) + " Hz");
 }
 
@@ -856,6 +1012,8 @@ void updateFilterRes() {
   filter2.resonance(filterRes);
   filter3.resonance(filterRes);
   filter4.resonance(filterRes);
+  filter5.resonance(filterRes);
+  filter6.resonance(filterRes);
   showCurrentParameterPage("Resonance", filterRes);
 }
 
@@ -895,6 +1053,12 @@ void updateFilterMixer() {
   filterMixer4.gain(0, LP);
   filterMixer4.gain(1, BP);
   filterMixer4.gain(2, HP);
+  filterMixer5.gain(0, LP);
+  filterMixer5.gain(1, BP);
+  filterMixer5.gain(2, HP);
+  filterMixer6.gain(0, LP);
+  filterMixer6.gain(1, BP);
+  filterMixer6.gain(2, HP);
   showCurrentParameterPage("Filter Type", filterStr);
 }
 
@@ -903,6 +1067,8 @@ void updateFilterEnv() {
   vcfModMixer2.gain(0, filterEnv);
   vcfModMixer3.gain(0, filterEnv);
   vcfModMixer4.gain(0, filterEnv);
+  vcfModMixer5.gain(0, filterEnv);
+  vcfModMixer6.gain(0, filterEnv);
   showCurrentParameterPage("Filter Env.", String(filterEnv));
 }
 
@@ -915,6 +1081,10 @@ void updatePitchEnv() {
   vcoModMixer3b.gain(1, pitchEnv);
   vcoModMixer4a.gain(1, pitchEnv);
   vcoModMixer4b.gain(1, pitchEnv);
+  vcoModMixer5a.gain(1, pitchEnv);
+  vcoModMixer5b.gain(1, pitchEnv);
+  vcoModMixer6a.gain(1, pitchEnv);
+  vcoModMixer6b.gain(1, pitchEnv);
   showCurrentParameterPage("Pitch Env Amt", String(pitchEnv));
 }
 
@@ -923,6 +1093,8 @@ void updateKeyTracking() {
   vcfModMixer2.gain(2, keytrackingAmount);
   vcfModMixer3.gain(2, keytrackingAmount);
   vcfModMixer4.gain(2, keytrackingAmount);
+  vcfModMixer5.gain(2, keytrackingAmount);
+  vcfModMixer6.gain(2, keytrackingAmount);
   showCurrentParameterPage("Key Tracking", String(keytrackingAmount));
 }
 
@@ -986,6 +1158,8 @@ void updateVcfAttack() {
   vcfEnvelope2.attack(vcfAttack);
   vcfEnvelope3.attack(vcfAttack);
   vcfEnvelope4.attack(vcfAttack);
+  vcfEnvelope5.attack(vcfAttack);
+  vcfEnvelope6.attack(vcfAttack);
   if (vcfAttack < 1000) {
     showCurrentParameterPage("Filter Attack", String(int(vcfAttack)) + " ms", FILTER_ENV);
   } else {
@@ -998,6 +1172,8 @@ void updateVcfDecay() {
   vcfEnvelope2.decay(vcfDecay);
   vcfEnvelope3.decay(vcfDecay);
   vcfEnvelope4.decay(vcfDecay);
+  vcfEnvelope5.decay(vcfDecay);
+  vcfEnvelope6.decay(vcfDecay);
   if (vcfDecay < 1000) {
     showCurrentParameterPage("Filter Decay", String(int(vcfDecay)) + " ms", FILTER_ENV);
   } else {
@@ -1010,6 +1186,8 @@ void updateVcfSustain() {
   vcfEnvelope2.sustain(vcfSustain);
   vcfEnvelope3.sustain(vcfSustain);
   vcfEnvelope4.sustain(vcfSustain);
+  vcfEnvelope5.sustain(vcfSustain);
+  vcfEnvelope6.sustain(vcfSustain);
   showCurrentParameterPage("Filter Sustain", String(vcfSustain), FILTER_ENV);
 }
 
@@ -1018,6 +1196,8 @@ void updateVcfRelease() {
   vcfEnvelope2.release(vcfRelease);
   vcfEnvelope3.release(vcfRelease);
   vcfEnvelope4.release(vcfRelease);
+  vcfEnvelope5.release(vcfRelease);
+  vcfEnvelope6.release(vcfRelease);
   if (vcfRelease < 1000) {
     showCurrentParameterPage("Filter Release", String(int(vcfRelease)) + " ms", FILTER_ENV);
   } else {
@@ -1030,6 +1210,8 @@ void updateVcaAttack() {
   vcaEnvelope2.attack(vcaAttack);
   vcaEnvelope3.attack(vcaAttack);
   vcaEnvelope4.attack(vcaAttack);
+  vcaEnvelope5.attack(vcaAttack);
+  vcaEnvelope6.attack(vcaAttack);
   if (vcaAttack < 1000) {
     showCurrentParameterPage("Attack", String(int(vcaAttack)) + " ms", AMP_ENV);
   } else {
@@ -1042,6 +1224,8 @@ void updateVcaDecay() {
   vcaEnvelope2.decay(vcaDecay);
   vcaEnvelope3.decay(vcaDecay);
   vcaEnvelope4.decay(vcaDecay);
+  vcaEnvelope5.decay(vcaDecay);
+  vcaEnvelope6.decay(vcaDecay);
   if (vcaDecay < 1000) {
     showCurrentParameterPage("Decay", String(int(vcaDecay)) + " ms", AMP_ENV);
   } else {
@@ -1054,6 +1238,8 @@ void updateVcaSustain() {
   vcaEnvelope2.sustain(vcaSustain);
   vcaEnvelope3.sustain(vcaSustain);
   vcaEnvelope4.sustain(vcaSustain);
+  vcaEnvelope5.sustain(vcaSustain);
+  vcaEnvelope6.sustain(vcaSustain);
   showCurrentParameterPage("Sustain", String(vcaSustain), AMP_ENV);
 }
 
@@ -1062,6 +1248,8 @@ void updateVcaRelease() {
   vcaEnvelope2.release(vcaRelease);
   vcaEnvelope3.release(vcaRelease);
   vcaEnvelope4.release(vcaRelease);
+  vcaEnvelope5.release(vcaRelease);
+  vcaEnvelope6.release(vcaRelease);
   if (vcaRelease < 1000) {
     showCurrentParameterPage("Release", String(int(vcaRelease)) + " ms", AMP_ENV);
   } else {
@@ -1075,20 +1263,28 @@ void updateRingMod() {
     ringMod2.setCombineMode(AudioEffectDigitalCombine::XOR);
     ringMod3.setCombineMode(AudioEffectDigitalCombine::XOR);
     ringMod4.setCombineMode(AudioEffectDigitalCombine::XOR);
+    ringMod5.setCombineMode(AudioEffectDigitalCombine::XOR);
+    ringMod6.setCombineMode(AudioEffectDigitalCombine::XOR);
     waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
     waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
     waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
     waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
+    waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
+    waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0);//Ring Mod
     showCurrentParameterPage("Ring Mod", "On");
   } else {
     ringMod1.setCombineMode(AudioEffectDigitalCombine::OFF);
     ringMod2.setCombineMode(AudioEffectDigitalCombine::OFF);
     ringMod3.setCombineMode(AudioEffectDigitalCombine::OFF);
     ringMod4.setCombineMode(AudioEffectDigitalCombine::OFF);
+    ringMod5.setCombineMode(AudioEffectDigitalCombine::OFF);
+    ringMod6.setCombineMode(AudioEffectDigitalCombine::OFF);
     waveformMixer1.gain(3, 0);//Ring Mod
     waveformMixer2.gain(3, 0);//Ring Mod
     waveformMixer3.gain(3, 0);//Ring Mod
     waveformMixer4.gain(3, 0);//Ring Mod
+    waveformMixer5.gain(3, 0);//Ring Mod
+    waveformMixer6.gain(3, 0);//Ring Mod
     showCurrentParameterPage("Ring Mod", "Off");
   }
 }
@@ -1924,6 +2120,11 @@ void checkEncoder() {
   }
 }
 
+void storeMidiChannel(byte channel) {
+  midiChannel = channel;
+  EEPROM.write(0, channel);
+}
+
 void loop() {
   myusb.Task();
   midi1.read();//USB HOST MIDI Class Compliant
@@ -1941,8 +2142,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-  //        Serial.print("CPU:");
-  //        Serial.print(AudioProcessorUsageMax());
-  //        Serial.print("  MEM:");
-  //        Serial.println(AudioMemoryUsageMax());
+//          Serial.print("CPU:");
+//          Serial.print(AudioProcessorUsageMax());
+//          Serial.print("  MEM:");
+//          Serial.println(AudioMemoryUsageMax());
 }
