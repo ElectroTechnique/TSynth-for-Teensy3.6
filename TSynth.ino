@@ -61,7 +61,7 @@ int  prevNote = 48;//Initialised to middle value
 float previousMillis = millis();//For MIDI Clk Sync
 
 int count = 0;
-byte channel = MIDI_CHANNEL_OMNI;
+byte midiChannel = MIDI_CHANNEL_OMNI;
 int  patchNo = 1;
 int voiceToReturn = -1;//Initialise to 'null'
 long earliestTime = millis();//For voice allocation - initialise to now
@@ -148,7 +148,7 @@ void setup() {
   voiceMixer.gain(3, VOICEMIXERLEVEL);
 
   pwmLfo.amplitude(CONSTANTONE);
-  pwmLfo.begin(WAVEFORM_TRIANGLE);// set waveform as Triangle
+  pwmLfo.begin(PWMWAVEFORM);//
 
   waveformMod1a.amplitude(CONSTANTONE);
   waveformMod1a.frequency(440);
@@ -234,6 +234,7 @@ void setup() {
 }
 
 void myNoteOn(byte channel, byte note, byte velocity) {
+  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   //Check for out of range notes
   if (note + vcoOctaveA < 0 || note + vcoOctaveA > 127 || note + vcoOctaveB < 0 || note + vcoOctaveB > 127) return;
 
@@ -331,6 +332,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 }
 
 void myNoteOff(byte channel, byte note, byte velocity) {
+  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   AudioNoInterrupts();
   if (unison == 0) {
     switch (getVoiceNo(note)) {
@@ -743,7 +745,11 @@ void updatePWA() {
     setPwmMixerBFEnv(0);
     setPwmMixerAPW(1);
     setPwmMixerBPW(1);
-    showCurrentParameterPage("1. PW Amt", pwA);
+    if (vcoWaveformA == WAVEFORM_TRIANGLE_VARIABLE) {
+      showCurrentParameterPage("1. PW Amt", pwA, VAR_TRI);
+    } else {
+      showCurrentParameterPage("1. PW Amt", pwA, PULSE);
+    }
   } else {
     setPwmMixerAPW(0);
     setPwmMixerBPW(0);
@@ -769,7 +775,11 @@ void updatePWB() {
     setPwmMixerBFEnv(0);
     setPwmMixerAPW(1);
     setPwmMixerBPW(1);
-    showCurrentParameterPage("2. PW Amt", pwB);
+    if (vcoWaveformB == WAVEFORM_TRIANGLE_VARIABLE) {
+      showCurrentParameterPage("2. PW Amt", pwB, VAR_TRI);
+    } else {
+      showCurrentParameterPage("2. PW Amt", pwB, PULSE);
+    }
   } else {
     setPwmMixerAPW(0);
     setPwmMixerBPW(0);
@@ -1101,11 +1111,12 @@ void updatePatchname() {
 }
 
 void myPitchBend(byte channel, int bend) {
+  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   pitchBend.amplitude(bend * 0.5 * DIV8192);//)0.5 to give 1oct - spread of mod is 2oct
 }
 
 void myControlChange(byte channel, byte control, byte value) {
-  //Serial.println("MIDI: " + String(control) + ":" + String(value));
+  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   AudioNoInterrupts();
   switch (control) {
     case CCvolume:
@@ -1176,15 +1187,13 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCpwA:
-      //Limited to 95% otherwise pulse wave goes silent
-      pwA = (1.90 * LINEAR[value]) - 0.95;
-      pwmAmtA =  LINEAR[value];
+      pwA = (2.0 * LINEAR[value]) - 1.0;//Bipolar
+      pwmAmtA =   LINEAR[value];
       updatePWA();
       break;
 
     case CCpwB:
-      //Limited to 95% otherwise pulse wave goes silent
-      pwB =  (1.90 * LINEAR[value]) - 0.95;
+      pwB =  (2.0 * LINEAR[value]) - 1.0;//Bipolar
       pwmAmtB = LINEAR[value];
       updatePWB();
       break;
@@ -1359,6 +1368,7 @@ void myControlChange(byte channel, byte control, byte value) {
 }
 
 void myProgramChange(byte channel, byte program) {
+  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   state = PATCH;
   Serial.print("MIDI Pgm Change:");
   Serial.println(String(program + 1));
@@ -1461,7 +1471,6 @@ void setCurrentPatchData(String data[]) {
   updateWaveformB();
   updateOctaveA();
   updateOctaveB();
-  updatePitchEnv();
   updateDetune();
   updatePWMSource();
   updatePWMAmount();
@@ -1493,6 +1502,7 @@ void setCurrentPatchData(String data[]) {
   updateRingMod();
   updateFXAmt();
   updateFXMix();
+  updatePitchEnv();
   Serial.print("Set Patch: ");
   Serial.println(patchName);
 }
@@ -1513,52 +1523,52 @@ void checkMux() {
 
     switch (muxInput) {
       case MUX1_octaveA:
-        myControlChange(channel, CCoctaveA, mux1Read);
+        myControlChange(midiChannel, CCoctaveA, mux1Read);
         break;
       case MUX1_octaveB:
-        myControlChange(channel, CCoctaveB, mux1Read);
+        myControlChange(midiChannel, CCoctaveB, mux1Read);
         break;
       case MUX1_vcowaveformA:
-        myControlChange(channel, CCvcowaveformA, mux1Read);
+        myControlChange(midiChannel, CCvcowaveformA, mux1Read);
         break;
       case MUX1_vcowaveformB:
-        myControlChange(channel, CCvcowaveformB, mux1Read);
+        myControlChange(midiChannel, CCvcowaveformB, mux1Read);
         break;
       case MUX1_vcoLevelA:
-        myControlChange(channel, CCvcoLevelA, mux1Read);
+        myControlChange(midiChannel, CCvcoLevelA, mux1Read);
         break;
       case MUX1_vcoLevelB:
-        myControlChange(channel, CCvcoLevelB, mux1Read);
+        myControlChange(midiChannel, CCvcoLevelB, mux1Read);
         break;
       case MUX1_pwA:
-        myControlChange(channel, CCpwA, mux1Read);
+        myControlChange(midiChannel, CCpwA, mux1Read);
         break;
       case MUX1_pwB:
-        myControlChange(channel, CCpwB, mux1Read);
+        myControlChange(midiChannel, CCpwB, mux1Read);
         break;
       case MUX1_pwmRate:
-        myControlChange(channel, CCpwmRate, mux1Read);
+        myControlChange(midiChannel, CCpwmRate, mux1Read);
         break;
       case MUX1_vcoLfoRate:
-        myControlChange(channel, CCvcoLfoRate, mux1Read);
+        myControlChange(midiChannel, CCvcoLfoRate, mux1Read);
         break;
       case MUX1_noiseLevel:
-        myControlChange(channel, CCnoiseLevel, mux1Read);
+        myControlChange(midiChannel, CCnoiseLevel, mux1Read);
         break;
       case MUX1_vcoLfoWaveform:
-        myControlChange(channel, CCvcoLfoWaveform, mux1Read);
+        myControlChange(midiChannel, CCvcoLfoWaveform, mux1Read);
         break;
       case MUX1_vcolfoamt:
-        myControlChange(channel, CCvcolfoamt, mux1Read);
+        myControlChange(midiChannel, CCvcolfoamt, mux1Read);
         break;
       case MUX1_detune:
-        myControlChange(channel, CCdetune, mux1Read);
+        myControlChange(midiChannel, CCdetune, mux1Read);
         break;
       case MUX1_filterfreq:
-        myControlChange(channel, CCfilterfreq, mux1Read);
+        myControlChange(midiChannel, CCfilterfreq, mux1Read);
         break;
       case MUX1_filterres:
-        myControlChange(channel, CCfilterres, mux1Read);
+        myControlChange(midiChannel, CCfilterres, mux1Read);
         break;
     }
   }
@@ -1569,52 +1579,52 @@ void checkMux() {
 
     switch (muxInput) {
       case MUX2_vcflfoamt:
-        myControlChange(channel, CCvcflfoamt, mux2Read);
+        myControlChange(midiChannel, CCvcflfoamt, mux2Read);
         break;
       case MUX2_vcflforate:
-        myControlChange(channel, CCvcflforate, mux2Read);
+        myControlChange(midiChannel, CCvcflforate, mux2Read);
         break;
       case MUX2_filterenv:
-        myControlChange(channel, CCfilterenv, mux2Read);
+        myControlChange(midiChannel, CCfilterenv, mux2Read);
         break;
       case MUX2_vcflfowaveform:
-        myControlChange(channel, CCvcflfowaveform, mux2Read);
+        myControlChange(midiChannel, CCvcflfowaveform, mux2Read);
         break;
       case MUX2_filtermixer:
-        myControlChange(channel, CCfiltermixer, mux2Read);
+        myControlChange(midiChannel, CCfiltermixer, mux2Read);
         break;
       case MUX2_keytracking:
-        myControlChange(channel, CCkeytracking, mux2Read);
+        myControlChange(midiChannel, CCkeytracking, mux2Read);
         break;
       case MUX2_vcfattack:
-        myControlChange(channel, CCvcfattack, mux2Read);
+        myControlChange(midiChannel, CCvcfattack, mux2Read);
         break;
       case MUX2_vcfdecay:
-        myControlChange(channel, CCvcfdecay, mux2Read);
+        myControlChange(midiChannel, CCvcfdecay, mux2Read);
         break;
       case MUX2_vcfsustain:
-        myControlChange(channel, CCvcfsustain, mux2Read);
+        myControlChange(midiChannel, CCvcfsustain, mux2Read);
         break;
       case MUX2_vcfrelease:
-        myControlChange(channel, CCvcfrelease, mux2Read);
+        myControlChange(midiChannel, CCvcfrelease, mux2Read);
         break;
       case MUX2_vcaattack:
-        myControlChange(channel, CCvcaattack, mux2Read);
+        myControlChange(midiChannel, CCvcaattack, mux2Read);
         break;
       case MUX2_vcadecay:
-        myControlChange(channel, CCvcadecay, mux2Read);
+        myControlChange(midiChannel, CCvcadecay, mux2Read);
         break;
       case MUX2_vcasustain:
-        myControlChange(channel, CCvcasustain, mux2Read);
+        myControlChange(midiChannel, CCvcasustain, mux2Read);
         break;
       case MUX2_vcarelease:
-        myControlChange(channel, CCvcarelease, mux2Read);
+        myControlChange(midiChannel, CCvcarelease, mux2Read);
         break;
       case MUX2_glide:
-        myControlChange(channel, CCglide, mux2Read);
+        myControlChange(midiChannel, CCglide, mux2Read);
         break;
       case MUX2_volume:
-        myControlChange(channel, CCvolume, mux2Read);
+        myControlChange(midiChannel, CCvolume, mux2Read);
         break;
     }
   }
@@ -1632,13 +1642,13 @@ void checkFxPots() {
   if (fxAmtRead > (fxAmtPrevious + QUANTISE_FACTOR) || fxAmtRead < (fxAmtPrevious - QUANTISE_FACTOR)) {
     fxAmtPrevious = fxAmtRead;
     fxAmtRead = (fxAmtRead >> 3); //Change range to 0-127
-    myControlChange(channel, CCfxamt, fxAmtRead);
+    myControlChange(midiChannel, CCfxamt, fxAmtRead);
   }
   fxMixRead = analogRead(EFFECTMIX_POT);
   if (fxMixRead > (fxMixPrevious + QUANTISE_FACTOR) || fxMixRead < (fxMixPrevious - QUANTISE_FACTOR)) {
     fxMixPrevious = fxMixRead;
     fxMixRead = (fxMixRead >> 3); //Change range to 0-127
-    myControlChange(channel, CCfxmix, fxMixRead);
+    myControlChange(midiChannel, CCfxmix, fxMixRead);
   }
 }
 
@@ -1646,56 +1656,56 @@ void checkSwitches() {
   pwmSourceSwitch.update();
   if (pwmSourceSwitch.risingEdge()) {
     pwmSource = PWMSOURCEFENV;
-    myControlChange(channel, CCpwmSource, pwmSource);
+    myControlChange(midiChannel, CCpwmSource, pwmSource);
   } else if (pwmSourceSwitch.fallingEdge()) {
     pwmSource = PWMSOURCELFO;
-    myControlChange(channel, CCpwmSource, pwmSource);
+    myControlChange(midiChannel, CCpwmSource, pwmSource);
   }
 
   unisonSwitch.update();
   if (unisonSwitch.risingEdge()) {
     unison = 1;
-    myControlChange(channel, CCunison, unison);
+    myControlChange(midiChannel, CCunison, unison);
   } else if (unisonSwitch.fallingEdge()) {
     unison = 0;
-    myControlChange(channel, CCunison, unison);
+    myControlChange(midiChannel, CCunison, unison);
   }
 
   ringModSwitch.update();
   if (ringModSwitch.risingEdge()) {
     ringMod = 1;
-    myControlChange(channel, CCringmod, ringMod);
+    myControlChange(midiChannel, CCringmod, ringMod);
     Serial.println("RING_MOD_SW: " + String(ringMod));
   } else if (ringModSwitch.fallingEdge()) {
     ringMod = 0;
-    myControlChange(channel, CCringmod, ringMod);
+    myControlChange(midiChannel, CCringmod, ringMod);
   }
 
   vcoLFORetrigSwitch.update();
   if (vcoLFORetrigSwitch.risingEdge()) {
     vcoLfoRetrig = 1;
-    myControlChange(channel, CCvcolforetrig, vcoLfoRetrig);
+    myControlChange(midiChannel, CCvcolforetrig, vcoLfoRetrig);
   } else if (vcoLFORetrigSwitch.fallingEdge()) {
     vcoLfoRetrig = 0;
-    myControlChange(channel, CCvcolforetrig, vcoLfoRetrig);
+    myControlChange(midiChannel, CCvcolforetrig, vcoLfoRetrig);
   }
 
   vcfLFORetrigSwitch.update();
   if (vcfLFORetrigSwitch.risingEdge()) {
     vcfLfoRetrig = 1;
-    myControlChange(channel, CCvcflforetrig, vcfLfoRetrig);
+    myControlChange(midiChannel, CCvcflforetrig, vcfLfoRetrig);
   } else if (vcfLFORetrigSwitch.fallingEdge()) {
     vcfLfoRetrig = 0;
-    myControlChange(channel, CCvcflforetrig, vcfLfoRetrig);
+    myControlChange(midiChannel, CCvcflforetrig, vcfLfoRetrig);
   }
 
   tempoSwitch.update();
   if (tempoSwitch.risingEdge()) {
     vcfLFOMidiClkSync = 1;
-    myControlChange(channel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
+    myControlChange(midiChannel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
   } else  if (tempoSwitch.fallingEdge()) {
     vcfLFOMidiClkSync = 0;
-    myControlChange(channel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
+    myControlChange(midiChannel, CCvcfLFOMidiClkSync, vcfLFOMidiClkSync);
   }
 
   saveButton.update();

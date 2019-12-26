@@ -16,6 +16,7 @@ const int16_t HARMONIC_WAVE[256] = { 0, 3934, 7773, 11428, 14813, 17853, 20484, 
 const float VCOLFOOCTAVERANGE = 2.0f;//2 Oct range
 const float MAXDETUNE = 0.05f; //5%
 const float PWMMAXRATE = 10.0f;//10Hz
+const int PWMWAVEFORM = WAVEFORM_SINE;
 const float LFOMAXRATE = 40.0f;//40Hz
 const int PWMSOURCELFO = 0;
 const int PWMSOURCEFENV = 1;

@@ -22,6 +22,7 @@ ST7735_t3 tft = ST7735_t3(cs, dc, mosi, sclk, rst);
 
 String currentParameter = "";
 String currentValue = "";
+float currentFloatValue = 0.0;
 String currentPgmNum = "";
 String currentPatchName = "";
 String newPatchName = "";
@@ -108,11 +109,14 @@ void renderCurrentPatchPage() {
 }
 
 void renderPulseWidth(float value) {
-  tft.drawFastVLine(110, 74, 21, ST7735_CYAN);
-  tft.drawFastHLine(110, 74, 13 + (value * 13), ST7735_CYAN);
+  tft.drawFastHLine(108, 74, 15 + (value * 13), ST7735_CYAN);
   tft.drawFastVLine(123 + (value * 13), 74, 20, ST7735_CYAN);
-  tft.drawFastHLine(123 + (value * 13), 94, 13 - (value * 13), ST7735_CYAN);
-  tft.drawFastVLine(136, 74, 21, ST7735_CYAN);
+  tft.drawFastHLine(123 + (value * 13), 94, 16 - (value * 13), ST7735_CYAN);
+  if (value < 0) {
+    tft.drawFastVLine(108, 74, 21, ST7735_CYAN);
+  } else {
+    tft.drawFastVLine(138, 74, 21, ST7735_CYAN);
+  }
 }
 
 void renderVarTriangle(float value) {
@@ -121,9 +125,9 @@ void renderVarTriangle(float value) {
 }
 
 void renderEnv(float att, float dec, float sus, float rel) {
-  tft.drawLine(110, 94, 110 + (att * 13), 74, ST7735_CYAN);
-  tft.drawLine(110 + (att * 13), 74.0, 110 + ((att  + dec) * 13), 94 - (sus * 20), ST7735_CYAN);
-  tft.drawFastHLine(110 + ((att + dec) * 13), 94 - (sus * 20), 30 - ((att  + dec) * 13), ST7735_CYAN);
+  tft.drawLine(100, 94, 100 + (att * 15), 74, ST7735_CYAN);
+  tft.drawLine(100 + (att * 15), 74.0, 100 + ((att  + dec) * 15), 94 - (sus * 20), ST7735_CYAN);
+  tft.drawFastHLine(100 + ((att + dec) * 15), 94 - (sus * 20), 40 - ((att  + dec) * 15), ST7735_CYAN);
   tft.drawLine(139, 94 - (sus * 20), 139 + (rel * 13), 94, ST7735_CYAN);
 }
 
@@ -142,10 +146,10 @@ void renderCurrentParameterPage() {
       tft.println(currentValue);
       switch (paramType) {
         case PULSE:
-          //   renderPulseWidth(strtof(currentValue,NULL));
+          renderPulseWidth(currentFloatValue);
           break;
         case VAR_TRI:
-          //     renderVarTriangle(strtof(currentValue,NULL));
+          renderVarTriangle(currentFloatValue);
           break;
         case FILTER_ENV:
           renderEnv(vcfAttack * 0.0001, vcfDecay * 0.0001, vcfSustain, vcfRelease * 0.0001);
@@ -258,6 +262,14 @@ void renderRecallPage() {
 
 void showRenamingPage(String newName) {
   newPatchName = newName;
+}
+
+void showCurrentParameterPage(String param, float val, int pType) {
+  currentParameter = param;
+  currentValue = String(val);
+  currentFloatValue = val;
+  paramType = pType;
+  startTimer();
 }
 
 void showCurrentParameterPage(String param, String val, int pType) {
