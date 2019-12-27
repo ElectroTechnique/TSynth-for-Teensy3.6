@@ -76,7 +76,7 @@ void setup() {
 
   AudioMemory(48);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.5);//Headphones
+  sgtl5000_1.volume(SGTL_MAXVOLUME);//Headphones
   sgtl5000_1.lineOutLevel(29);//Line out
 
   // Configure SPI
@@ -105,8 +105,9 @@ void setup() {
   }
 
   //Read MIDI Channel from EEPROM
-//  midiChannel = EEPROM.read(0);
-//  if (midiChannel == 0) midiChannel = MIDI_CHANNEL_OMNI;
+  midiChannel = EEPROM.read(0);
+  if (midiChannel < 0 || midiChannel > 16) midiChannel = MIDI_CHANNEL_OMNI;
+  Serial.println("MIDI Ch:" + String(midiChannel));
 
   //USB HOST MIDI Class Compliant
   delay(200);//Wait to turn on USB Host
@@ -152,15 +153,15 @@ void setup() {
   voiceMixer1.gain(0, VOICEMIXERLEVEL);
   voiceMixer1.gain(1, VOICEMIXERLEVEL);
   voiceMixer1.gain(2, VOICEMIXERLEVEL);
-  voiceMixer1.gain(3, VOICEMIXERLEVEL);
+  voiceMixer1.gain(3, 0);
 
   voiceMixer2.gain(0, VOICEMIXERLEVEL);
   voiceMixer2.gain(1, VOICEMIXERLEVEL);
-  voiceMixer2.gain(2, 0);
+  voiceMixer2.gain(2, VOICEMIXERLEVEL);
   voiceMixer2.gain(3, 0);
 
-  voiceMixerM.gain(0, VOICEMIXERLEVEL);
-  voiceMixerM.gain(1, VOICEMIXERLEVEL);
+  voiceMixerM.gain(0, 0.5);
+  voiceMixerM.gain(1, 0.5);
   voiceMixerM.gain(2, 0);
   voiceMixerM.gain(3, 0);
 
@@ -281,7 +282,7 @@ void setup() {
   effectMixerR.gain(3, 0);
 
   //reinitialiseToPanel();
-  recallPatch(String(patchNo));
+  recallPatch(String(patchNo));//Load first patch
 }
 
 void myNoteOn(byte channel, byte note, byte velocity) {
@@ -558,7 +559,7 @@ void updateVoice3() {
     waveformMod3a.frequency(NOTEFREQS[voices[2].note + vcoOctaveA]);
     waveformMod3b.frequency(NOTEFREQS[voices[2].note + vcoOctaveB] * detune);
   }
-}void updateVoice4() {
+} void updateVoice4() {
   if (unison == 1) {
     waveformMod4a.frequency(NOTEFREQS[voices[3].note + vcoOctaveA] * (detune + ((1 - detune) * 0.55)));
     waveformMod4b.frequency(NOTEFREQS[voices[3].note + vcoOctaveB] * (detune + ((1 - detune) * 0.64)));
@@ -904,7 +905,7 @@ void updatePWA() {
       setPwmMixerALFO(pwmAmtA);
       showCurrentParameterPage("1. PWM Amt", "LFO " + String(pwmAmtA));
     } else {
-      //PW alters PWM FEnv amount for waveform A
+      //PW alters PWM Filter Env amount for waveform A
       setPwmMixerAFEnv(pwmAmtA);
       showCurrentParameterPage("1. PWM Amt", "F. Env " + String(pwmAmtA));
     }
@@ -934,7 +935,7 @@ void updatePWB() {
       setPwmMixerBLFO(pwmAmtB);
       showCurrentParameterPage("2. PWM Amt", "LFO " + String(pwmAmtB));
     } else {
-      //PW alters PWM FEnv amount for waveform B
+      //PW alters PWM Filter Env amount for waveform B
       setPwmMixerBFEnv(pwmAmtB);
       showCurrentParameterPage("2. PWM Amt", "F. Env " + String(pwmAmtB));
     }
@@ -1100,7 +1101,8 @@ void updateKeyTracking() {
 
 void updateVcoLFOAmt() {
   vcoLfo.amplitude(vcoLfoAmt);
-  showCurrentParameterPage("LFO Amount", String(vcoLfoAmt));
+  char buf[10];
+  showCurrentParameterPage("LFO Amount", dtostrf(vcoLfoAmt, 4, 3, buf));
 }
 
 void updateModWheel() {
@@ -1316,8 +1318,9 @@ void myControlChange(byte channel, byte control, byte value) {
   AudioNoInterrupts();
   switch (control) {
     case CCvolume:
-      sgtl5000_1.volume(0.8 * LINEAR[value]);//Headphones
-      //sgtl5000_1.lineOutLevel(31 - (18 * LINEAR[value])); //Line out
+      //Nasty clicking sounds when adjusting SGTL5000 volume value
+      sgtl5000_1.volume(SGTL_MAXVOLUME * LINEAR[value]);//Headphones
+      //sgtl5000_1.lineOutLevel(31 - (18 * LINEAR[value])); //Line out, wierd inverted values
       updateVolume(LINEAR[value]);
       break;
 
@@ -1377,19 +1380,19 @@ void myControlChange(byte channel, byte control, byte value) {
     case CCpwmAmt:
       //NO FRONT PANEL CONTROL - MIDI CC ONLY
       //Total PWM amount for both oscillators
-      pwmAmtA =  LINEAR[value];
-      pwmAmtB =  LINEAR[value];
+      pwmAmtA = LINEAR[value];
+      pwmAmtB = LINEAR[value];
       updatePWMAmount();
       break;
 
     case CCpwA:
-      pwA = (2.0 * LINEAR[value]) - 1.0;//Bipolar
-      pwmAmtA =   LINEAR[value];
+      pwA = LINEARCENTREZERO[value];//Bipolar
+      pwmAmtA = LINEAR[value];
       updatePWA();
       break;
 
     case CCpwB:
-      pwB =  (2.0 * LINEAR[value]) - 1.0;//Bipolar
+      pwB =  LINEARCENTREZERO[value];//Bipolar
       pwmAmtB = LINEAR[value];
       updatePWB();
       break;
@@ -1426,12 +1429,12 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCfilterenv:
-      filterEnv = ((2 * LINEAR[value]) - 1) * VCFMODMIXERMAX;
+      filterEnv = LINEARCENTREZERO[value] * VCFMODMIXERMAX;//Bipolar
       updateFilterEnv();
       break;
 
     case CCkeytracking:
-      keytrackingAmount = LINEAR[value] * VCFMODMIXERMAX;
+      keytrackingAmount = LINEAR[value];
       updateKeyTracking();
       break;
 
@@ -2120,6 +2123,7 @@ void checkEncoder() {
   }
 }
 
+//Store MIDI Channel to non-volatile EEPROM
 void storeMidiChannel(byte channel) {
   midiChannel = channel;
   EEPROM.write(0, channel);
@@ -2142,8 +2146,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-//          Serial.print("CPU:");
-//          Serial.print(AudioProcessorUsageMax());
-//          Serial.print("  MEM:");
-//          Serial.println(AudioMemoryUsageMax());
+            Serial.print("CPU:");
+            Serial.print(AudioProcessorUsageMax());
+            Serial.print("  MEM:");
+            Serial.println(AudioMemoryUsageMax());
 }

@@ -220,8 +220,10 @@ AudioConnection          patchCord193(filterMixer5, vcaEnvelope5);
 AudioConnection          patchCord194(filterMixer6, vcaEnvelope6);
 AudioConnection          patchCord108(vcaEnvelope2, 0, voiceMixer1, 1);
 AudioConnection          patchCord109(vcaEnvelope3, 0, voiceMixer1, 2);
-AudioConnection          patchCord110(vcaEnvelope4, 0, voiceMixer1, 3);
+AudioConnection          patchCord110(vcaEnvelope4, 0, voiceMixer2, 0);
 AudioConnection          patchCord111(vcaEnvelope1, 0, voiceMixer1, 0);
+AudioConnection          patchCord195(vcaEnvelope5, 0, voiceMixer2, 1);
+AudioConnection          patchCord196(vcaEnvelope6, 0, voiceMixer2, 2);
 AudioConnection          patchCord112(voiceMixerM, ensemble);
 AudioConnection          patchCord113(ensemble, 0, effectMixerL, 1);
 AudioConnection          patchCord114(ensemble, 1, effectMixerR, 1);
@@ -299,10 +301,6 @@ AudioConnection          patchCord185(waveformMixer5, 0, filter5, 0);
 AudioConnection          patchCord186(vcfModMixer5, 0, filter5, 1);
 AudioConnection          patchCord187(waveformMixer6, 0, filter6, 0);
 AudioConnection          patchCord188(vcfModMixer6, 0, filter6, 1);
-
-
-AudioConnection          patchCord195(vcaEnvelope5, 0, voiceMixer2, 0);
-AudioConnection          patchCord196(vcaEnvelope6, 0, voiceMixer2, 1);
 AudioConnection          patchCord197(voiceMixer1, 0, voiceMixerM, 0);
 AudioConnection          patchCord198(voiceMixer2, 0, voiceMixerM, 1);
 AudioConnection          patchCord199(constant1Dc, vcfEnvelope5);
