@@ -295,7 +295,6 @@ void myNoteOn(byte channel, byte note, byte velocity) {
   //Check for out of range notes
   if (note + vcoOctaveA < 0 || note + vcoOctaveA > 127 || note + vcoOctaveB < 0 || note + vcoOctaveB > 127) return;
 
-  AudioNoInterrupts();
   if (glideSpeed > 0) {
     glide.amplitude((prevNote - note) * DIV12);//Set glide to previous note frequency
     glide.amplitude(0, glideSpeed * GLIDEFACTOR);//Glide to current note
@@ -420,12 +419,10 @@ void myNoteOn(byte channel, byte note, byte velocity) {
     voiceOn[4] = true;
     voiceOn[5] = true;
   }
-  AudioInterrupts();
 }
 
 void myNoteOff(byte channel, byte note, byte velocity) {
   if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
-  AudioNoInterrupts();
   if (unison == 0) {
     switch (getVoiceNo(note)) {
       case 1:
@@ -469,7 +466,6 @@ void myNoteOff(byte channel, byte note, byte velocity) {
     //UNISON MODE
     allNotesOff();
   }
-  AudioInterrupts();
 }
 
 void allNotesOff() {
@@ -485,7 +481,7 @@ void allNotesOff() {
   vcaEnvelope5.noteOff();
   vcfEnvelope6.noteOff();
   vcaEnvelope6.noteOff();
-
+  
   voices[0].note = -1;
   voices[1].note = -1;
   voices[2].note = -1;
@@ -1320,7 +1316,6 @@ void myPitchBend(byte channel, int bend) {
 
 void myControlChange(byte channel, byte control, byte value) {
   if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
-  AudioNoInterrupts();
   switch (control) {
     case CCvolume:
       //Nasty clicking sounds when adjusting SGTL5000 volume value
@@ -1568,7 +1563,6 @@ void myControlChange(byte channel, byte control, byte value) {
       allNotesOff();
       break;
   }
-  AudioInterrupts();
 }
 
 void myProgramChange(byte channel, byte program) {
@@ -2151,8 +2145,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-//  Serial.print("CPU:");
-//  Serial.print(AudioProcessorUsageMax());
-//  Serial.print("  MEM:");
-//  Serial.println(AudioMemoryUsageMax());
+//    Serial.print("CPU:");
+//    Serial.print(AudioProcessorUsageMax());
+//    Serial.print("  MEM:");
+//    Serial.println(AudioMemoryUsageMax());
 }

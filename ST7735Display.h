@@ -6,7 +6,7 @@
 #define cs  2  // CS & DC can use pins 2, 6, 9, 10, 15, 20, 21, 22, 23
 #define dc   3   //but certain pairs must NOT be used: 2+10, 6+9, 20+23, 21+22
 #define rst  8   // RST can use any pin
-#define DISPLAYDELAY 2
+#define DISPLAYDELAY 1
 #define DISPLAYTIMEOUT 800
 
 #include <ST7735_t3.h> // Hardware-specific library for T3.x
