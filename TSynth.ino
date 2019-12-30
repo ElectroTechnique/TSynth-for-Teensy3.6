@@ -274,6 +274,11 @@ void setup() {
   filterMixer5.gain(3, 0);//Not used
   filterMixer6.gain(3, 0);//Not used
 
+  //This removes dc offset (mostly from unison pulse waves) before the ensemble effect
+  dcOffsetFilter.octaveControl(1);
+  dcOffsetFilter.frequency(20);
+  dcOffsetFilter.resonance(0.707);
+
   ensemble.lfoRate(fxAmt);
 
   effectMixerL.gain(2, 0);
@@ -2146,8 +2151,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-            Serial.print("CPU:");
-            Serial.print(AudioProcessorUsageMax());
-            Serial.print("  MEM:");
-            Serial.println(AudioMemoryUsageMax());
+//  Serial.print("CPU:");
+//  Serial.print(AudioProcessorUsageMax());
+//  Serial.print("  MEM:");
+//  Serial.println(AudioMemoryUsageMax());
 }

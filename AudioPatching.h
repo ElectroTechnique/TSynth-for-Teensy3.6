@@ -98,6 +98,7 @@ AudioEffectEnvelope      vcaEnvelope6;   //xy=1327,211
 AudioMixer4              voiceMixer1;     //xy=1524,570
 AudioMixer4              voiceMixer2;     //xy=1524,570
 AudioMixer4              voiceMixerM;     //xy=1544,580
+AudioFilterStateVariable dcOffsetFilter;     //xy=1564,580
 AudioEffectEnsemble       ensemble;  //xy=1800,600
 AudioMixer4              effectMixerR;         //xy=1848,625
 AudioMixer4              effectMixerL;         //xy=1857,539
@@ -224,11 +225,11 @@ AudioConnection          patchCord110(vcaEnvelope4, 0, voiceMixer2, 0);
 AudioConnection          patchCord111(vcaEnvelope1, 0, voiceMixer1, 0);
 AudioConnection          patchCord195(vcaEnvelope5, 0, voiceMixer2, 1);
 AudioConnection          patchCord196(vcaEnvelope6, 0, voiceMixer2, 2);
-AudioConnection          patchCord112(voiceMixerM, ensemble);
+AudioConnection          patchCord112(dcOffsetFilter, 2, ensemble, 0);
 AudioConnection          patchCord113(ensemble, 0, effectMixerL, 1);
 AudioConnection          patchCord114(ensemble, 1, effectMixerR, 1);
-AudioConnection          patchCord115(voiceMixerM, 0, effectMixerL, 0);
-AudioConnection          patchCord116(voiceMixerM, 0, effectMixerR, 0);
+AudioConnection          patchCord115(dcOffsetFilter, 2, effectMixerL, 0);
+AudioConnection          patchCord116(dcOffsetFilter, 2, effectMixerR, 0);
 AudioConnection          patchCord117(effectMixerR, 0, usbAudio, 1);
 AudioConnection          patchCord118(effectMixerR, 0, i2s, 1);
 AudioConnection          patchCord119(effectMixerL, 0, i2s, 0);
@@ -305,5 +306,6 @@ AudioConnection          patchCord197(voiceMixer1, 0, voiceMixerM, 0);
 AudioConnection          patchCord198(voiceMixer2, 0, voiceMixerM, 1);
 AudioConnection          patchCord199(constant1Dc, vcfEnvelope5);
 AudioConnection          patchCord200(constant1Dc, vcfEnvelope6);
+AudioConnection          patchCord203(voiceMixerM, 0, dcOffsetFilter, 0);
 AudioControlSGTL5000     sgtl5000_1;     //xy=2353,505
 // GUItool: end automatically generated code
