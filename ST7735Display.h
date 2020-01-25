@@ -6,7 +6,6 @@
 #define cs  2  // CS & DC can use pins 2, 6, 9, 10, 15, 20, 21, 22, 23
 #define dc   3   //but certain pairs must NOT be used: 2+10, 6+9, 20+23, 21+22
 #define rst  8   // RST can use any pin
-#define DISPLAYDELAY 1
 #define DISPLAYTIMEOUT 800
 
 #include <ST7735_t3.h> // Hardware-specific library for T3.x
@@ -82,33 +81,33 @@ void renderCurrentPatchPage() {
   tft.setTextColor(ST7735_BLACK);
   tft.setFont(&Org_01);
   if (voiceOn[0]) {
-    tft.fillRect(117, 30, 8, 8 , ST7735_BLUE);
-    tft.setCursor(121, 36);
+    tft.fillRect(115, 28, 12, 12 , ST7735_BLUE);
+    tft.setCursor(120, 36);
     tft.println("1");
   }
   if (voiceOn[1]) {
-    tft.fillRect(132, 30, 8, 8 , ST7735_BLUE);
-    tft.setCursor(134, 36);
+    tft.fillRect(130, 28, 12, 12 , ST7735_BLUE);
+    tft.setCursor(133, 36);
     tft.println("2");
   }
   if (voiceOn[2]) {
-    tft.fillRect(147, 30, 8, 8 , ST7735_BLUE);
-    tft.setCursor(149, 36);
+    tft.fillRect(145, 28, 12, 12 , ST7735_BLUE);
+    tft.setCursor(148, 36);
     tft.println("3");
   }
   if (voiceOn[3]) {
-    tft.fillRect(117, 45, 8, 8 , ST7735_BLUE);
-    tft.setCursor(119, 51);
+    tft.fillRect(115, 43, 12, 12 , ST7735_BLUE);
+    tft.setCursor(118, 51);
     tft.println("4");
   }
   if (voiceOn[4]) {
-    tft.fillRect(132, 45, 8, 8 , ST7735_BLUE);
-    tft.setCursor(134, 51);
+    tft.fillRect(130, 43, 12, 12 , ST7735_BLUE);
+    tft.setCursor(133, 51);
     tft.println("5");
   }
   if (voiceOn[5]) {
-    tft.fillRect(147, 45, 8, 8 , ST7735_BLUE);
-    tft.setCursor(149, 51);
+    tft.fillRect(145, 43, 12, 12 , ST7735_BLUE);
+    tft.setCursor(148, 51);
     tft.println("6");
   }
 
@@ -333,9 +332,8 @@ void displayThread() {
         renderDeletePatchPage();
         break;
     }
-
     tft.updateScreen();
-    threads.delay(DISPLAYDELAY);
+   // threads.delay(1);//Not needed!
   }
 }
 

@@ -76,7 +76,7 @@ void setup() {
 
   AudioMemory(48);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(SGTL_MAXVOLUME);//Headphones
+  sgtl5000_1.volume(SGTL_MAXVOLUME * 0.5);//Headphones - do not initialise to maximum
   sgtl5000_1.lineOutLevel(29);//Line out
 
   // Configure SPI
@@ -291,12 +291,11 @@ void setup() {
 }
 
 void myNoteOn(byte channel, byte note, byte velocity) {
-  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   //Check for out of range notes
   if (note + vcoOctaveA < 0 || note + vcoOctaveA > 127 || note + vcoOctaveB < 0 || note + vcoOctaveB > 127) return;
 
   if (glideSpeed > 0) {
-    glide.amplitude((prevNote - note) * DIV12);//Set glide to previous note frequency
+    glide.amplitude((prevNote - note) * DIV12);//Set glide to previous note frequency (limited to 1 octave max)
     glide.amplitude(0, glideSpeed * GLIDEFACTOR);//Glide to current note
   }
 
@@ -422,7 +421,6 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 }
 
 void myNoteOff(byte channel, byte note, byte velocity) {
-  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   if (unison == 0) {
     switch (getVoiceNo(note)) {
       case 1:
@@ -481,7 +479,7 @@ void allNotesOff() {
   vcaEnvelope5.noteOff();
   vcfEnvelope6.noteOff();
   vcaEnvelope6.noteOff();
-  
+
   voices[0].note = -1;
   voices[1].note = -1;
   voices[2].note = -1;
@@ -1310,17 +1308,15 @@ void updatePatchname() {
 }
 
 void myPitchBend(byte channel, int bend) {
-  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
+
   pitchBend.amplitude(bend * 0.5 * DIV8192);//)0.5 to give 1oct - spread of mod is 2oct
 }
 
 void myControlChange(byte channel, byte control, byte value) {
-  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   switch (control) {
     case CCvolume:
-      //Nasty clicking sounds when adjusting SGTL5000 volume value
       sgtl5000_1.volume(SGTL_MAXVOLUME * LINEAR[value]);//Headphones
-      //sgtl5000_1.lineOutLevel(31 - (18 * LINEAR[value])); //Line out, wierd inverted values
+      //sgtl5000_1.lineOutLevel(31 - (18 * LINEAR[value])); //Line out, weird inverted values
       updateVolume(LINEAR[value]);
       break;
 
@@ -1335,8 +1331,6 @@ void myControlChange(byte channel, byte control, byte value) {
       break;
 
     case CCpitchenv:
-      //The pitch envelope amount has a large 'zero zone' in the centre
-      //to make it easier to ensure that it is off when adjusted.
       pitchEnv = LINEARCENTREZERO[value] * VCOMODMIXERMAX;
       updatePitchEnv();
       break;
@@ -1566,7 +1560,6 @@ void myControlChange(byte channel, byte control, byte value) {
 }
 
 void myProgramChange(byte channel, byte program) {
-  if (midiChannel != MIDI_CHANNEL_OMNI && midiChannel != channel) return;
   state = PATCH;
   Serial.print("MIDI Pgm Change:");
   Serial.println(String(program + 1));
@@ -1603,7 +1596,7 @@ void myMIDIClock() {
 }
 
 void recallPatch(String patchNo) {
-  File patchFile = SD.open(patchNo);
+  File patchFile = SD.open(patchNo.c_str());
   if (!patchFile) {
     Serial.println("File not found");
   } else {
@@ -1873,7 +1866,6 @@ void checkSwitches() {
   if (ringModSwitch.risingEdge()) {
     ringMod = 1;
     myControlChange(midiChannel, CCringmod, ringMod);
-    Serial.println("RING_MOD_SW: " + String(ringMod));
   } else if (ringModSwitch.fallingEdge()) {
     ringMod = 0;
     myControlChange(midiChannel, CCringmod, ringMod);
@@ -1934,6 +1926,7 @@ void checkSwitches() {
           //Save renamed patch
           //sort patches so new patch is saved at end
           patchName = renamedPatch;
+          state = PATCH;
           savePatch(String(patches.last().patchNo), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patchName);
           getPatches(SD.open("/"));//Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
@@ -2130,9 +2123,9 @@ void storeMidiChannel(byte channel) {
 
 void loop() {
   myusb.Task();
-  midi1.read();//USB HOST MIDI Class Compliant
-  usbMIDI.read();//USB Client MIDI
-  MIDI.read();//MIDI 5 Pin DIN
+  midi1.read(midiChannel);//USB HOST MIDI Class Compliant
+  usbMIDI.read(midiChannel);//USB Client MIDI
+  MIDI.read(midiChannel);//MIDI 5 Pin DIN
 
   checkMux();
   checkFxPots();
@@ -2145,8 +2138,8 @@ void loop() {
   //    Serial.println(Serial4.read(), HEX);
   //  }
 
-//    Serial.print("CPU:");
-//    Serial.print(AudioProcessorUsageMax());
-//    Serial.print("  MEM:");
-//    Serial.println(AudioMemoryUsageMax());
+//      Serial.print("CPU:");
+//      Serial.print(AudioProcessorUsageMax());
+//      Serial.print("  MEM:");
+//      Serial.println(AudioMemoryUsageMax());
 }
