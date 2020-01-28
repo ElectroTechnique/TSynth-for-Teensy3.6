@@ -31,7 +31,7 @@
 
 
 // uncomment for more accurate but more computationally expensive frequency modulation
-//#define IMPROVE_EXPONENTIAL_ACCURACY
+#define IMPROVE_EXPONENTIAL_ACCURACY
 
 
 void AudioSynthWaveform::update(void)
