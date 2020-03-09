@@ -59,7 +59,7 @@ void printPatchesCircularBuffer() {
   }
 }
 
-size_t readField(File * file, char* str, size_t size, char* delim) {
+size_t readField(File * file, char* str, size_t size, const char* delim) {
   char ch;
   size_t n = 0;
   while ((n + 1) < size && file->read(&ch, 1) == 1) {

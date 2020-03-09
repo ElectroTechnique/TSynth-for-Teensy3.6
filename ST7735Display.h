@@ -275,7 +275,16 @@ void showRenamingPage(String newName) {
   newPatchName = newName;
 }
 
-void showCurrentParameterPage(String param, float val, int pType) {
+void renderSettingsPage() {
+ tft.fillScreen(ST7735_BLACK);
+  tft.setFont(&FreeSans12pt7b);
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextSize(1);
+  tft.setCursor(0, 53);
+  tft.println("Settings");
+}
+
+void showCurrentParameterPage(const char* param, float val, int pType) {
   currentParameter = param;
   currentValue = String(val);
   currentFloatValue = val;
@@ -283,14 +292,14 @@ void showCurrentParameterPage(String param, float val, int pType) {
   startTimer();
 }
 
-void showCurrentParameterPage(String param, String val, int pType) {
+void showCurrentParameterPage(const char* param, String val, int pType) {
   currentParameter = param;
   currentValue = val;
   paramType = pType;
   startTimer();
 }
 
-void showCurrentParameterPage(String param, String val) {
+void showCurrentParameterPage(const char* param, String val) {
   showCurrentParameterPage(param, val, PARAMETER);
 }
 
@@ -331,9 +340,12 @@ void displayThread() {
       case DELETE:
         renderDeletePatchPage();
         break;
+      case SETTINGS:
+        renderSettingsPage();
+        break;
     }
     tft.updateScreen();
-   // threads.delay(1);//Not needed!
+    // threads.delay(1);//Not needed!
   }
 }
 
