@@ -26,7 +26,8 @@ int charIndex = 0;
 char currentCharacter = 0;
 String renamedPatch = "";
 
-struct PatchNoAndName {
+struct PatchNoAndName
+{
   int patchNo;
   String patchName;
 };
@@ -34,12 +35,17 @@ struct PatchNoAndName {
 CircularBuffer<PatchNoAndName, PATCHES_LIMIT> patches;
 
 //Utility for debugging
-void printPatchesCircularBuffer() {
-  if (patches.isEmpty()) {
+void printPatchesCircularBuffer()
+{
+  if (patches.isEmpty())
+  {
     Serial.println("empty");
-  } else {
+  }
+  else
+  {
     Serial.print("[");
-    for (decltype(patches)::index_t i = 0; i < patches.size(); i++) {
+    for (decltype(patches)::index_t i = 0; i < patches.size(); i++)
+    {
       Serial.print(patches[i].patchNo);
       Serial.print(":");
       Serial.print(patches[i].patchName);
@@ -51,7 +57,8 @@ void printPatchesCircularBuffer() {
     Serial.print(patches.size());
     Serial.print("/");
     Serial.print(patches.size() + patches.available());
-    if (patches.isFull()) {
+    if (patches.isFull())
+    {
       Serial.print(" full");
     }
 
@@ -59,16 +66,20 @@ void printPatchesCircularBuffer() {
   }
 }
 
-size_t readField(File * file, char* str, size_t size, char* delim) {
+size_t readField(File *file, char *str, size_t size, const char *delim)
+{
   char ch;
   size_t n = 0;
-  while ((n + 1) < size && file->read(&ch, 1) == 1) {
+  while ((n + 1) < size && file->read(&ch, 1) == 1)
+  {
     // Delete CR.
-    if (ch == '\r') {
+    if (ch == '\r')
+    {
       continue;
     }
     str[n++] = ch;
-    if (strchr(delim, ch)) {
+    if (strchr(delim, ch))
+    {
       break;
     }
   }
@@ -76,21 +87,27 @@ size_t readField(File * file, char* str, size_t size, char* delim) {
   return n;
 }
 
-void recallPatchData(File patchFile, String data[]) {
+void recallPatchData(File patchFile, String data[])
+{
   //Read patch data from file and set current patch parameters
-  size_t n;      // Length of returned field with delimiter.
-  char str[20];  // Must hold longest field with delimiter and zero byte.
+  size_t n;     // Length of returned field with delimiter.
+  char str[20]; // Must hold longest field with delimiter and zero byte.
   int i = 0;
-  while (patchFile.available() && i < NO_OF_PARAMS) {
+  while (patchFile.available() && i < NO_OF_PARAMS)
+  {
     n = readField(&patchFile, str, sizeof(str), ",\n");
     // done if Error or at EOF.
-    if (n == 0) break;
+    if (n == 0)
+      break;
     // Print the type of delimiter.
-    if (str[n - 1] == ',' || str[n - 1] == '\n') {
+    if (str[n - 1] == ',' || str[n - 1] == '\n')
+    {
       //        Serial.print(str[n - 1] == ',' ? F("comma: ") : F("endl:  "));
       // Remove the delimiter.
       str[n - 1] = 0;
-    } else {
+    }
+    else
+    {
       // At eof, too long, or read error.  Too long is error.
       Serial.print(patchFile.available() ? F("error: ") : F("eof:   "));
     }
@@ -102,17 +119,24 @@ void recallPatchData(File patchFile, String data[]) {
   }
 }
 
-void getPatches(File file) {
+void getPatches(File file)
+{
   patches.clear();
-  while (true) {
-    String data[NO_OF_PARAMS];    //Array of data read in
-    File patchFile =  file.openNextFile();
-    if (! patchFile) {
+  while (true)
+  {
+    String data[NO_OF_PARAMS]; //Array of data read in
+    File patchFile = file.openNextFile();
+    if (!patchFile)
+    {
       break;
     }
-    if (patchFile.isDirectory()) {
-      getPatches(patchFile);
-    } else {
+    if (patchFile.isDirectory())
+    {
+      //getPatches(patchFile);//Looks for patch files within dirs
+      Serial.println("Ignoring Dir");
+    }
+    else
+    {
       recallPatchData(patchFile, data);
       patches.push(PatchNoAndName{atoi(patchFile.name()), data[0]});
       Serial.println(String(patchFile.name()) + ":" + data[0]);
@@ -121,49 +145,60 @@ void getPatches(File file) {
   }
 }
 
-void deletePatch(String patchNo) {
+void deletePatch(const char *patchNo)
+{
   //Don't delete last patch
-  if (SD.exists(patchNo) && patches.size() > 1) {
+  if (SD.exists(patchNo) && patches.size() > 1)
+  {
     SD.remove(patchNo);
   }
 }
 
-void savePatch(String patchNo, String patchData) {
+void savePatch(const char *patchNo, String patchData)
+{
   Serial.print("savePatch Patch No:");
   Serial.println(patchNo);
   //Overwrite existing patch by deleting
-  if (SD.exists(patchNo)) {
+  if (SD.exists(patchNo))
+  {
     SD.remove(patchNo);
   }
   File patchFile = SD.open(patchNo, FILE_WRITE);
-  if (patchFile) {
+  if (patchFile)
+  {
     Serial.print("Writing Patch No:");
     Serial.println(patchNo);
     Serial.println(patchData);
     patchFile.println(patchData);
     patchFile.close();
-  } else {
+  }
+  else
+  {
     Serial.print("Error writing Patch file:");
     Serial.println(patchNo);
   }
 }
 
-void savePatch(String patchNo, String patchData[]) {
+void savePatch(const char *patchNo, String patchData[])
+{
   String dataString = patchData[0];
-  for (int i = 1; i < NO_OF_PARAMS; i++) {
-    dataString = dataString + "," + patchData[i] ;
+  for (int i = 1; i < NO_OF_PARAMS; i++)
+  {
+    dataString = dataString + "," + patchData[i];
   }
   savePatch(patchNo, dataString);
 }
 
-void resortPatches() {
+void resortPatches()
+{
   //Rename patch files to be consecutive
-  for (int i = 0; i < patches.size(); i++) {
-    String data[NO_OF_PARAMS];    //Array of data read in
-    File file = SD.open(String(patches[i].patchNo));
+  for (int i = 0; i < patches.size(); i++)
+  {
+    String data[NO_OF_PARAMS]; //Array of data read in
+    File file = SD.open(String(patches[i].patchNo).c_str());
     recallPatchData(file, data);
     file.close();
-    savePatch(String(i + 1), data);
+    savePatch(String(i + 1).c_str(), data);
   }
-  deletePatch(patches.size() + 1); //delete final patch still on SD
+  deletePatch(String(patches.size() + 1).c_str()); //delete final patch still on SD
 }

@@ -4,13 +4,13 @@ float VCOALevel = 1;
 float VCOBLevel = 1;
 float noiseLevel = 0;
 int unison = 0;
-int ringMod = 0;
+int oscFX = 0;
 float detune = 0.98;
 float lfoSyncFreq = 1.0;
 float midiClkTimeInterval = 0.0;
 float lfoTempoValue = 1.0;
 
-float keytrackingAmount = 0.7;
+float keytrackingAmount = 0.7;//Not a panel control 
 float glideSpeed = 0;
 int vcoOctaveA = 0;
 int vcoOctaveB = 12;
