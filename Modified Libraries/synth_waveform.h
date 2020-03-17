@@ -22,6 +22,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ 
+ ElectroTechnique 2020
+ Added WAVEFORM_SILENT, sync()
  */
 
 #ifndef synth_waveform_h_
@@ -36,7 +39,6 @@ extern "C" {
 extern const int16_t AudioWaveformSine[257];
 }
 
-
 #define WAVEFORM_SINE              0
 #define WAVEFORM_SAWTOOTH          1
 #define WAVEFORM_SQUARE            2
@@ -46,6 +48,7 @@ extern const int16_t AudioWaveformSine[257];
 #define WAVEFORM_SAWTOOTH_REVERSE  6
 #define WAVEFORM_SAMPLE_HOLD       7
 #define WAVEFORM_TRIANGLE_VARIABLE 8
+#define WAVEFORM_SILENT			   9
 
 class AudioSynthWaveform : public AudioStream
 {
@@ -96,11 +99,11 @@ public:
 		}
 		tone_offset = n * 32767.0;
 	}
-	void pulseWidth(float n) {	// 0.0 to 1.0
-		if (n < 0) {
-			n = 0;
-		} else if (n > 1.0) {
-			n = 1.0;
+	void pulseWidth(float n) {	// 0.05 to 0.95
+		if (n < 0.05) {
+			n = 0.05;
+		} else if (n > 0.95) {
+			n = 0.95;
 		}
 		pulse_width = n * 4294967296.0;
 	}
