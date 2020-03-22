@@ -1,4 +1,4 @@
-Electrical schematic
-3D models
-Lasercut plans
-Mechanical plans
+- Electrical schematic
+- 3D models
+- Lasercut plans
+- Mechanical plans
