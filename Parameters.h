@@ -1,4 +1,5 @@
-//Values below are just for initialising and will be changed when synth is initialised to current panel controls
+//Values below are just for initialising and will be changed when synth is initialised to current panel controls & EEPROM settings
+byte midiChannel = MIDI_CHANNEL_OMNI;//(EEPROM)
 String patchName = INITPATCHNAME;
 float VCOALevel = 1;
 float VCOBLevel = 1;
@@ -9,8 +10,9 @@ float detune = 0.98;
 float lfoSyncFreq = 1.0;
 float midiClkTimeInterval = 0.0;
 float lfoTempoValue = 1.0;
-
-float keytrackingAmount = 0.7;//Not a panel control 
+int pitchBendRange = 12;
+float modWheelDepth = 0.2f;
+float keytrackingAmount = 0.5;//MIDI CC & Menu option (EEPROM)
 float glideSpeed = 0;
 int vcoOctaveA = 0;
 int vcoOctaveB = 12;

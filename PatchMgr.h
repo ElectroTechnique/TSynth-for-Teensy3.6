@@ -17,11 +17,12 @@
   Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name.
   Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again.
 */
-
 //Agileware CircularBuffer available in libraries manager
 #include <CircularBuffer.h>
 
-const char CHARACTERS[63] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+#define TOTALCHARS 63
+
+const char CHARACTERS[TOTALCHARS] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
 int charIndex = 0;
 char currentCharacter = 0;
 String renamedPatch = "";
@@ -33,38 +34,6 @@ struct PatchNoAndName
 };
 
 CircularBuffer<PatchNoAndName, PATCHES_LIMIT> patches;
-
-//Utility for debugging
-void printPatchesCircularBuffer()
-{
-  if (patches.isEmpty())
-  {
-    Serial.println("empty");
-  }
-  else
-  {
-    Serial.print("[");
-    for (decltype(patches)::index_t i = 0; i < patches.size(); i++)
-    {
-      Serial.print(patches[i].patchNo);
-      Serial.print(":");
-      Serial.print(patches[i].patchName);
-      Serial.print(",");
-    }
-    //Serial.print(patches[patches.size() - 1]);
-    Serial.print("] (");
-
-    Serial.print(patches.size());
-    Serial.print("/");
-    Serial.print(patches.size() + patches.available());
-    if (patches.isFull())
-    {
-      Serial.print(" full");
-    }
-
-    Serial.println(")");
-  }
-}
 
 size_t readField(File *file, char *str, size_t size, const char *delim)
 {
@@ -132,7 +101,6 @@ void getPatches(File file)
     }
     if (patchFile.isDirectory())
     {
-      //getPatches(patchFile);//Looks for patch files within dirs
       Serial.println("Ignoring Dir");
     }
     else
@@ -151,6 +119,7 @@ void deletePatch(const char *patchNo)
   if (SD.exists(patchNo) && patches.size() > 1)
   {
     SD.remove(patchNo);
+    //TODO renumber filenames on SD card
   }
 }
 
@@ -189,16 +158,97 @@ void savePatch(const char *patchNo, String patchData[])
   savePatch(patchNo, dataString);
 }
 
-void resortPatches()
+
+int compare(const void *a, const void *b) {
+  return ( *(int*)a - * (int*)b );
+}
+
+
+//// A utility function to swap two elements
+//void swap(int* a, int* b)
+//{
+//  int t = *a;
+//  *a = *b;
+//  *b = t;
+//}
+//
+///* This function takes last element as pivot, places
+//   the pivot element at its correct position in sorted
+//    array, and places all smaller (smaller than pivot)
+//   to left of pivot and all greater elements to right
+//   of pivot */
+//int partition (CircularBuffer<PatchNoAndName, PATCHES_LIMIT> arr, int low, int high)
+//{
+//  int pivot = arr[high].patchNo;    // pivot
+//  int i = (low - 1);  // Index of smaller element
+//
+//  for (int j = low; j <= high - 1; j++)
+//  {
+//    // If current element is smaller than the pivot
+//    if (arr[j].patchNo < pivot)
+//    {
+//      i++;    // increment index of smaller element
+//      swap(&arr[i], &arr[j]);
+//    }
+//  }
+//  swap(&arr[i + 1], &arr[high]);
+//  return (i + 1);
+//}
+//
+///* The main function that implements QuickSort
+//  arr[] --> Array to be sorted,
+//  low  --> Starting index,
+//  high  --> Ending index */
+//void quickSort(CircularBuffer<PatchNoAndName, PATCHES_LIMIT> arr, int low, int high)
+//{
+//  if (low < high)
+//  {
+//    /* pi is partitioning index, arr[p] is now
+//       at right place */
+//    int pi = partition(arr, low, high);
+//
+//    // Separately sort elements before
+//    // partition and after partition
+//    quickSort(arr, low, pi - 1);
+//    quickSort(arr, pi + 1, high);
+//  }
+//}
+
+
+
+
+
+void sortPatches()
 {
-  //Rename patch files to be consecutive
-  for (int i = 0; i < patches.size(); i++)
-  {
-    String data[NO_OF_PARAMS]; //Array of data read in
-    File file = SD.open(String(patches[i].patchNo).c_str());
-    recallPatchData(file, data);
-    file.close();
-    savePatch(String(i + 1).c_str(), data);
-  }
-  deletePatch(String(patches.size() + 1).c_str()); //delete final patch still on SD
+   // quickSort(arr, 0, patches.size()-1); 
+  
+  //  //Sort patches buffer to be consecutive ascending patchNo order
+  //  int arrayToSort[patches.size()];
+  //  for (int i = 0; i < patches.size() - 1; ++i)
+  //  {
+  //    arrayToSort[i] = patches[i].patchNo;
+  //  }
+  //  qsort(arrayToSort, patches.size(), sizeof(int), compare);
+  //
+  //  for (int i = 0; i < patches.size() - 1; ++i)
+  //  {
+  //
+  //    for (int j = 0; j < patches.size() - 1; ++j)
+  //    {
+  //if(patches[j].patchNo == arrayToSort[i]){
+  //  patches[j].
+  //  break;
+  //}
+  //    }
+  //  }
+
+  //  for (int i = 1; i < patches.size(); ++i)
+  //  {
+  //    String data[NO_OF_PARAMS]; //Array of data read in
+  //    File file = SD.open(String(patches[i].patchNo).c_str());
+  //    recallPatchData(file, data);
+  //    file.close();
+  //    savePatch(String(i + 1).c_str(), data);
+  //  }
+  //deletePatch(String(patches.size() + 1).c_str()); //delete final patch still on SD
 }

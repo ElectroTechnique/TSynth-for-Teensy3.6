@@ -1,20 +1,17 @@
 /*
-
   TSynth Firmware Rev 1.0
 
-  TODO+++++++++
-  Menus
-
-  Tools menu Settings:
+  Arduino IDE
+  Tools Settings:
   Board: "Teensy3.6"
   USB Type: "Serial + MIDI + Audio"
+  CPU Speed: "180MHz"
 */
 //#include <Arduino.h>
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-#include <EEPROM.h>
 #include <SerialFlash.h>
 #include <MIDI.h>
 #include <USBHost_t36.h>
@@ -24,15 +21,18 @@
 #include "Parameters.h"
 #include "PatchMgr.h"
 #include "HWControls.h"
+#include "EepromMgr.h"
+#include "MenuOptions.h"
 
-#define PARAMETER 0
-#define RECALL 1
-#define SAVE 2
-#define REINITIALISE 3
-#define PATCH 4
-#define PATCHNAMING 5
-#define DELETE 6
-#define MENU 7
+#define PARAMETER 0 //The main page for displaying the current patch and control (parameter) changes
+#define RECALL 1 //Patches list
+#define SAVE 2 //Save patch page
+#define REINITIALISE 3 // Reinitialise message
+#define PATCH 4 // Show current patch bypassing PARAMETER
+#define PATCHNAMING 5 // Patch naming page
+#define DELETE 6 //Delete patch page
+#define MENU 7 //Menu for settings page
+#define MENUVALUE 8 //Menu values for settings page
 
 volatile unsigned int state = PARAMETER;
 
@@ -75,15 +75,14 @@ int prevNote = 48;               //Initialised to middle value
 float previousMillis = millis(); //For MIDI Clk Sync
 
 int count = 0;
-byte midiChannel = MIDI_CHANNEL_OMNI;
 int patchNo = 1;
 int voiceToReturn = -1;       //Initialise to 'null'
 long earliestTime = millis(); //For voice allocation - initialise to now
 
 void setup()
 {
-  //ST7735 Display
   setupDisplay();
+  setUpMenus();
   setupHardware();
 
   AudioMemory(48);
@@ -102,19 +101,19 @@ void setup()
       //save an initialised patch to SD card
       savePatch("1", INITPATCH);
       getPatches(SD.open("/"));
+    } else {
+      // sortPatches();
     }
   }
   else
   {
     Serial.println("SD card is not connected or unusable");
     reinitialiseToPanel();
-    showPatchPage("SD card not", "conn'd or usable");
+    showPatchPage("No SD", "conn'd / usable");
   }
 
   //Read MIDI Channel from EEPROM
-  midiChannel = EEPROM.read(0);
-  if (midiChannel < 0 || midiChannel > 16)
-    midiChannel = MIDI_CHANNEL_OMNI;
+  midiChannel = getMIDIChannel();
   Serial.println("MIDI Ch:" + String(midiChannel) + " (0 is Omni On)");
 
   //USB HOST MIDI Class Compliant
@@ -147,8 +146,8 @@ void setup()
   MIDI.setHandleControlChange(myControlChange);
   MIDI.setHandleProgramChange(myProgramChange);
   //Doesn't like continuous Midi Clock signals from DAW, works with USB Midi fine
-  //MIDI.setHandleClock(myMIDIClock);
-  //MIDI.setHandleStart(myMIDIClockStart);
+  MIDI.setHandleClock(myMIDIClock);
+  MIDI.setHandleStart(myMIDIClockStart);
   Serial.println("MIDI In DIN Listening");
 
   constant1Dc.amplitude(CONSTANTONE);
@@ -291,6 +290,17 @@ void setup()
   effectMixerR.gain(2, 0);
   effectMixerR.gain(3, 0);
 
+  volumePrevious = -9999; //Force volume control to be read and set to current
+
+  //Read Key Tracking from EEPROM, this can be set individually by each patch.
+  keytrackingAmount = getKeyTracking();
+  
+  //Read Pitch Bend Range from EEPROM
+  pitchBendRange = getPitchBendRange();
+
+    //Read Mod Wheel Depth from EEPROM
+  modWheelDepth = getModWheelDepth();
+
   recallPatch(String(patchNo)); //Load first patch
 }
 
@@ -321,7 +331,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
     switch (getVoiceNo(-1))
     {
       case 1:
-        keytracking1.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        keytracking1.amplitude(note * DIV127 * keytrackingAmount);
         voices[0].note = note;
         voices[0].timeOn = millis();
         updateVoice1();
@@ -330,7 +340,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voiceOn[0] = true;
         break;
       case 2:
-        keytracking2.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        keytracking2.amplitude(note * DIV127 * keytrackingAmount);
         voices[1].note = note;
         voices[1].timeOn = millis();
         updateVoice2();
@@ -339,7 +349,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voiceOn[1] = true;
         break;
       case 3:
-        keytracking3.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        keytracking3.amplitude(note * DIV127 * keytrackingAmount);
         voices[2].note = note;
         voices[2].timeOn = millis();
         updateVoice3();
@@ -348,7 +358,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voiceOn[2] = true;
         break;
       case 4:
-        keytracking4.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        keytracking4.amplitude(note * DIV127 * keytrackingAmount);
         voices[3].note = note;
         voices[3].timeOn = millis();
         updateVoice4();
@@ -357,7 +367,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voiceOn[3] = true;
         break;
       case 5:
-        keytracking5.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        keytracking5.amplitude(note * DIV127 * keytrackingAmount);
         voices[4].note = note;
         voices[4].timeOn = millis();
         updateVoice5();
@@ -366,7 +376,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voiceOn[4] = true;
         break;
       case 6:
-        keytracking6.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+        keytracking6.amplitude(note * DIV127 * keytrackingAmount);
         voices[5].note = note;
         voices[5].timeOn = millis();
         updateVoice6();
@@ -393,12 +403,12 @@ void myNoteOn(byte channel, byte note, byte velocity)
     //    waveformMod6b.sync();
 
     //UNISON MODE
-    keytracking1.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
-    keytracking2.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
-    keytracking3.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
-    keytracking4.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
-    keytracking5.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
-    keytracking6.amplitude(note * DIV127 * keytrackingAmount * KEYTRACKINGFACTOR);
+    keytracking1.amplitude(note * DIV127 * keytrackingAmount);
+    keytracking2.amplitude(note * DIV127 * keytrackingAmount);
+    keytracking3.amplitude(note * DIV127 * keytrackingAmount);
+    keytracking4.amplitude(note * DIV127 * keytrackingAmount);
+    keytracking5.amplitude(note * DIV127 * keytrackingAmount);
+    keytracking6.amplitude(note * DIV127 * keytrackingAmount);
     voices[0].note = note;
     voices[0].timeOn = millis();
     updateVoice1();
@@ -653,23 +663,23 @@ void updateVoice6()
 
 int getLFOWaveform(int value)
 {
-  if (value >= 0 && value < 20)
+  if (value >= 0 && value < 8)
   {
     return WAVEFORM_SINE;
   }
-  else if (value >= 20 && value < 41)
+  else if (value >= 8 && value < 30)
   {
     return WAVEFORM_TRIANGLE;
   }
-  else if (value >= 41 && value < 63)
+  else if (value >= 30 && value < 63)
   {
     return WAVEFORM_SAWTOOTH_REVERSE;
   }
-  else if (value >= 63 && value < 84)
+  else if (value >= 63 && value < 92)
   {
     return WAVEFORM_SAWTOOTH;
   }
-  else if (value >= 84 && value < 105)
+  else if (value >= 92 && value < 111)
   {
     return WAVEFORM_SQUARE;
   }
@@ -733,32 +743,32 @@ float getLFOTempoRate(int value)
 
 int getVCOWaveformA(int value)
 {
-  if (value >= 0 && value < 13)
+  if (value >= 0 && value < 7)
   {
     //This will turn the osc off
     return WAVEFORM_SILENT;
   }
-  else if (value >= 13 && value < 28)
+  else if (value >= 7 && value < 23)
   {
     return WAVEFORM_TRIANGLE;
   }
-  else if (value >= 28 && value < 44)
+  else if (value >= 23 && value < 40)
   {
     return WAVEFORM_SQUARE;
   }
-  else if (value >= 44 && value < 60)
+  else if (value >= 40 && value < 60)
   {
     return WAVEFORM_SAWTOOTH;
   }
-  else if (value >= 60 && value < 76)
+  else if (value >= 60 && value < 80)
   {
     return WAVEFORM_PULSE;
   }
-  else if (value >= 76 && value < 95)
+  else if (value >= 80 && value < 100)
   {
     return WAVEFORM_TRIANGLE_VARIABLE;
   }
-  else if (value >= 95 && value < 111)
+  else if (value >= 100 && value < 120)
   {
     loadWaveform(PARABOLIC_WAVE);
     return WAVEFORM_PARABOLIC;
@@ -772,33 +782,32 @@ int getVCOWaveformA(int value)
 
 int getVCOWaveformB(int value)
 {
-  //Gaps between zones to avoid instability
-  if (value >= 0 && value < 13)
+  if (value >= 0 && value < 7)
   {
     //This will turn the osc off
     return WAVEFORM_SILENT;
   }
-  else if (value >= 13 && value < 28)
+  else if (value >= 7 && value < 23)
   {
     return WAVEFORM_SAMPLE_HOLD;
   }
-  else if (value >= 28 && value < 44)
+  else if (value >= 23 && value < 40)
   {
     return WAVEFORM_SQUARE;
   }
-  else if (value >= 44 && value < 60)
+  else if (value >= 40 && value < 60)
   {
     return WAVEFORM_SAWTOOTH;
   }
-  else if (value >= 60 && value < 76)
+  else if (value >= 60 && value < 80)
   {
     return WAVEFORM_PULSE;
   }
-  else if (value >= 76 && value < 95)
+  else if (value >= 80 && value < 100)
   {
     return WAVEFORM_TRIANGLE_VARIABLE;
   }
-  else if (value >= 95 && value < 111)
+  else if (value >= 100 && value < 120)
   {
     loadWaveform(PARABOLIC_WAVE);
     return WAVEFORM_PARABOLIC;
@@ -812,7 +821,6 @@ int getVCOWaveformB(int value)
 
 int getVCOOctave(int value)
 {
-  Serial.println("OCTAVE:" + String(OCTAVECONTROL[value]));
   return OCTAVECONTROL[value];
 }
 
@@ -957,7 +965,7 @@ void updateOctaveA()
     updateVoice5();
     updateVoice6();
   }
-  showCurrentParameterPage("1. Octave", (vcoOctaveA > 0 ? "+" : "") + String(vcoOctaveA));
+  showCurrentParameterPage("1. Semitones", (vcoOctaveA > 0 ? "+" : "") + String(vcoOctaveA));
 }
 
 void updateOctaveB()
@@ -972,7 +980,7 @@ void updateOctaveB()
     updateVoice5();
     updateVoice6();
   }
-  showCurrentParameterPage("2. Octave", (vcoOctaveB > 0 ? "+" : "") + String(vcoOctaveB));
+  showCurrentParameterPage("2. Semitones", (vcoOctaveB > 0 ? "+" : "") + String(vcoOctaveB));
 }
 
 void updateDetune()
@@ -996,18 +1004,18 @@ void updatePWMSource()
   {
     setPwmMixerAFEnv(0);
     setPwmMixerBFEnv(0);
-    if (pwmRate >-5)
+    if (pwmRate > -5)
     {
       setPwmMixerALFO(pwmAmtA);
       setPwmMixerBLFO(pwmAmtB);
     }
-    showCurrentParameterPage("PWM Source", "LFO");
+    showCurrentParameterPage("PWM Source", "LFO"); //Only shown when updated via MIDI
   }
   else
   {
     setPwmMixerALFO(0);
     setPwmMixerBLFO(0);
-    if (pwmRate >-5)
+    if (pwmRate > -5)
     {
       setPwmMixerAFEnv(pwmAmtA);
       setPwmMixerBFEnv(pwmAmtB);
@@ -1039,6 +1047,7 @@ void updatePWMRate()
     setPwmMixerBLFO(0);
     setPwmMixerAFEnv(pwmAmtA);
     setPwmMixerBFEnv(pwmAmtB);
+    showCurrentParameterPage("PWM Source", "Filter Env");
   } else {
 
     pwmSource = PWMSOURCELFO;
@@ -1156,7 +1165,7 @@ void updateVcoLevelA()
     waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
     waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
   }
-  showCurrentParameterPage("1. Level", VCOALevel);
+  showCurrentParameterPage("Osc Levels", "   " + String(VCOALevel) + " - " + String(VCOBLevel));
 }
 
 void updateVcoLevelB()
@@ -1176,7 +1185,7 @@ void updateVcoLevelB()
     waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
     waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
   }
-  showCurrentParameterPage("2. Level", VCOBLevel);
+  showCurrentParameterPage("Osc Levels", "   " + String(VCOALevel) + " - " + String(VCOBLevel));
 }
 
 void updateNoiseLevel()
@@ -1253,7 +1262,7 @@ void updateFilterMixer()
     }
     else
     {
-      filterStr = "LP " + String(100 - filterMixStr) + ":" + String(filterMixStr) + " HP";
+      filterStr = "LP " + String(100 - filterMixStr) + " - " + String(filterMixStr) + " HP";
     }
   }
   filterMixer1.gain(0, LP);
@@ -1578,13 +1587,13 @@ void updatePatchname()
 
 void myPitchBend(byte channel, int bend)
 {
-  pitchBend.amplitude(bend * 0.5 * DIV8192); //)0.5 to give 1oct - spread of mod is 2oct
+  pitchBend.amplitude(bend * 0.5 * pitchBendRange * DIV12 * DIV8192); //)0.5 to give 1oct max - spread of mod is 2oct
 }
 
 void myControlChange(byte channel, byte control, byte value)
 {
 
-  Serial.println("MIDI: " + String(control) + " : " + String(value));
+  //Serial.println("MIDI: " + String(control) + " : " + String(value));
   switch (control)
   {
     case CCvolume:
@@ -1688,7 +1697,7 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCfilterres:
-      filterRes = (3.9f * LINEAR[value]) + 1.1f; //If <1.1 there is noise at high cutoff freq
+      filterRes = (13.9f * POWER[value]) + 1.1f; //If <1.1 there is noise at high cutoff freq
       updateFilterRes();
       break;
 
@@ -1704,12 +1713,12 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCkeytracking:
-      keytrackingAmount = LINEAR[value];
+      keytrackingAmount = KEYTRACKINGAMT[value];
       updateKeyTracking();
       break;
 
     case CCmodwheel:
-      vcoLfoAmt = POWER[value] * MODWHEELFACTOR; //Less LFO amount from mod wheel
+      vcoLfoAmt = POWER[value] * modWheelDepth; //Variable LFO amount from mod wheel - Menu Option
       updateModWheel();
       break;
 
@@ -1975,9 +1984,12 @@ void setCurrentPatchData(String data[])
   updateVcoLFOAmt();
   updateVcoLFORate();
   updateVcoLFOWaveform();
+  updateVcoLFOMidiClkSync();
   updateVcfLfoRate();
   updateVcfLfoAmt();
   updateVcfLFOWaveform();
+  updateVcfLFOMidiClkSync();
+  updateVcfLFORetrig();
   updateVcfAttack();
   updateVcfDecay();
   updateVcfSustain();
@@ -2085,7 +2097,7 @@ void checkMux()
         myControlChange(midiChannel, CCvcarelease, mux2Read);
         break;
       case MUX2_filterLFOAmount:
-        myControlChange(midiChannel, CCvcolfoamt, mux2Read);
+        myControlChange(midiChannel, CCvcflfoamt, mux2Read);
         break;
       case MUX2_FXMix:
         myControlChange(midiChannel, CCfxmix, mux2Read);
@@ -2174,11 +2186,17 @@ void checkSwitches()
   }
 
   saveButton.update();
-  if (saveButton.read() == LOW && saveButton.duration() > INITIALISE_DURATION)
+  if (saveButton.read() == LOW && saveButton.duration() > HOLD_DURATION)
   {
-    state = DELETE;
-    saveButton.write(HIGH); //Come out of this state
-    del = true;             //Hack
+    switch (state)
+    {
+      case PARAMETER:
+      case PATCH:
+        state = DELETE;
+        saveButton.write(HIGH); //Come out of this state
+        del = true;             //Hack
+        break;
+    }
   }
   else if (saveButton.risingEdge())
   {
@@ -2223,9 +2241,9 @@ void checkSwitches()
   }
 
   menuButton.update();
-  if (menuButton.read() == LOW && menuButton.duration() > INITIALISE_DURATION)
+  if (menuButton.read() == LOW && menuButton.duration() > HOLD_DURATION)
   {
-    //If recall held for 1.5s, set current patch to match current hardware state
+    //If recall held, set current patch to match current hardware state
     //Reinitialise all hardware values to force them to be re-read if different
     state = REINITIALISE;
     reinitialiseToPanel();
@@ -2238,7 +2256,20 @@ void checkSwitches()
     {
       switch (state)
       {
+        case PARAMETER:
+          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
           state = MENU;
+          break;
+        case MENU:
+          menuOptions.push(menuOptions.shift());
+          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
+        case MENUVALUE:
+          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
+          state = MENU;
+          break;
       }
     }
     else
@@ -2248,9 +2279,9 @@ void checkSwitches()
   }
 
   backButton.update();
-  if (backButton.read() == LOW && backButton.duration() > INITIALISE_DURATION)
+  if (backButton.read() == LOW && backButton.duration() > HOLD_DURATION)
   {
-    //If Back button held for 1.5s, Panic - all notes off
+    //If Back button held, Panic - all notes off
     allNotesOff();
     backButton.write(HIGH); //Come out of this state
     panic = true;           //Hack
@@ -2279,6 +2310,11 @@ void checkSwitches()
         case MENU:
           state = PARAMETER;
           break;
+        case MENUVALUE:
+          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
+          state = MENU;
+          break;
       }
     }
     else
@@ -2289,10 +2325,16 @@ void checkSwitches()
 
   //Encoder switch
   recallButton.update();
-  if (recallButton.read() == LOW && recallButton.duration() > INITIALISE_DURATION)
+  if (recallButton.read() == LOW && recallButton.duration() > HOLD_DURATION)
   {
-    //If Recall button held for 1.5s, show patch list
-    state = RECALL;
+    //If Recall button held, return to current patch setting
+    //which clears any changes made
+    state = PATCH;
+    //Recall the current patch
+    patchNo = patches.first().patchNo;
+    recallPatch(String(patchNo));
+    state = PARAMETER;
+
     recallButton.write(HIGH); //Come out of this state
     recall = true;            //Hack
   }
@@ -2303,7 +2345,7 @@ void checkSwitches()
       switch (state)
       {
         case PARAMETER:
-          state = RECALL;
+          state = RECALL;//show patch list
           break;
         case RECALL:
           state = PATCH;
@@ -2334,13 +2376,22 @@ void checkSwitches()
             getPatches(SD.open("/"));
             patchNo = patches.first().patchNo;
             recallPatch(String(patchNo));
-            resortPatches(); //Make patch Nos consecutive on SD
+            sortPatches();
             getPatches(SD.open("/"));
           }
           state = PARAMETER;
           break;
         case MENU:
-          state = PATCH;
+          //Choose this option and allow value choice
+          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENUVALUE);
+          state = MENUVALUE;
+          break;
+        case MENUVALUE:
+          //Store current menu item and go back to options
+          menuHandler(menuOptions.first().value[menuValueIndex], menuOptions.first().handler);
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
+          state = MENU;
           break;
       }
     }
@@ -2391,7 +2442,7 @@ void checkEncoder()
         patches.push(patches.shift());
         break;
       case PATCHNAMING:
-        if (charIndex == 63)
+        if (charIndex == TOTALCHARS)
           charIndex = 0;
         currentCharacter = CHARACTERS[charIndex++];
         showRenamingPage(renamedPatch + currentCharacter);
@@ -2400,7 +2451,13 @@ void checkEncoder()
         patches.push(patches.shift());
         break;
       case MENU:
-       showMenuPage("Option","Value");
+        menuOptions.push(menuOptions.shift());
+        menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+        showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex] , MENU);
+        break;
+      case MENUVALUE:
+        if (menuOptions.first().value[menuValueIndex + 1] != '\0')
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[++menuValueIndex], MENUVALUE);
         break;
     }
     encPrevious = encRead;
@@ -2424,7 +2481,7 @@ void checkEncoder()
         break;
       case PATCHNAMING:
         if (charIndex == -1)
-          charIndex = 62;
+          charIndex = TOTALCHARS - 1;
         currentCharacter = CHARACTERS[charIndex--];
         showRenamingPage(renamedPatch + currentCharacter);
         break;
@@ -2432,19 +2489,34 @@ void checkEncoder()
         patches.unshift(patches.pop());
         break;
       case MENU:
-       showMenuPage("Option","Value");
+        menuOptions.unshift(menuOptions.pop());
+        menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+        showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
+        break;
+      case MENUVALUE:
+        if (menuValueIndex > 0)
+          showMenuPage(menuOptions.first().option, menuOptions.first().value[--menuValueIndex], MENUVALUE);
         break;
     }
     encPrevious = encRead;
   }
 }
 
-//Store MIDI Channel to non-volatile EEPROM
-void storeMidiChannel(byte channel)
-{
-  midiChannel = channel;
-  EEPROM.write(0, channel);
+void MIDIMonitor() {
+  //Monitor MIDI In DIN
+  if (Serial4.available() > 0) {
+    Serial.print("MIDI DIN: ");
+    Serial.println(Serial4.read(), HEX);
+  }
 }
+
+void CPUMonitor() {
+  Serial.print("CPU:");
+  Serial.print(AudioProcessorUsageMax());
+  Serial.print("  MEM:");
+  Serial.println(AudioMemoryUsageMax());
+}
+
 
 void loop()
 {
@@ -2453,19 +2525,10 @@ void loop()
   usbMIDI.read(midiChannel); //USB Client MIDI
   MIDI.read(midiChannel);    //MIDI 5 Pin DIN
 
-  //  checkMux();
-  //  checkVolumePot();
-  //  checkSwitches();
-  //  checkEncoder();
+  checkMux();
+  checkVolumePot();
+  checkSwitches();
+  checkEncoder();
 
-  //Monitor MIDI In DIN
-  //  if (Serial4.available() > 0) {
-  //    Serial.print("UART received: ");
-  //    Serial.println(Serial4.read(), HEX);
-  //  }
-
-  //      Serial.print("CPU:");
-  //      Serial.print(AudioProcessorUsageMax());
-  //      Serial.print("  MEM:");
-  //      Serial.println(AudioMemoryUsageMax());
+  // CPUMonitor();
 }

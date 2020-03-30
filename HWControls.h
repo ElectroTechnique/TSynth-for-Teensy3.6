@@ -10,7 +10,7 @@
 #define MUX_2 26
 #define MUX_3 25
 #define MUX1_S 38
-#define MUX2_S 29
+#define MUX2_S A22
 //Mux 1 Connections
 #define MUX1_noiseLevel 0
 #define MUX1_pitchLfoRate 1
@@ -48,11 +48,11 @@
 
 //Teensy 3.6 Pins
 #define OSC_FX_SW 39
-#define VCF_LFO_RETRIG_SW 16
+#define VCF_LFO_RETRIG_SW 30
 #define UNISON_SW 36
-#define TEMPO_SW 30
-#define RECALL_SW 9
-#define SAVE_SW 11
+#define TEMPO_SW 16
+#define RECALL_SW 17
+#define SAVE_SW 24
 #define MENU_SW 12
 #define BACK_SW 10
 #define VOLUME_POT A14
