@@ -20,7 +20,7 @@ Filter
 - State variable 12dB filter (SVF) with continuous mix between LP and HP (provides notch filter) and BP
 - Cutoff freq and resonance
 - Cutoff can be modulated by dedicated ADSR envelope (+/-), dedicated LFO and key tracking
-- LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock (tempo) with variable time division delay (1,3/4,1/2,1/4,1/8...)
+- LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock (tempo) with variable time division (1,3/4,1/2,1/4,1/8...)
 
 Amplifier
 - Dedicated ADSR envelope
