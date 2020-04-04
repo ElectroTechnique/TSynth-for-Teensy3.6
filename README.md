@@ -3,12 +3,12 @@ Teensy 3.6 based synthesizer using PJRC Audio Board and Audio Lib
 
 More details at PJRC Forum https://forum.pjrc.com/threads/57418-TSynth-Two-Oscillator-Polysynth
 
-This is for the new version of TSynth with a PCB.
+This is for the new version of TSynth with a PCB and a front panel.
 
 Specifications
 
 Oscillators
-- Six voice polyphony (last note priority), two oscillators per voice, detunable with +/- 2 octaves range, Sine/Sample & Hold (like tuned noise)/Square/Sawtooth/Ramp/PWM/Var Triangle/User waveforms and level
+- Six voice polyphony (last note priority), two oscillators per voice (second detunable), with +/- 2 octaves range, Triangle/Sample & Hold (like tuned noise)/Square (band limited)/Sawtooth(band limited)/Var Pulse/Var Triangle/Parabolic/Harmonic waveforms and level
 - Pulse Width/Var Triangle can be set for each oscillator with PWM by dedicated LFO or from the filter envelope
 - Pink or white noise level
 - Dedicated LFO for pitch mod (can be retriggered by note on) , Sine/Triangle/Sawtooth/Ramp/Square/S&H waveforms
