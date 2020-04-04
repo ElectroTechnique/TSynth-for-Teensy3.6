@@ -18,6 +18,11 @@
 #include "Fonts/FreeSansOblique24pt7b.h"
 #include "Fonts/FreeSansBoldOblique24pt7b.h"
 
+#define PULSE 1
+#define VAR_TRI 2
+#define FILTER_ENV 3
+#define AMP_ENV 4
+
 ST7735_t3 tft = ST7735_t3(cs, dc, mosi, sclk, rst);
 
 String currentParameter = "";
@@ -218,6 +223,17 @@ void renderDeletePatchPage()
   tft.println(patches.first().patchName);
 }
 
+void renderDeleteMessagePage() {
+  tft.fillScreen(ST7735_BLACK);
+  tft.setFont(&FreeSans12pt7b);
+  tft.setCursor(5, 53);
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextSize(1);
+  tft.println("Reordering");
+  tft.setCursor(10, 90);
+  tft.println("SD Card");
+}
+
 void renderSavePage()
 {
   tft.fillScreen(ST7735_BLACK);
@@ -398,6 +414,9 @@ void displayThread()
         break;
       case DELETE:
         renderDeletePatchPage();
+        break;
+      case DELETEMSG:
+        renderDeleteMessagePage();
         break;
       case MENU:
       case MENUVALUE:

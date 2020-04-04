@@ -94,7 +94,7 @@ Bounce menuButton = Bounce(MENU_SW, DEBOUNCE);
 boolean reini = true; //Hack for menu button
 Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
 boolean panic = true; //Hack for back button
-Encoder encoder(ENCODER_PINA, ENCODER_PINB);
+Encoder encoder(ENCODER_PINB, ENCODER_PINA);//This often needs the pins swapping
 
 void setupHardware()
 {

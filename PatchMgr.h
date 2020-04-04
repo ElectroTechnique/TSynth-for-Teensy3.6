@@ -88,8 +88,32 @@ void recallPatchData(File patchFile, String data[])
   }
 }
 
-void getPatches(File file)
+int compare(const void *a, const void *b) {
+  return ((PatchNoAndName*)a)->patchNo - ((PatchNoAndName*)b)->patchNo;
+}
+
+void sortPatches()
 {
+  int arraySize = patches.size();
+  //Sort patches buffer to be consecutive ascending patchNo order
+  struct PatchNoAndName arrayToSort[arraySize];
+
+  for (int i = 0; i < arraySize; ++i)
+  {
+    arrayToSort[i] = patches[i];
+  }
+  qsort(arrayToSort, arraySize, sizeof(PatchNoAndName), compare);
+  patches.clear();
+
+  for (int i = 0; i < arraySize; ++i)
+  {
+    patches.push(arrayToSort[i]);
+  }
+}
+
+void loadPatches()
+{
+  File file = SD.open("/");
   patches.clear();
   while (true)
   {
@@ -111,22 +135,13 @@ void getPatches(File file)
     }
     patchFile.close();
   }
-}
-
-void deletePatch(const char *patchNo)
-{
-  //Don't delete last patch
-  if (SD.exists(patchNo) && patches.size() > 1)
-  {
-    SD.remove(patchNo);
-    //TODO renumber filenames on SD card
-  }
+  sortPatches();
 }
 
 void savePatch(const char *patchNo, String patchData)
 {
-  Serial.print("savePatch Patch No:");
-  Serial.println(patchNo);
+ // Serial.print("savePatch Patch No:");
+//  Serial.println(patchNo);
   //Overwrite existing patch by deleting
   if (SD.exists(patchNo))
   {
@@ -135,9 +150,9 @@ void savePatch(const char *patchNo, String patchData)
   File patchFile = SD.open(patchNo, FILE_WRITE);
   if (patchFile)
   {
-    Serial.print("Writing Patch No:");
-    Serial.println(patchNo);
-    Serial.println(patchData);
+//    Serial.print("Writing Patch No:");
+//    Serial.println(patchNo);
+    //Serial.println(patchData);
     patchFile.println(patchData);
     patchFile.close();
   }
@@ -158,97 +173,23 @@ void savePatch(const char *patchNo, String patchData[])
   savePatch(patchNo, dataString);
 }
 
-
-int compare(const void *a, const void *b) {
-  return ( *(int*)a - * (int*)b );
+void deletePatch(const char *patchNo)
+{
+  if (SD.exists(patchNo)) {
+    SD.remove(patchNo);
+  }
 }
 
-
-//// A utility function to swap two elements
-//void swap(int* a, int* b)
-//{
-//  int t = *a;
-//  *a = *b;
-//  *b = t;
-//}
-//
-///* This function takes last element as pivot, places
-//   the pivot element at its correct position in sorted
-//    array, and places all smaller (smaller than pivot)
-//   to left of pivot and all greater elements to right
-//   of pivot */
-//int partition (CircularBuffer<PatchNoAndName, PATCHES_LIMIT> arr, int low, int high)
-//{
-//  int pivot = arr[high].patchNo;    // pivot
-//  int i = (low - 1);  // Index of smaller element
-//
-//  for (int j = low; j <= high - 1; j++)
-//  {
-//    // If current element is smaller than the pivot
-//    if (arr[j].patchNo < pivot)
-//    {
-//      i++;    // increment index of smaller element
-//      swap(&arr[i], &arr[j]);
-//    }
-//  }
-//  swap(&arr[i + 1], &arr[high]);
-//  return (i + 1);
-//}
-//
-///* The main function that implements QuickSort
-//  arr[] --> Array to be sorted,
-//  low  --> Starting index,
-//  high  --> Ending index */
-//void quickSort(CircularBuffer<PatchNoAndName, PATCHES_LIMIT> arr, int low, int high)
-//{
-//  if (low < high)
-//  {
-//    /* pi is partitioning index, arr[p] is now
-//       at right place */
-//    int pi = partition(arr, low, high);
-//
-//    // Separately sort elements before
-//    // partition and after partition
-//    quickSort(arr, low, pi - 1);
-//    quickSort(arr, pi + 1, high);
-//  }
-//}
-
-
-
-
-
-void sortPatches()
-{
-   // quickSort(arr, 0, patches.size()-1); 
-  
-  //  //Sort patches buffer to be consecutive ascending patchNo order
-  //  int arrayToSort[patches.size()];
-  //  for (int i = 0; i < patches.size() - 1; ++i)
-  //  {
-  //    arrayToSort[i] = patches[i].patchNo;
-  //  }
-  //  qsort(arrayToSort, patches.size(), sizeof(int), compare);
-  //
-  //  for (int i = 0; i < patches.size() - 1; ++i)
-  //  {
-  //
-  //    for (int j = 0; j < patches.size() - 1; ++j)
-  //    {
-  //if(patches[j].patchNo == arrayToSort[i]){
-  //  patches[j].
-  //  break;
-  //}
-  //    }
-  //  }
-
-  //  for (int i = 1; i < patches.size(); ++i)
-  //  {
-  //    String data[NO_OF_PARAMS]; //Array of data read in
-  //    File file = SD.open(String(patches[i].patchNo).c_str());
-  //    recallPatchData(file, data);
-  //    file.close();
-  //    savePatch(String(i + 1).c_str(), data);
-  //  }
-  //deletePatch(String(patches.size() + 1).c_str()); //delete final patch still on SD
+void renumberPatchesOnSD() {
+  for (int i = 0; i < patches.size(); i++)
+  {
+    String data[NO_OF_PARAMS]; //Array of data read in
+    File file = SD.open(String(patches[i].patchNo).c_str());
+    if (file) {
+      recallPatchData(file, data);
+      file.close();
+      savePatch(String(i+1).c_str(), data);
+    }
+  }
+  deletePatch(String(patches.size()+1).c_str());//Delete final patch which is duplicate of penultimate patch
 }

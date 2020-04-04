@@ -1,11 +1,16 @@
 /*
-  TSynth Firmware Rev 1.0
+  ElectroTechnique TSynth - Firmware Rev 1.0
+
+  Includes code by:
+  Gustavo Silveira - Band limited wavetables https://forum.pjrc.com/threads/41905-Band-limited-Sawtooth-wavetable-C-generator-for-quot-Arbitrary-Waveform-quot-(and-its-use)
+  Alexander Davis - Stereo ensemble chorus effect https://github.com/quarterturn/teensy3-ensemble-chorus
+
 
   Arduino IDE
   Tools Settings:
   Board: "Teensy3.6"
   USB Type: "Serial + MIDI + Audio"
-  CPU Speed: "180MHz"
+  CPU Speed: "240MHz (overclock)"
 */
 //#include <Arduino.h>
 #include <Audio.h>
@@ -23,6 +28,8 @@
 #include "HWControls.h"
 #include "EepromMgr.h"
 #include "MenuOptions.h"
+#include "sawtoothWave.h"
+#include "squareWave.h"
 
 #define PARAMETER 0 //The main page for displaying the current patch and control (parameter) changes
 #define RECALL 1 //Patches list
@@ -31,17 +38,16 @@
 #define PATCH 4 // Show current patch bypassing PARAMETER
 #define PATCHNAMING 5 // Patch naming page
 #define DELETE 6 //Delete patch page
-#define MENU 7 //Menu for settings page
-#define MENUVALUE 8 //Menu values for settings page
+#define DELETEMSG 7 //Delete patch page
+#define MENU 8 //Menu for settings page
+#define MENUVALUE 9 //Menu values for settings page
 
 volatile unsigned int state = PARAMETER;
 
-#define PULSE 1
-#define VAR_TRI 2
-#define FILTER_ENV 3
-#define AMP_ENV 4
-#define WAVEFORM_PARABOLIC 100
-#define WAVEFORM_HARMONIC 101
+#define WAVEFORM_SAWTOOTH_WT 101
+#define WAVEFORM_SQUARE_WT 102
+#define WAVEFORM_PARABOLIC 103
+#define WAVEFORM_HARMONIC 104
 
 #include "ST7735Display.h"
 
@@ -71,7 +77,7 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
   { -1, 0}
 };
 
-int prevNote = 48;               //Initialised to middle value
+int prevNote = 48;//Initialised to middle value
 float previousMillis = millis(); //For MIDI Clk Sync
 
 int count = 0;
@@ -88,21 +94,18 @@ void setup()
   AudioMemory(48);
   sgtl5000_1.enable();
   sgtl5000_1.volume(SGTL_MAXVOLUME * 0.5); //Headphones - do not initialise to maximum
-  sgtl5000_1.lineOutLevel(29);             //Line out
 
   cardStatus = SD.begin(BUILTIN_SDCARD);
   if (cardStatus)
   {
     Serial.println("SD card is connected");
     //Get patch numbers and names from SD card
-    getPatches(SD.open("/"));
+    loadPatches();
     if (patches.size() == 0)
     {
       //save an initialised patch to SD card
       savePatch("1", INITPATCH);
-      getPatches(SD.open("/"));
-    } else {
-      // sortPatches();
+      loadPatches();
     }
   }
   else
@@ -235,8 +238,9 @@ void setup()
   waveformMod6b.frequencyModulation(VCOLFOOCTAVERANGE);
   waveformMod6b.begin(vcoWaveformB);
 
-  //All oscillators get parabolic arbitary waveform initially
-  loadWaveform(PARABOLIC_WAVE);
+  //Arbitary waveform needs initialising to something
+  loadArbWaveformA(PARABOLIC_WAVE);
+  loadArbWaveformB(PARABOLIC_WAVE);
 
   filter1.octaveControl(FILTEROCTAVERANGE);
   filter2.octaveControl(FILTEROCTAVERANGE);
@@ -294,14 +298,14 @@ void setup()
 
   //Read Key Tracking from EEPROM, this can be set individually by each patch.
   keytrackingAmount = getKeyTracking();
-  
+
   //Read Pitch Bend Range from EEPROM
   pitchBendRange = getPitchBendRange();
 
-    //Read Mod Wheel Depth from EEPROM
+  //Read Mod Wheel Depth from EEPROM
   modWheelDepth = getModWheelDepth();
 
-  recallPatch(String(patchNo)); //Load first patch
+  recallPatch(patchNo); //Load first patch
 }
 
 void myNoteOn(byte channel, byte note, byte velocity)
@@ -498,7 +502,9 @@ void myNoteOff(byte channel, byte note, byte velocity)
   else
   {
     //UNISON MODE
-    allNotesOff();
+    //If statement prevents the previous different note
+    //ending the current note when released
+    if (voices[0].note == note)allNotesOff();
   }
 }
 
@@ -582,6 +588,11 @@ int getVoiceNo(int note)
 
 void updateVoice1()
 {
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod1a.arbitraryWaveform(sawtoothWavetable[(voices[0].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod1b.arbitraryWaveform(sawtoothWavetable[(voices[0].note + vcoOctaveB) / 3 + 1], AWFREQ);
+  if (vcoWaveformA == WAVEFORM_SQUARE_WT) waveformMod1a.arbitraryWaveform(squareWavetable[(voices[0].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SQUARE_WT) waveformMod1b.arbitraryWaveform(squareWavetable[(voices[0].note + vcoOctaveB) / 3 + 1], AWFREQ);
+
   waveformMod1a.frequency(NOTEFREQS[voices[0].note + vcoOctaveA]);
   if (unison == 1)
   {
@@ -595,6 +606,10 @@ void updateVoice1()
 
 void updateVoice2()
 {
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod2a.arbitraryWaveform(sawtoothWavetable[(voices[1].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod2b.arbitraryWaveform(sawtoothWavetable[(voices[1].note + vcoOctaveB) / 3 + 1], AWFREQ);
+  if (vcoWaveformA == WAVEFORM_SQUARE_WT) waveformMod2a.arbitraryWaveform(squareWavetable[(voices[1].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SQUARE_WT) waveformMod2b.arbitraryWaveform(squareWavetable[(voices[1].note + vcoOctaveB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
     waveformMod2a.frequency(NOTEFREQS[voices[1].note + vcoOctaveA] * (detune + ((1 - detune) * 0.18)));
@@ -609,6 +624,10 @@ void updateVoice2()
 
 void updateVoice3()
 {
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod3a.arbitraryWaveform(sawtoothWavetable[(voices[2].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod3b.arbitraryWaveform(sawtoothWavetable[(voices[2].note + vcoOctaveB) / 3 + 1], AWFREQ);
+  if (vcoWaveformA == WAVEFORM_SQUARE_WT) waveformMod3a.arbitraryWaveform(squareWavetable[(voices[2].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SQUARE_WT) waveformMod3b.arbitraryWaveform(squareWavetable[(voices[2].note + vcoOctaveB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
     waveformMod3a.frequency(NOTEFREQS[voices[2].note + vcoOctaveA] * (detune + ((1 - detune) * 0.36)));
@@ -622,6 +641,10 @@ void updateVoice3()
 }
 void updateVoice4()
 {
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod4a.arbitraryWaveform(sawtoothWavetable[(voices[3].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod4b.arbitraryWaveform(sawtoothWavetable[(voices[3].note + vcoOctaveB) / 3 + 1], AWFREQ);
+  if (vcoWaveformA == WAVEFORM_SQUARE_WT) waveformMod4a.arbitraryWaveform(squareWavetable[(voices[3].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SQUARE_WT) waveformMod4b.arbitraryWaveform(squareWavetable[(voices[3].note + vcoOctaveB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
     waveformMod4a.frequency(NOTEFREQS[voices[3].note + vcoOctaveA] * (detune + ((1 - detune) * 0.55)));
@@ -636,6 +659,10 @@ void updateVoice4()
 
 void updateVoice5()
 {
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod5a.arbitraryWaveform(sawtoothWavetable[(voices[4].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod5b.arbitraryWaveform(sawtoothWavetable[(voices[4].note + vcoOctaveB) / 3 + 1], AWFREQ);
+  if (vcoWaveformA == WAVEFORM_SQUARE_WT) waveformMod5a.arbitraryWaveform(squareWavetable[(voices[4].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SQUARE_WT) waveformMod5b.arbitraryWaveform(squareWavetable[(voices[4].note + vcoOctaveB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
     waveformMod5a.frequency(NOTEFREQS[voices[4].note + vcoOctaveA] * (detune + ((1 - detune) * 0.73)));
@@ -650,6 +677,10 @@ void updateVoice5()
 
 void updateVoice6()
 {
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod6a.arbitraryWaveform(sawtoothWavetable[(voices[5].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod6b.arbitraryWaveform(sawtoothWavetable[(voices[5].note + vcoOctaveB) / 3 + 1], AWFREQ);
+  if (vcoWaveformA == WAVEFORM_SQUARE_WT) waveformMod6a.arbitraryWaveform(squareWavetable[(voices[5].note + vcoOctaveA) / 3 + 1], AWFREQ);
+  if (vcoWaveformB == WAVEFORM_SQUARE_WT) waveformMod6b.arbitraryWaveform(squareWavetable[(voices[5].note + vcoOctaveB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
     waveformMod6a.frequency(NOTEFREQS[voices[5].note + vcoOctaveA] * (detune + ((1 - detune) * 0.90)));
@@ -699,10 +730,12 @@ String getWaveformStr(int value)
       return "Sample & Hold";
     case WAVEFORM_SINE:
       return "Sine";
+    case WAVEFORM_SQUARE_WT:
     case WAVEFORM_SQUARE:
       return "Square";
     case WAVEFORM_TRIANGLE:
       return "Triangle";
+    case WAVEFORM_SAWTOOTH_WT:
     case WAVEFORM_SAWTOOTH:
       return "Sawtooth";
     case WAVEFORM_SAWTOOTH_REVERSE:
@@ -720,19 +753,22 @@ String getWaveformStr(int value)
   }
 }
 
-void loadWaveform(const int16_t * wavedata) {
-  waveformMod1a.arbitraryWaveform(wavedata, 172.0);
-  waveformMod1b.arbitraryWaveform(wavedata, 172.0);
-  waveformMod2a.arbitraryWaveform(wavedata, 172.0);
-  waveformMod2b.arbitraryWaveform(wavedata, 172.0);
-  waveformMod3a.arbitraryWaveform(wavedata, 172.0);
-  waveformMod3b.arbitraryWaveform(wavedata, 172.0);
-  waveformMod4a.arbitraryWaveform(wavedata, 172.0);
-  waveformMod4b.arbitraryWaveform(wavedata, 172.0);
-  waveformMod5a.arbitraryWaveform(wavedata, 172.0);
-  waveformMod5b.arbitraryWaveform(wavedata, 172.0);
-  waveformMod6a.arbitraryWaveform(wavedata, 172.0);
-  waveformMod6b.arbitraryWaveform(wavedata, 172.0);
+void loadArbWaveformA(const int16_t * wavedata) {
+  waveformMod1a.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod2a.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod3a.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod4a.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod5a.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod6a.arbitraryWaveform(wavedata, AWFREQ);
+}
+
+void loadArbWaveformB(const int16_t * wavedata) {
+  waveformMod1b.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod2b.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod3b.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod4b.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod5b.arbitraryWaveform(wavedata, AWFREQ);
+  waveformMod6b.arbitraryWaveform(wavedata, AWFREQ);
 }
 
 float getLFOTempoRate(int value)
@@ -754,11 +790,11 @@ int getVCOWaveformA(int value)
   }
   else if (value >= 23 && value < 40)
   {
-    return WAVEFORM_SQUARE;
+    return WAVEFORM_SQUARE_WT;
   }
   else if (value >= 40 && value < 60)
   {
-    return WAVEFORM_SAWTOOTH;
+    return WAVEFORM_SAWTOOTH_WT;
   }
   else if (value >= 60 && value < 80)
   {
@@ -770,12 +806,10 @@ int getVCOWaveformA(int value)
   }
   else if (value >= 100 && value < 120)
   {
-    loadWaveform(PARABOLIC_WAVE);
     return WAVEFORM_PARABOLIC;
   }
   else
   {
-    loadWaveform(HARMONIC_WAVE);
     return WAVEFORM_HARMONIC;
   }
 }
@@ -793,11 +827,11 @@ int getVCOWaveformB(int value)
   }
   else if (value >= 23 && value < 40)
   {
-    return WAVEFORM_SQUARE;
+    return WAVEFORM_SQUARE_WT;
   }
   else if (value >= 40 && value < 60)
   {
-    return WAVEFORM_SAWTOOTH;
+    return WAVEFORM_SAWTOOTH_WT;
   }
   else if (value >= 60 && value < 80)
   {
@@ -809,12 +843,10 @@ int getVCOWaveformB(int value)
   }
   else if (value >= 100 && value < 120)
   {
-    loadWaveform(PARABOLIC_WAVE);
     return WAVEFORM_PARABOLIC;
   }
   else
   {
-    loadWaveform(HARMONIC_WAVE);
     return WAVEFORM_HARMONIC;
   }
 }
@@ -917,11 +949,16 @@ void updateWaveformA()
 {
   int newWaveform = vcoWaveformA;//To allow Arbitrary waveforms
   if (vcoWaveformA == WAVEFORM_PARABOLIC) {
-    loadWaveform(PARABOLIC_WAVE);
+    loadArbWaveformA(PARABOLIC_WAVE);
     newWaveform = WAVEFORM_ARBITRARY;
   }
   if (vcoWaveformA == WAVEFORM_HARMONIC) {
-    loadWaveform(HARMONIC_WAVE);
+    loadArbWaveformA(HARMONIC_WAVE);
+    newWaveform = WAVEFORM_ARBITRARY;
+  }
+  if (vcoWaveformA == WAVEFORM_SAWTOOTH_WT || vcoWaveformA == WAVEFORM_SQUARE_WT) {
+    //Wavetable is loaded on each new note
+    updatesAllVoices();
     newWaveform = WAVEFORM_ARBITRARY;
   }
   waveformMod1a.begin(newWaveform);
@@ -937,11 +974,16 @@ void updateWaveformB()
 {
   int newWaveform = vcoWaveformB;//To allow Arbitrary waveforms
   if (vcoWaveformB == WAVEFORM_PARABOLIC) {
-    loadWaveform(PARABOLIC_WAVE);
+    loadArbWaveformB(PARABOLIC_WAVE);
     newWaveform = WAVEFORM_ARBITRARY;
   }
   if (vcoWaveformB == WAVEFORM_HARMONIC) {
-    loadWaveform(HARMONIC_WAVE);
+    loadArbWaveformB(PPG_WAVE);
+    newWaveform = WAVEFORM_ARBITRARY;
+  }
+  if (vcoWaveformB == WAVEFORM_SAWTOOTH_WT || vcoWaveformB == WAVEFORM_SQUARE_WT) {
+    //Wavetable is loaded on each new note
+    updatesAllVoices();
     newWaveform = WAVEFORM_ARBITRARY;
   }
   waveformMod1b.begin(newWaveform);
@@ -958,12 +1000,7 @@ void updateOctaveA()
   //update waveforms with new frequencies if notes are on
   if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
   {
-    updateVoice1();
-    updateVoice2();
-    updateVoice3();
-    updateVoice4();
-    updateVoice5();
-    updateVoice6();
+    updatesAllVoices();
   }
   showCurrentParameterPage("1. Semitones", (vcoOctaveA > 0 ? "+" : "") + String(vcoOctaveA));
 }
@@ -973,12 +1010,7 @@ void updateOctaveB()
   //update waveforms with new frequencies if notes are on
   if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
   {
-    updateVoice1();
-    updateVoice3();
-    updateVoice2();
-    updateVoice4();
-    updateVoice5();
-    updateVoice6();
+    updatesAllVoices();
   }
   showCurrentParameterPage("2. Semitones", (vcoOctaveB > 0 ? "+" : "") + String(vcoOctaveB));
 }
@@ -988,14 +1020,18 @@ void updateDetune()
   //update waveforms with new frequencies if notes are on
   if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
   {
-    updateVoice1();
-    updateVoice2();
-    updateVoice3();
-    updateVoice4();
-    updateVoice5();
-    updateVoice6();
+    updatesAllVoices();
   }
   showCurrentParameterPage("Detune", String((1 - detune) * 100) + " %");
+}
+
+void updatesAllVoices() {
+  updateVoice1();
+  updateVoice2();
+  updateVoice3();
+  updateVoice4();
+  updateVoice5();
+  updateVoice6();
 }
 
 void updatePWMSource()
@@ -1619,14 +1655,11 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCvcowaveformA:
       vcoWaveformA = getVCOWaveformA(value);
-
       updateWaveformA();
       break;
 
     case CCvcowaveformB:
       vcoWaveformB = getVCOWaveformB(value);
-
-
       updateWaveformB();
       break;
 
@@ -1853,10 +1886,10 @@ void myControlChange(byte channel, byte control, byte value)
 void myProgramChange(byte channel, byte program)
 {
   state = PATCH;
-  Serial.print("MIDI Pgm Change:");
-  Serial.println(String(program + 1));
   patchNo = program + 1;
-  recallPatch(String(program + 1));
+  recallPatch(patchNo);
+  Serial.print("MIDI Pgm Change:");
+  Serial.println(patchNo);
   state = PARAMETER;
 }
 
@@ -1895,9 +1928,9 @@ void myMIDIClock()
     count++; //prevent eventual overflow
 }
 
-void recallPatch(String patchNo)
+void recallPatch(int patchNo)
 {
-  File patchFile = SD.open(patchNo.c_str());
+  File patchFile = SD.open(String(patchNo).c_str());
   if (!patchFile)
   {
     Serial.println("File not found");
@@ -2207,7 +2240,7 @@ void checkSwitches()
         case PARAMETER:
           if (patches.size() < PATCHES_LIMIT)
           {
-            getPatches(SD.open("/")); //Reload patches from SD
+            //loadPatches(); //Reload patches from SD
             patches.push({patches.size() + 1, INITPATCHNAME});
             state = SAVE;
           }
@@ -2217,7 +2250,7 @@ void checkSwitches()
           patchName = patches.last().patchName;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
-          getPatches(SD.open("/")); //Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
+          loadPatches(); //Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
           renamedPatch = "";
           state = PARAMETER;
           break;
@@ -2228,7 +2261,7 @@ void checkSwitches()
           state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patchName);
-          getPatches(SD.open("/")); //Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
+          loadPatches(); //Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
           renamedPatch = "";
           state = PARAMETER;
           break;
@@ -2266,7 +2299,8 @@ void checkSwitches()
           menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
           showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
         case MENUVALUE:
-          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
+          //Same as pushing Recall - store current menu item and go back to options
+          menuHandler(menuOptions.first().value[menuValueIndex], menuOptions.first().handler);
           showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
           state = MENU;
           break;
@@ -2298,7 +2332,7 @@ void checkSwitches()
         case SAVE:
           renamedPatch = "";
           state = PARAMETER;
-          getPatches(SD.open("/"));
+          loadPatches();
           break;
         case PATCHNAMING:
           renamedPatch = "";
@@ -2332,7 +2366,7 @@ void checkSwitches()
     state = PATCH;
     //Recall the current patch
     patchNo = patches.first().patchNo;
-    recallPatch(String(patchNo));
+    recallPatch(patchNo);
     state = PARAMETER;
 
     recallButton.write(HIGH); //Come out of this state
@@ -2351,7 +2385,7 @@ void checkSwitches()
           state = PATCH;
           //Recall the current patch
           patchNo = patches.first().patchNo;
-          recallPatch(String(patchNo));
+          recallPatch(patchNo);
           state = PARAMETER;
           break;
         case SAVE:
@@ -2368,16 +2402,18 @@ void checkSwitches()
           }
           break;
         case DELETE:
-          state = PATCH;
-          if (patches.size() > 0)
+          //Don't delete final patch
+          if (patches.size() > 1)
           {
-            patchNo = patches.first().patchNo;
-            deletePatch(String(patchNo).c_str());
-            getPatches(SD.open("/"));
-            patchNo = patches.first().patchNo;
-            recallPatch(String(patchNo));
-            sortPatches();
-            getPatches(SD.open("/"));
+            state = DELETEMSG;
+            patchNo = patches.first().patchNo;//PatchNo to delete from SD card
+            patches.shift();//Remove patch from circular buffer
+            deletePatch(String(patchNo).c_str());//Delete from SD card
+            loadPatches();//Repopulate circular buffer to start from lowest Patch No
+            renumberPatchesOnSD();
+            loadPatches();//Repopulate circular buffer again after delete
+            patchNo = patches.first().patchNo;//Go back to 1
+            recallPatch(patchNo);//Load first patch
           }
           state = PARAMETER;
           break;
@@ -2432,7 +2468,7 @@ void checkEncoder()
         state = PATCH;
         patches.push(patches.shift());
         patchNo = patches.first().patchNo;
-        recallPatch(String(patchNo));
+        recallPatch(patchNo);
         state = PARAMETER;
         break;
       case RECALL:
@@ -2470,7 +2506,7 @@ void checkEncoder()
         state = PATCH;
         patches.unshift(patches.pop());
         patchNo = patches.first().patchNo;
-        recallPatch(String(patchNo));
+        recallPatch(patchNo);
         state = PARAMETER;
         break;
       case RECALL:
