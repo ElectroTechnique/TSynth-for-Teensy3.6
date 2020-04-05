@@ -71,7 +71,6 @@ void recallPatchData(File patchFile, String data[])
     // Print the type of delimiter.
     if (str[n - 1] == ',' || str[n - 1] == '\n')
     {
-      //        Serial.print(str[n - 1] == ',' ? F("comma: ") : F("endl:  "));
       // Remove the delimiter.
       str[n - 1] = 0;
     }
@@ -175,9 +174,7 @@ void savePatch(const char *patchNo, String patchData[])
 
 void deletePatch(const char *patchNo)
 {
-  if (SD.exists(patchNo)) {
-    SD.remove(patchNo);
-  }
+  if (SD.exists(patchNo)) SD.remove(patchNo); 
 }
 
 void renumberPatchesOnSD() {
@@ -192,4 +189,15 @@ void renumberPatchesOnSD() {
     }
   }
   deletePatch(String(patches.size()+1).c_str());//Delete final patch which is duplicate of penultimate patch
+}
+
+void setPatchesOrdering(int no){
+  while(patches.first().patchNo != no){
+    Serial.println(patches.first().patchNo);
+    patches.push(patches.shift());
+  }
+}
+
+void resetPatchesOrdering(){
+  setPatchesOrdering(1);
 }

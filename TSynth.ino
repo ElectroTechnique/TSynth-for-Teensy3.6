@@ -2240,7 +2240,7 @@ void checkSwitches()
         case PARAMETER:
           if (patches.size() < PATCHES_LIMIT)
           {
-            //loadPatches(); //Reload patches from SD
+            resetPatchesOrdering(); //Reset order of patches from first patch
             patches.push({patches.size() + 1, INITPATCHNAME});
             state = SAVE;
           }
@@ -2250,7 +2250,8 @@ void checkSwitches()
           patchName = patches.last().patchName;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
-          loadPatches(); //Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
+          loadPatches(); //Get rid of pushed patchNo if it wasn't saved
+          setPatchesOrdering(patchNo);
           renamedPatch = "";
           state = PARAMETER;
           break;
@@ -2327,18 +2328,22 @@ void checkSwitches()
       switch (state)
       {
         case RECALL:
+          setPatchesOrdering(patchNo);
           state = PARAMETER;
           break;
         case SAVE:
           renamedPatch = "";
           state = PARAMETER;
-          loadPatches();
+          loadPatches();//Remove patch that was to be saved
+          setPatchesOrdering(patchNo);
           break;
         case PATCHNAMING:
+          charIndex = 0;
           renamedPatch = "";
           state = SAVE;
           break;
         case DELETE:
+          setPatchesOrdering(patchNo);
           state = PARAMETER;
           break;
         case MENU:
