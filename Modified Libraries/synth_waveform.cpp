@@ -22,6 +22,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ 
+  ElectroTechnique 2020
+ Added WAVEFORM_SILENT, syncFlag
  */
 
 #include <Arduino.h>
@@ -32,7 +35,6 @@
 
 // uncomment for more accurate but more computationally expensive frequency modulation
 #define IMPROVE_EXPONENTIAL_ACCURACY
-
 
 void AudioSynthWaveform::update(void)
 {
@@ -110,6 +112,7 @@ void AudioSynthWaveform::update(void)
 	case WAVEFORM_SAWTOOTH:
 		for (i=0; i < AUDIO_BLOCK_SAMPLES; i++) {
 			*bp++ = signed_multiply_32x16t(magnitude, ph);
+			//magnitude is 16 bit, ph is 32 bit, bp is uint16_t corresponds to 1.0;
 			ph += inc;
 		}
 		break;
@@ -266,7 +269,14 @@ void AudioSynthWaveformModulated::update(void)
 		}
 	}
 	phase_accumulator = ph;
-
+	
+	//Amplitude is always 1 on TSynth when oscillator is sounding
+	//magnitude must be set to zero, otherwise digital noise comes through
+	if(tone_type == WAVEFORM_SILENT){
+		magnitude  = 0;
+	}else{
+		magnitude = 65536.0;
+		}
 	// If the amplitude is zero, no output, but phase still increments properly
 	if (magnitude == 0) {
 		if (shapedata) release(shapedata);
@@ -334,9 +344,11 @@ void AudioSynthWaveformModulated::update(void)
 		for (i=0; i < AUDIO_BLOCK_SAMPLES; i++) {
 			if (phasedata[i] & 0x80000000) {
 				*bp++ = -magnitude15;
+
 			} else {
 				*bp++ = magnitude15;
 			}
+			ph += inc;
 		}
 		break;
 
