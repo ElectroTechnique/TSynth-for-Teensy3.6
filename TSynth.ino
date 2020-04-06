@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.0
+  ElectroTechnique TSynth - Firmware Rev 1.1
 
   Includes code by:
   Gustavo Silveira - Band limited wavetables https://forum.pjrc.com/threads/41905-Band-limited-Sawtooth-wavetable-C-generator-for-quot-Arbitrary-Waveform-quot-(and-its-use)
@@ -10,7 +10,7 @@
   Tools Settings:
   Board: "Teensy3.6"
   USB Type: "Serial + MIDI + Audio"
-  CPU Speed: "240MHz (overclock)"
+  CPU Speed: "180MHz"
 */
 //#include <Arduino.h>
 #include <Audio.h>
@@ -2248,6 +2248,7 @@ void checkSwitches()
         case SAVE:
           //Save as new patch with INITIALPATCH or overwrite existing keeping name - bypassing patch renaming
           patchName = patches.last().patchName;
+          state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
           loadPatches(); //Get rid of pushed patchNo if it wasn't saved
@@ -2256,13 +2257,12 @@ void checkSwitches()
           state = PARAMETER;
           break;
         case PATCHNAMING:
-          //Save renamed patch
-          //sort patches so new patch is saved at end
           patchName = renamedPatch;
           state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patchName);
-          loadPatches(); //Get rid of pushed patchNo if it wasn't saved TODO - Also resets circularbuffer
+          loadPatches(); //Get rid of pushed patchNo if it wasn't saved
+          setPatchesOrdering(patchNo);
           renamedPatch = "";
           state = PARAMETER;
           break;
