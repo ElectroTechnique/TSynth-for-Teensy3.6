@@ -283,8 +283,8 @@ void setup()
   filterMixer6.gain(3, 0); //Not used
 
   //This removes dc offset (mostly from unison pulse waves) before the ensemble effect
-  dcOffsetFilter.octaveControl(1);
-  dcOffsetFilter.frequency(20);
+  dcOffsetFilter.octaveControl(1.0);
+  dcOffsetFilter.frequency(1.0);
   dcOffsetFilter.resonance(0.707);
 
   ensemble.lfoRate(fxAmt);
