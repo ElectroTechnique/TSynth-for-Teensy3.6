@@ -45,7 +45,7 @@ public:
 		state_bandpass = 0;
 	}
 	void frequency(float freq) {
-		if (freq < 20.0) freq = 20.0;
+		if (freq < 1.0) freq = 1.0;//ElectroTechnique changed from 20.0 to make dc offset filter
 		else if (freq > AUDIO_SAMPLE_RATE_EXACT/2.5) freq = AUDIO_SAMPLE_RATE_EXACT/2.5;
 		setting_fcenter = (freq * (3.141592654/(AUDIO_SAMPLE_RATE_EXACT*2.0)))
 			* 2147483647.0;
