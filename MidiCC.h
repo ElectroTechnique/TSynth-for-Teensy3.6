@@ -1,7 +1,7 @@
 //MIDI CC control numbers
 //These broadly follow standard CC assignments
-#define   CCmodwheel  1 //vco LFO amount - less from mod wheel
-#define   CCvcolfoamt  3 //vco LFO amount - panel control
+#define   CCmodwheel  1 //pitch LFO amount - less from mod wheel
+#define   CCvcolfoamt  3 //pitch LFO amount - panel control
 #define   CCglide 5
 #define   CCvolume  7
 #define   CCvcowaveformA  14

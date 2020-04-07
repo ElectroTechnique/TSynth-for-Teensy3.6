@@ -1,22 +1,24 @@
-//Values below are just for initialising and will be changed when synth is initialised to current panel controls
+//Values below are just for initialising and will be changed when synth is initialised to current panel controls & EEPROM settings
+byte midiChannel = MIDI_CHANNEL_OMNI;//(EEPROM)
 String patchName = INITPATCHNAME;
 float VCOALevel = 1;
 float VCOBLevel = 1;
 float noiseLevel = 0;
 int unison = 0;
-int ringMod = 0;
+int oscFX = 0;
 float detune = 0.98;
 float lfoSyncFreq = 1.0;
 float midiClkTimeInterval = 0.0;
 float lfoTempoValue = 1.0;
-
-float keytrackingAmount = 0.7;
+int pitchBendRange = 12;
+float modWheelDepth = 0.2f;
+float keytrackingAmount = 0.5;//MIDI CC & Menu option (EEPROM)
 float glideSpeed = 0;
 int vcoOctaveA = 0;
 int vcoOctaveB = 12;
 float pitchEnv = 0;
 int vcoWaveformA = WAVEFORM_SQUARE;
-int vcoWaveformB = WAVEFORM_SAWTOOTH_REVERSE;
+int vcoWaveformB = WAVEFORM_SQUARE;
 float pwmAmtA = 1;
 float pwmAmtB = 1;
 float pwmRate = 0.5;
@@ -26,6 +28,7 @@ int pwmSource = PWMSOURCELFO;
 
 float filterRes = 1.1;
 float filterFreq = 12000;
+float filterOctave = 7.0;
 float filterMix = 0;
 int filterMixStr = 0;//For display
 float filterEnv = 0;

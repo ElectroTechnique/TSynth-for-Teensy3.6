@@ -1,21 +1,27 @@
 #include "TeensyThreads.h"
 
 // This Teensy3 native optimized version requires specific pins
-#define sclk 20  // SCLK can also use pin 14  
-#define mosi 21  // MOSI can also use pin 7
-#define cs  2  // CS & DC can use pins 2, 6, 9, 10, 15, 20, 21, 22, 23
-#define dc   3   //but certain pairs must NOT be used: 2+10, 6+9, 20+23, 21+22
-#define rst  8   // RST can use any pin
-#define DISPLAYTIMEOUT 800
+#define sclk 20 // SCLK can also use pin 14
+#define mosi 21 // MOSI can also use pin 7
+#define cs 2    // CS & DC can use pins 2, 6, 9, 10, 15, 20, 21, 22, 23
+#define dc 3    //but certain pairs must NOT be used: 2+10, 6+9, 20+23, 21+22
+#define rst 8   // RST can use any pin
+#define DISPLAYTIMEOUT 700
 
 #include <ST7735_t3.h> // Hardware-specific library for T3.x
 
 #include "Fonts/Org_01.h"
+#include "Fonts/Yeysk16pt7b.h"
 #include "Fonts/FreeSansBold18pt7b.h"
 #include "Fonts/FreeSans12pt7b.h"
 #include "Fonts/FreeSans9pt7b.h"
 #include "Fonts/FreeSansOblique24pt7b.h"
 #include "Fonts/FreeSansBoldOblique24pt7b.h"
+
+#define PULSE 1
+#define VAR_TRI 2
+#define FILTER_ENV 3
+#define AMP_ENV 4
 
 ST7735_t3 tft = ST7735_t3(cs, dc, mosi, sclk, rst);
 
@@ -25,45 +31,49 @@ float currentFloatValue = 0.0;
 String currentPgmNum = "";
 String currentPatchName = "";
 String newPatchName = "";
+char * currentMenuOption = "";
+char * currentMenuValue = "";
+int currentMenuPart = MENU;
 int paramType = PARAMETER;
 
 boolean voiceOn[NO_OF_VOICES] = {false, false, false, false, false, false};
 
 unsigned long timer = 0;
 
-void startTimer() {
-  if (state == PARAMETER) {
+void startTimer()
+{
+  if (state == PARAMETER)
+  {
     timer = millis();
   }
 }
 
-void renderBootUpPage() {
+void renderBootUpPage()
+{
   tft.fillScreen(ST7735_BLACK);
-  tft.drawRect(17, 30, 46, 11, ST7735_WHITE);
-  tft.fillRect(63, 30, 61, 11, ST7735_WHITE);
-  tft.setCursor(20, 31);
+  tft.drawRect(42, 30, 46, 11, ST7735_WHITE);
+  tft.fillRect(88, 30, 61, 11, ST7735_WHITE);
+  tft.setCursor(45, 31);
   tft.setFont(&Org_01);
   tft.setTextSize(1);
   tft.setTextColor(ST7735_WHITE);
   tft.println("ELECTRO");
   tft.setTextColor(ST7735_BLACK);
-  tft.setCursor(66, 37);
+  tft.setCursor(91, 37);
   tft.println("TECHNIQUE");
   tft.setTextColor(ST7735_YELLOW);
-  tft.setFont(&FreeSansBoldOblique24pt7b);
-  tft.setCursor(5, 82);
+  tft.setFont(&Yeysk16pt7b);
+  tft.setCursor(5, 70);
   tft.setTextSize(1);
-  tft.println("T");
-  tft.setFont(&FreeSansOblique24pt7b);
-  tft.setCursor(30, 82);
-  tft.println("Synth");
+  tft.println("TSynth");
   tft.setTextColor(ST7735_RED);
   tft.setFont(&FreeSans9pt7b);
-  tft.setCursor(110, 100);
-  tft.println("V1.0");
+  tft.setCursor(110, 95);
+  tft.println(VERSION);
 }
 
-void renderCurrentPatchPage() {
+void renderCurrentPatchPage()
+{
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSansBold18pt7b);
   tft.setCursor(5, 53);
@@ -71,42 +81,48 @@ void renderCurrentPatchPage() {
   tft.setTextSize(1);
   tft.println(currentPgmNum);
 
-  tft.drawRect(115, 28, 12, 12 , ST7735_BLUE);
-  tft.drawRect(130, 28, 12, 12 , ST7735_BLUE);
-  tft.drawRect(145, 28, 12, 12 , ST7735_BLUE);
-  tft.drawRect(115, 43, 12, 12 , ST7735_BLUE);
-  tft.drawRect(130, 43, 12, 12 , ST7735_BLUE);
-  tft.drawRect(145, 43, 12, 12 , ST7735_BLUE);
+  tft.drawRect(115, 28, 12, 12, ST7735_BLUE);
+  tft.drawRect(130, 28, 12, 12, ST7735_BLUE);
+  tft.drawRect(145, 28, 12, 12, ST7735_BLUE);
+  tft.drawRect(115, 43, 12, 12, ST7735_BLUE);
+  tft.drawRect(130, 43, 12, 12, ST7735_BLUE);
+  tft.drawRect(145, 43, 12, 12, ST7735_BLUE);
 
   tft.setTextColor(ST7735_BLACK);
   tft.setFont(&Org_01);
-  if (voiceOn[0]) {
-    tft.fillRect(115, 28, 12, 12 , ST7735_BLUE);
+  if (voiceOn[0])
+  {
+    tft.fillRect(115, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(120, 36);
     tft.println("1");
   }
-  if (voiceOn[1]) {
-    tft.fillRect(130, 28, 12, 12 , ST7735_BLUE);
+  if (voiceOn[1])
+  {
+    tft.fillRect(130, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(133, 36);
     tft.println("2");
   }
-  if (voiceOn[2]) {
-    tft.fillRect(145, 28, 12, 12 , ST7735_BLUE);
+  if (voiceOn[2])
+  {
+    tft.fillRect(145, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(148, 36);
     tft.println("3");
   }
-  if (voiceOn[3]) {
-    tft.fillRect(115, 43, 12, 12 , ST7735_BLUE);
+  if (voiceOn[3])
+  {
+    tft.fillRect(115, 43, 12, 12, ST7735_BLUE);
     tft.setCursor(118, 51);
     tft.println("4");
   }
-  if (voiceOn[4]) {
-    tft.fillRect(130, 43, 12, 12 , ST7735_BLUE);
+  if (voiceOn[4])
+  {
+    tft.fillRect(130, 43, 12, 12, ST7735_BLUE);
     tft.setCursor(133, 51);
     tft.println("5");
   }
-  if (voiceOn[5]) {
-    tft.fillRect(145, 43, 12, 12 , ST7735_BLUE);
+  if (voiceOn[5])
+  {
+    tft.fillRect(145, 43, 12, 12, ST7735_BLUE);
     tft.setCursor(148, 51);
     tft.println("6");
   }
@@ -119,31 +135,39 @@ void renderCurrentPatchPage() {
   tft.println(currentPatchName);
 }
 
-void renderPulseWidth(float value) {
+void renderPulseWidth(float value)
+{
   tft.drawFastHLine(108, 74, 15 + (value * 13), ST7735_CYAN);
   tft.drawFastVLine(123 + (value * 13), 74, 20, ST7735_CYAN);
   tft.drawFastHLine(123 + (value * 13), 94, 16 - (value * 13), ST7735_CYAN);
-  if (value < 0) {
+  if (value < 0)
+  {
     tft.drawFastVLine(108, 74, 21, ST7735_CYAN);
-  } else {
+  }
+  else
+  {
     tft.drawFastVLine(138, 74, 21, ST7735_CYAN);
   }
 }
 
-void renderVarTriangle(float value) {
+void renderVarTriangle(float value)
+{
   tft.drawLine(110, 94, 123 + (value * 13), 74, ST7735_CYAN);
   tft.drawLine(123 + (value * 13), 74, 136, 94, ST7735_CYAN);
 }
 
-void renderEnv(float att, float dec, float sus, float rel) {
+void renderEnv(float att, float dec, float sus, float rel)
+{
   tft.drawLine(100, 94, 100 + (att * 15), 74, ST7735_CYAN);
-  tft.drawLine(100 + (att * 15), 74.0, 100 + ((att  + dec) * 15), 94 - (sus * 20), ST7735_CYAN);
-  tft.drawFastHLine(100 + ((att + dec) * 15), 94 - (sus * 20), 40 - ((att  + dec) * 15), ST7735_CYAN);
+  tft.drawLine(100 + (att * 15), 74.0, 100 + ((att + dec) * 15), 94 - (sus * 20), ST7735_CYAN);
+  tft.drawFastHLine(100 + ((att + dec) * 15), 94 - (sus * 20), 40 - ((att + dec) * 15), ST7735_CYAN);
   tft.drawLine(139, 94 - (sus * 20), 139 + (rel * 13), 94, ST7735_CYAN);
 }
 
-void renderCurrentParameterPage() {
-  switch (state) {
+void renderCurrentParameterPage()
+{
+  switch (state)
+  {
     case PARAMETER:
       tft.fillScreen(ST7735_BLACK);
       tft.setFont(&FreeSans12pt7b);
@@ -155,7 +179,8 @@ void renderCurrentParameterPage() {
       tft.setCursor(1, 90);
       tft.setTextColor(ST7735_WHITE);
       tft.println(currentValue);
-      switch (paramType) {
+      switch (paramType)
+      {
         case PULSE:
           renderPulseWidth(currentFloatValue);
           break;
@@ -173,7 +198,8 @@ void renderCurrentParameterPage() {
   }
 }
 
-void renderDeletePatchPage() {
+void renderDeletePatchPage()
+{
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSansBold18pt7b);
   tft.setCursor(5, 53);
@@ -197,7 +223,19 @@ void renderDeletePatchPage() {
   tft.println(patches.first().patchName);
 }
 
-void renderSavePage() {
+void renderDeleteMessagePage() {
+  tft.fillScreen(ST7735_BLACK);
+  tft.setFont(&FreeSans12pt7b);
+  tft.setCursor(5, 53);
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextSize(1);
+  tft.println("Reordering");
+  tft.setCursor(10, 90);
+  tft.println("SD Card");
+}
+
+void renderSavePage()
+{
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSansBold18pt7b);
   tft.setCursor(5, 53);
@@ -221,7 +259,8 @@ void renderSavePage() {
   tft.println(patches.last().patchName);
 }
 
-void renderReinitialisePage() {
+void renderReinitialisePage()
+{
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
   tft.setTextColor(ST7735_YELLOW);
@@ -232,7 +271,8 @@ void renderReinitialisePage() {
   tft.println("panel setting");
 }
 
-void renderPatchNamingPage() {
+void renderPatchNamingPage()
+{
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
   tft.setTextColor(ST7735_YELLOW);
@@ -245,7 +285,8 @@ void renderPatchNamingPage() {
   tft.println(newPatchName);
 }
 
-void renderRecallPage() {
+void renderRecallPage()
+{
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans9pt7b);
   tft.setCursor(0, 45);
@@ -271,20 +312,38 @@ void renderRecallPage() {
   patches.size() > 1 ? tft.println(patches[1].patchName) : tft.println(patches.last().patchName);
 }
 
-void showRenamingPage(String newName) {
+void showRenamingPage(String newName)
+{
   newPatchName = newName;
 }
 
-void renderSettingsPage() {
- tft.fillScreen(ST7735_BLACK);
+void renderUpDown(uint16_t  x, uint16_t  y, uint16_t  colour)
+{
+  //Produces up/down indicator glyph at x,y
+  tft.setCursor(x, y);
+  tft.fillTriangle(x, y, x + 8, y - 8, x + 16, y, colour);
+  tft.fillTriangle(x, y + 4, x + 8, y + 12, x + 16, y + 4, colour);
+}
+
+
+void renderMenuPage()
+{
+  tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
   tft.setCursor(0, 53);
-  tft.println("Settings");
+  tft.println(currentMenuOption);
+  if (currentMenuPart == MENU) renderUpDown(140, 42, ST7735_YELLOW);
+  tft.drawFastHLine(10, 62, tft.width() - 20, ST7735_RED);
+  tft.setTextColor(ST7735_WHITE);
+  tft.setCursor(5, 90);
+  tft.println(currentMenuValue);
+  if (currentMenuPart == MENUVALUE) renderUpDown(140, 80, ST7735_WHITE);
 }
 
-void showCurrentParameterPage(const char* param, float val, int pType) {
+void showCurrentParameterPage(const char *param, float val, int pType)
+{
   currentParameter = param;
   currentValue = String(val);
   currentFloatValue = val;
@@ -292,30 +351,46 @@ void showCurrentParameterPage(const char* param, float val, int pType) {
   startTimer();
 }
 
-void showCurrentParameterPage(const char* param, String val, int pType) {
+void showCurrentParameterPage(const char *param, String val, int pType)
+{
   currentParameter = param;
   currentValue = val;
   paramType = pType;
   startTimer();
 }
 
-void showCurrentParameterPage(const char* param, String val) {
+void showCurrentParameterPage(const char *param, String val)
+{
   showCurrentParameterPage(param, val, PARAMETER);
 }
 
-void showPatchPage(String number, String patchName) {
+void showPatchPage(String number, String patchName)
+{
   currentPgmNum = number;
   currentPatchName = patchName;
 }
 
-void displayThread() {
-  threads.delay(2000);//Give bootup page chance to display
-  while (1) {
-    switch (state) {
+void showMenuPage(char *  option, char * value, int menuPart)
+{
+  currentMenuOption = option;
+  currentMenuValue = value;
+  currentMenuPart = menuPart;
+}
+
+void displayThread()
+{
+  threads.delay(2000); //Give bootup page chance to display
+  while (1)
+  {
+    switch (state)
+    {
       case PARAMETER:
-        if ((millis() - timer) > DISPLAYTIMEOUT) {
+        if ((millis() - timer) > DISPLAYTIMEOUT)
+        {
           renderCurrentPatchPage();
-        } else {
+        }
+        else
+        {
           renderCurrentParameterPage();
         }
         break;
@@ -327,7 +402,7 @@ void displayThread() {
         break;
       case REINITIALISE:
         renderReinitialisePage();
-        tft.updateScreen();//update before delay
+        tft.updateScreen(); //update before delay
         threads.delay(1000);
         state = PARAMETER;
         break;
@@ -340,16 +415,20 @@ void displayThread() {
       case DELETE:
         renderDeletePatchPage();
         break;
-      case SETTINGS:
-        renderSettingsPage();
+      case DELETEMSG:
+        renderDeleteMessagePage();
+        break;
+      case MENU:
+      case MENUVALUE:
+        renderMenuPage();
         break;
     }
     tft.updateScreen();
-    // threads.delay(1);//Not needed!
   }
 }
 
-void setupDisplay() {
+void setupDisplay()
+{
   tft.useFrameBuffer(true);
   tft.initR(INITR_GREENTAB);
   tft.setRotation(3);
