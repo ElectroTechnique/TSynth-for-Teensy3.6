@@ -3,12 +3,12 @@ Teensy 3.6 based synthesizer using PJRC Audio Board and Audio Lib
 
 More details at PJRC Forum https://forum.pjrc.com/threads/57418-TSynth-Two-Oscillator-Polysynth
 
-![](https://forum.pjrc.com/attachment.php?attachmentid=17379&d=1567073211)
+This is for the new version of TSynth with a PCB and a front panel.
 
 Specifications
 
 Oscillators
-- Six voice polyphony (last note priority), two oscillators per voice, detunable with +/- 2 octaves range, Sine/Sample & Hold (like tuned noise)/Square/Sawtooth/Ramp/PWM/Var Triangle/User waveforms and level
+- Six voice polyphony (last note priority), two oscillators per voice (second detunable), with +/- 2 octaves range, Triangle/Sample & Hold (like tuned noise)/Square (band limited)/Sawtooth(band limited)/Var Pulse/Var Triangle/Parabolic/Harmonic waveforms and level
 - Pulse Width/Var Triangle can be set for each oscillator with PWM by dedicated LFO or from the filter envelope
 - Pink or white noise level
 - Dedicated LFO for pitch mod (can be retriggered by note on) , Sine/Triangle/Sawtooth/Ramp/Square/S&H waveforms
@@ -20,7 +20,7 @@ Filter
 - State variable 12dB filter (SVF) with continuous mix between LP and HP (provides notch filter) and BP
 - Cutoff freq and resonance
 - Cutoff can be modulated by dedicated ADSR envelope (+/-), dedicated LFO and key tracking
-- LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock (tempo) with variable time division delay (1,3/4,1/2,1/4,1/8...)
+- LFO has same waveforms as pitch LFO (can be retriggered by note on)  and rate can be set to match MIDI clock (tempo) with variable time division (1,3/4,1/2,1/4,1/8...)
 
 Amplifier
 - Dedicated ADSR envelope
@@ -59,5 +59,7 @@ TSynth patch saving and recall works like an analogue polysynth from the late 70
 - Save will save the current settings to a new patch at the end of the list or you can use the encoder to overwrite an existing patch. Press Save again to save it. If you want to name/rename the patch, press the encoder enter button and use the encoder and enter button to choose an alphanumeric name. Holding Save for 1.5s will go into a patch deletion mode. Use encoder and enter button to choose and delete patch. Patch numbers will be changed on the SD card to be consecutive again.
 
 KNOWN ISSUES
+- Occasional digital noises from audio over USB, possibly attributable to the 44117Hz sample rate T3.6 uses. T4 uses 44100Hz and will probably be better. Audio from Audio Board is fine.
 - Plugging in a MIDI controller may alter current patch settings. Arturia Minilab sends its current panel control settings when plugged in, causing MIDI CC messages to be received by TSynth.
 - MIDI In DIN doesn't like MIDI Clock signals which get mixed up with note on/off and CC messages, so it's set not to listen to MIDI Clock. MIDI Host and client USB is fine.
+- Frequency cutoff value is inaccurate due to FILTEROCTAVERANGE being high, 7.0 to improve low frequency response (bass!)
