@@ -28,6 +28,7 @@ int pwmSource = PWMSOURCELFO;
 
 float filterRes = 1.1;
 float filterFreq = 12000;
+float filterOctave = 7.0;
 float filterMix = 0;
 int filterMixStr = 0;//For display
 float filterEnv = 0;

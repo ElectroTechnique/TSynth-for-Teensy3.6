@@ -284,8 +284,7 @@ void setup()
 
   //This removes dc offset (mostly from unison pulse waves) before the ensemble effect
   dcOffsetFilter.octaveControl(1.0);
-  dcOffsetFilter.frequency(1.0);
-  dcOffsetFilter.resonance(0.707);
+  dcOffsetFilter.frequency(12.0);//Lower values will give clicks on note on/off
 
   ensemble.lfoRate(fxAmt);
 
@@ -853,7 +852,7 @@ int getVCOWaveformB(int value)
 
 int getVCOOctave(int value)
 {
-  return OCTAVECONTROL[value];
+  return PITCH[value];
 }
 
 void setPwmMixerALFO(float value)
@@ -1254,6 +1253,22 @@ void updateFilterFreq()
   filter4.frequency(filterFreq);
   filter5.frequency(filterFreq);
   filter6.frequency(filterFreq);
+  //TODO add octaveControl
+  //  float filterOctave = 1.0f;
+  //  if (filterFreq < 100) {
+  //    filterOctave = 7.0;
+  //  } else if (filterFreq < 200) {
+  //    filterOctave = 4.0;
+  //  } else {
+  //    filterOctave = 2.0;
+  //  }
+  //  filter1.octaveControl(filterOctave);
+  //  filter2.octaveControl(filterOctave);
+  //  filter3.octaveControl(filterOctave);
+  //  filter4.octaveControl(filterOctave);
+  //  filter5.octaveControl(filterOctave);
+  //  filter6.octaveControl(filterOctave);
+
   showCurrentParameterPage("Cutoff", String(int(filterFreq)) + " Hz");
 }
 
@@ -1930,6 +1945,7 @@ void myMIDIClock()
 
 void recallPatch(int patchNo)
 {
+  allNotesOff();
   File patchFile = SD.open(String(patchNo).c_str());
   if (!patchFile)
   {
