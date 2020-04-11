@@ -11,6 +11,9 @@
   Board: "Teensy3.6"
   USB Type: "Serial + MIDI + Audio"
   CPU Speed: "180MHz"
+
+  Additional libraries:
+    Agileware CircularBuffer available in Arduino libraries manager
 */
 
 #include <Audio.h>
@@ -77,12 +80,12 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
   { -1, 0}
 };
 
-int prevNote = 48;//Initialised to middle value
+int prevNote = 48;//Initialise
 float previousMillis = millis(); //For MIDI Clk Sync
 
-int count = 0;
-int patchNo = 1;
-int voiceToReturn = -1;       //Initialise to 'null'
+int count = 0;//For MIDI Clk Sync
+int patchNo = 1;//Current patch no
+int voiceToReturn = -1; //Initialise
 long earliestTime = millis(); //For voice allocation - initialise to now
 
 void setup()
@@ -293,7 +296,7 @@ void setup()
   effectMixerR.gain(2, 0);
   effectMixerR.gain(3, 0);
 
-  volumePrevious = -9999; //Force volume control to be read and set to current
+  volumePrevious = RE_READ; //Force volume control to be read and set to current
 
   //Read Key Tracking from EEPROM, this can be set individually by each patch.
   keytrackingAmount = getKeyTracking();
@@ -539,7 +542,7 @@ void allNotesOff()
 
 int getVoiceNo(int note)
 {
-  voiceToReturn = -1;      //Initialise to 'null'
+  voiceToReturn = -1;      //Initialise
   earliestTime = millis(); //Initialise to now
   if (note == -1)
   {
@@ -1926,7 +1929,7 @@ void myMIDIClockStart()
 
 void myMIDIClock()
 {
-  //This recalculates theLFO frequencies if the tempo changes (MIDI cLock is 24ppq)
+  //This recalculates the LFO frequencies if the tempo changes (MIDI cLock is 24ppq)
   if ((oscLFOMidiClkSync == 1 || filterLFOMidiClkSync == 1) && count > 23)
   {
     float timeNow = millis();
@@ -2467,10 +2470,10 @@ void reinitialiseToPanel()
   muxInput = 0;
   for (int i = 0; i < MUXCHANNELS; i++)
   {
-    mux1ValuesPrev[i] = -9999;
-    mux2ValuesPrev[i] = -9999;
+    mux1ValuesPrev[i] = RE_READ;
+    mux2ValuesPrev[i] = RE_READ;
   }
-  volumePrevious = -9999;
+  volumePrevious = RE_READ;
   patchName = INITPATCHNAME;
   showPatchPage("Initial", "Panel Settings");
 }
