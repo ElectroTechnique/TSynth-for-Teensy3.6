@@ -188,10 +188,10 @@ void renderCurrentParameterPage()
           renderVarTriangle(currentFloatValue);
           break;
         case FILTER_ENV:
-          renderEnv(vcfAttack * 0.0001, vcfDecay * 0.0001, vcfSustain, vcfRelease * 0.0001);
+          renderEnv(filterAttack * 0.0001, filterDecay * 0.0001, filterSustain, filterRelease * 0.0001);
           break;
         case AMP_ENV:
-          renderEnv(vcaAttack * 0.0001, vcaDecay * 0.0001, vcaSustain, vcaRelease * 0.0001);
+          renderEnv(ampAttack * 0.0001, ampDecay * 0.0001, ampSustain, ampRelease * 0.0001);
           break;
       }
       break;

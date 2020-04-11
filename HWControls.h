@@ -82,7 +82,7 @@ static long encPrevious = 0;
 
 //These are pushbuttons and require debouncing
 Bounce oscFXSwitch = Bounce(OSC_FX_SW, DEBOUNCE);
-Bounce vcfLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, DEBOUNCE);
+Bounce filterLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, DEBOUNCE);
 Bounce unisonSwitch = Bounce(UNISON_SW, DEBOUNCE);
 Bounce tempoSwitch = Bounce(TEMPO_SW, DEBOUNCE);
 
