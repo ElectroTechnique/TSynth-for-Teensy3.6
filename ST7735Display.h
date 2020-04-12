@@ -11,7 +11,7 @@
 #include <ST7735_t3.h> // Hardware-specific library for T3.x
 
 #include "Fonts/Org_01.h"
-#include "Fonts/Yeysk16pt7b.h"
+#include "Yeysk16pt7b.h"
 #include "Fonts/FreeSansBold18pt7b.h"
 #include "Fonts/FreeSans12pt7b.h"
 #include "Fonts/FreeSans9pt7b.h"
