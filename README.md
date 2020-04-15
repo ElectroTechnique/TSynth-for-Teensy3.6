@@ -61,5 +61,5 @@ TSynth patch saving and recall works like an analogue polysynth from the late 70
 KNOWN ISSUES
 - Occasional digital noises from audio over USB, possibly attributable to the 44117Hz sample rate T3.6 uses. T4 uses 44100Hz and will probably be better. Audio from Audio Board is fine.
 - Plugging in a MIDI controller may alter current patch settings. Arturia Minilab sends its current panel control settings when plugged in, causing MIDI CC messages to be received by TSynth.
-- MIDI In DIN doesn't like MIDI Clock signals which get mixed up with note on/off and CC messages, so it's set not to listen to MIDI Clock. MIDI Host and client USB is fine.
+- Low cost (sub $10) USB to MIDI converters can have problems handling Clock signals and SysEx, which get mixed up with note on/off and CC messages. Use quality converters made by a known brand name.
 - Frequency cutoff value is inaccurate due to FILTEROCTAVERANGE being high, 7.0 to improve low frequency response (bass!)
