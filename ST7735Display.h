@@ -9,7 +9,7 @@
 #define DISPLAYTIMEOUT 700
 
 #include <Adafruit_GFX.h>
-#include <ST7735_t3.h> // Hardware-specific library for T3.x
+#include "ST7735_t3.h" // Local copy from TD1.48 that works for 0.96" IPS 160x80 display
 
 #include <Fonts/Org_01.h>
 #include "Yeysk16pt7b.h"

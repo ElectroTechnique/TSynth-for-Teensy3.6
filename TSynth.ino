@@ -14,6 +14,7 @@
 
   Additional libraries:
     Agileware CircularBuffer available in Arduino libraries manager
+    Replacement files are in Modified Libraries and need to be placed in the teensy Audio folder.
 */
 
 #include <Audio.h>
@@ -244,13 +245,6 @@ void setup()
   //Arbitary waveform needs initialising to something
   loadArbWaveformA(PARABOLIC_WAVE);
   loadArbWaveformB(PARABOLIC_WAVE);
-
-  filter1.octaveControl(FILTEROCTAVERANGE);
-  filter2.octaveControl(FILTEROCTAVERANGE);
-  filter3.octaveControl(FILTEROCTAVERANGE);
-  filter4.octaveControl(FILTEROCTAVERANGE);
-  filter5.octaveControl(FILTEROCTAVERANGE);
-  filter6.octaveControl(FILTEROCTAVERANGE);
 
   waveformMixer1.gain(2, ONE); //Noise
   waveformMixer1.gain(3, 0);           //Osc FX
@@ -1256,21 +1250,21 @@ void updateFilterFreq()
   filter4.frequency(filterFreq);
   filter5.frequency(filterFreq);
   filter6.frequency(filterFreq);
-  //TODO add octaveControl
-  //  float filterOctave = 1.0f;
-  //  if (filterFreq < 100) {
-  //    filterOctave = 7.0;
-  //  } else if (filterFreq < 200) {
-  //    filterOctave = 4.0;
-  //  } else {
-  //    filterOctave = 2.0;
-  //  }
-  //  filter1.octaveControl(filterOctave);
-  //  filter2.octaveControl(filterOctave);
-  //  filter3.octaveControl(filterOctave);
-  //  filter4.octaveControl(filterOctave);
-  //  filter5.octaveControl(filterOctave);
-  //  filter6.octaveControl(filterOctave);
+
+  if (filterFreq > 1300) {
+    filterOctave = 1;
+  } else if (filterFreq < 100) {
+    filterOctave = 7;
+  } else {
+    filterOctave = 1 + ((1300 - filterFreq) / 200);
+  }
+
+  filter1.octaveControl(filterOctave);
+  filter2.octaveControl(filterOctave);
+  filter3.octaveControl(filterOctave);
+  filter4.octaveControl(filterOctave);
+  filter5.octaveControl(filterOctave);
+  filter6.octaveControl(filterOctave);
 
   showCurrentParameterPage("Cutoff", String(int(filterFreq)) + " Hz");
 }
