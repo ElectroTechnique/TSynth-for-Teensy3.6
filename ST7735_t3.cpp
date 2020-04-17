@@ -1562,8 +1562,6 @@ bool ST7735_t3::updateScreenAsync(bool update_cont)					// call to say update th
 	// T4
 	//==========================================
 #elif defined(__IMXRT1062__)  // Teensy 4.x
-	// TODO
-
   	// Start off remove disable on completion from both...
 	// it will be the ISR that disables it... 
 	_dma_data[_spi_num]._dmasettings[0].TCD->CSR &= ~( DMA_TCD_CSR_DREQ);

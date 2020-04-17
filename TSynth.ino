@@ -14,7 +14,7 @@
 
   Additional libraries:
     Agileware CircularBuffer available in Arduino libraries manager
-    Replacement files are in Modified Libraries and need to be placed in the teensy Audio folder.
+    Replacement files are in the Modified Libraries folder and need to be placed in the teensy Audio folder.
 */
 
 #include <Audio.h>
@@ -133,6 +133,7 @@ void setup()
   midi1.setHandleProgramChange(myProgramChange);
   midi1.setHandleClock(myMIDIClock);
   midi1.setHandleStart(myMIDIClockStart);
+  midi1.setHandleStop(myMIDIClockStop);
   Serial.println("USB HOST MIDI Class Compliant Listening");
 
   //USB Client MIDI
@@ -143,6 +144,7 @@ void setup()
   usbMIDI.setHandleProgramChange(myProgramChange);
   usbMIDI.setHandleClock(myMIDIClock);
   usbMIDI.setHandleStart(myMIDIClockStart);
+  usbMIDI.setHandleStop(myMIDIClockStop);
   Serial.println("USB Client MIDI Listening");
 
   //MIDI 5 Pin DIN
@@ -155,6 +157,7 @@ void setup()
   //Doesn't like continuous Midi Clock signals from DAW, works with USB Midi fine
   MIDI.setHandleClock(myMIDIClock);
   MIDI.setHandleStart(myMIDIClockStart);
+  MIDI.setHandleStop(myMIDIClockStop);
   Serial.println("MIDI In DIN Listening");
 
   constant1Dc.amplitude(ONE);
@@ -1907,6 +1910,7 @@ void myProgramChange(byte channel, byte program)
 
 void myMIDIClockStart()
 {
+  MIDIClkSignal = true;
   //Resync LFOs when MIDI Clock starts.
   //When there's a jump to a different
   //part of a track, such as in a DAW, the DAW must have same
@@ -1921,23 +1925,26 @@ void myMIDIClockStart()
   }
 }
 
+void myMIDIClockStop()
+{
+  MIDIClkSignal = false;
+}
+
 void myMIDIClock()
 {
   //This recalculates the LFO frequencies if the tempo changes (MIDI cLock is 24ppq)
   if ((oscLFOMidiClkSync == 1 || filterLFOMidiClkSync == 1) && count > 23)
   {
+      MIDIClkSignal = !MIDIClkSignal;
     float timeNow = millis();
     midiClkTimeInterval = (timeNow - previousMillis);
     lfoSyncFreq = 1000.0 / midiClkTimeInterval;
     previousMillis = timeNow;
-    if (oscLFOMidiClkSync == 1)
-      pitchLfo.frequency(lfoSyncFreq * lfoTempoValue); //MIDI CC only
-    if (filterLFOMidiClkSync == 1)
-      filterLfo.frequency(lfoSyncFreq * lfoTempoValue);
+    if (oscLFOMidiClkSync == 1)pitchLfo.frequency(lfoSyncFreq * lfoTempoValue); //MIDI CC only
+    if (filterLFOMidiClkSync == 1)filterLfo.frequency(lfoSyncFreq * lfoTempoValue);
     count = 0;
   }
-  if (count < 24)
-    count++; //prevent eventual overflow
+  if (count < 24) count++; //prevent eventual overflow
 }
 
 void recallPatch(int patchNo)
@@ -2496,8 +2503,7 @@ void checkEncoder()
         patches.push(patches.shift());
         break;
       case PATCHNAMING:
-        if (charIndex == TOTALCHARS)
-          charIndex = 0;
+        if (charIndex == TOTALCHARS) charIndex = 0;//Wrap around
         currentCharacter = CHARACTERS[charIndex++];
         showRenamingPage(renamedPatch + currentCharacter);
         break;
@@ -2553,14 +2559,6 @@ void checkEncoder()
         break;
     }
     encPrevious = encRead;
-  }
-}
-
-void MIDIMonitor() {
-  //Monitor MIDI In DIN
-  if (Serial4.available() > 0) {
-    Serial.print("MIDI DIN: ");
-    Serial.println(Serial4.read(), HEX);
   }
 }
 

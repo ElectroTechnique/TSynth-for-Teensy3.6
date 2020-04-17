@@ -48,7 +48,7 @@
 
 //Teensy 3.6 Pins
 #define OSC_FX_SW 39
-#define VCF_LFO_RETRIG_SW 30
+#define FILTER_LFO_RETRIG_SW 30
 #define UNISON_SW 36
 #define TEMPO_SW 16
 #define RECALL_SW 17
@@ -82,7 +82,7 @@ static long encPrevious = 0;
 
 //These are pushbuttons and require debouncing
 Bounce oscFXSwitch = Bounce(OSC_FX_SW, DEBOUNCE);
-Bounce filterLFORetrigSwitch = Bounce(VCF_LFO_RETRIG_SW, DEBOUNCE);
+Bounce filterLFORetrigSwitch = Bounce(FILTER_LFO_RETRIG_SW, DEBOUNCE);
 Bounce unisonSwitch = Bounce(UNISON_SW, DEBOUNCE);
 Bounce tempoSwitch = Bounce(TEMPO_SW, DEBOUNCE);
 
@@ -94,7 +94,7 @@ Bounce menuButton = Bounce(MENU_SW, DEBOUNCE);
 boolean reini = true; //Hack for menu button
 Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
 boolean panic = true; //Hack for back button
-Encoder encoder(ENCODER_PINB, ENCODER_PINA);//This often needs the pins swapping
+Encoder encoder(ENCODER_PINB, ENCODER_PINA);//This often needs the pins swapping depending on the encoder
 
 void setupHardware()
 {
@@ -106,7 +106,7 @@ void setupHardware()
 
   //Switches
   pinMode(OSC_FX_SW, INPUT_PULLUP);
-  pinMode(VCF_LFO_RETRIG_SW, INPUT_PULLUP);
+  pinMode(FILTER_LFO_RETRIG_SW, INPUT_PULLUP);
   pinMode(UNISON_SW, INPUT_PULLUP);
   pinMode(TEMPO_SW, INPUT_PULLUP);
   pinMode(RECALL_SW, INPUT_PULLUP); //On encoder

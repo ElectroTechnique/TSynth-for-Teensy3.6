@@ -38,6 +38,7 @@ int currentMenuPart = MENU;
 int paramType = PARAMETER;
 
 boolean voiceOn[NO_OF_VOICES] = {false, false, false, false, false, false};
+boolean MIDIClkSignal = false;
 
 unsigned long timer = 0;
 
@@ -82,6 +83,15 @@ void renderCurrentPatchPage()
   tft.setTextSize(1);
   tft.println(currentPgmNum);
 
+  tft.setTextColor(ST7735_BLACK);
+  tft.setFont(&Org_01);
+
+  if (MIDIClkSignal) {
+    tft.fillRect(93, 28, 19, 7, ST77XX_ORANGE);
+    tft.setCursor(94, 33);
+    tft.println("CLK");
+  }
+
   tft.drawRect(115, 28, 12, 12, ST7735_BLUE);
   tft.drawRect(130, 28, 12, 12, ST7735_BLUE);
   tft.drawRect(145, 28, 12, 12, ST7735_BLUE);
@@ -89,8 +99,7 @@ void renderCurrentPatchPage()
   tft.drawRect(130, 43, 12, 12, ST7735_BLUE);
   tft.drawRect(145, 43, 12, 12, ST7735_BLUE);
 
-  tft.setTextColor(ST7735_BLACK);
-  tft.setFont(&Org_01);
+
   if (voiceOn[0])
   {
     tft.fillRect(115, 28, 12, 12, ST7735_BLUE);
