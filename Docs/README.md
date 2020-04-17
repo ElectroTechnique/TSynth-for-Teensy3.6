@@ -1,3 +1,3 @@
 Documents for TSynth:
-Build Guide
-User Manual
+- Build Guide
+- User Manual
