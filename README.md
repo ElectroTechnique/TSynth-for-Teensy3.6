@@ -6,7 +6,7 @@ Currently under development. The pcb and front panel as seen below will be avail
 Questions: info@electrotechnique.cc
 
 # Latest News
-**6th March 2020** - The main PCB has had a few minor revisons including 0.1uF capacitors across all the potentiometers to reduce noise. I'm considering adding a footprint to allow a 3.5mm jack for TRS MIDI as an option instead of the 5 pin DIN, which would allow the synth to be less high. The code has had some improvements - sawtooth and square waves are now band limited _to some extent_ by using wavetables for sets of notes and loading these as arbitrary waves. The Settings menu allows you to set MIDI channel, pitchbend range, key tracking and mod wheel depth. This can be extended to allow other functionality including velocity sensitivity.
+**6th April 2020** - The main PCB has had a few minor revisons including 0.1uF capacitors across all the potentiometers to reduce noise. I'm considering adding a footprint to allow a 3.5mm jack for TRS MIDI as an option instead of the 5 pin DIN, which would allow the synth to be less high. The code has had some improvements - sawtooth and square waves are now band limited _to some extent_ by using wavetables for sets of notes and loading these as arbitrary waves. The Settings menu allows you to set MIDI channel, pitchbend range, key tracking and mod wheel depth. This can be extended to allow other functionality including velocity sensitivity.
 
 ![](fp.jpg)
 
@@ -21,7 +21,8 @@ Oscillators
 - Dedicated LFO for pitch mod (can be retriggered by note on), Sine/Triangle/Sawtooth/Ramp/Square/S&H waveforms
 - Pitch can be modulated by filter envelope (+/-)
 - XOR ‘Ring Mod’ (creates lots of harmonics with certain waveforms)
-- Unison with all eight oscillators detunable from each other
+- Unison with all twelve oscillators detunable from each other
+- Polyphonic Glide with variable time
 
 Filter
 - State variable 12dB filter (SVF) with continuous mix between LP and HP (provides notch filter) and BP
@@ -31,7 +32,6 @@ Filter
 
 Amplifier
 - Dedicated ADSR envelope
-- Glide (up to 1 octave range) with variable time
 - Volume for DAC output
 - Effect amount and mix  - currently for stereo ensemble chorus rate and mix but could be set up to allow choices in programmer
 
