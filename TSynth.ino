@@ -81,7 +81,7 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
   { -1, 0}
 };
 
-int prevNote = 48;//Initialise
+int prevNote = 48;//This is for glide to use previous note to glide from
 float previousMillis = millis(); //For MIDI Clk Sync
 
 int count = 0;//For MIDI Clk Sync
@@ -313,12 +313,6 @@ void myNoteOn(byte channel, byte note, byte velocity)
   if (note + oscPitchA < 0 || note + oscPitchA > 127 || note + oscPitchB < 0 || note + oscPitchB > 127)
     return;
 
-  if (glideSpeed > 0 && note != prevNote)
-  {
-    glide.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
-    glide.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
-  }
-
   if (oscLfoRetrig == 1)
   {
     pitchLfo.sync();
@@ -328,7 +322,6 @@ void myNoteOn(byte channel, byte note, byte velocity)
     filterLfo.sync();
   }
 
-  prevNote = note;
   if (unison == 0)
   {
     switch (getVoiceNo(-1))
@@ -341,6 +334,11 @@ void myNoteOn(byte channel, byte note, byte velocity)
         filterEnvelope1.noteOn();
         ampEnvelope1.noteOn();
         voiceOn[0] = true;
+        if (glideSpeed > 0 && note != prevNote)
+        {
+          glide1.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide1.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+        }
         break;
       case 2:
         keytracking2.amplitude(note * DIV127 * keytrackingAmount);
@@ -350,6 +348,11 @@ void myNoteOn(byte channel, byte note, byte velocity)
         filterEnvelope2.noteOn();
         ampEnvelope2.noteOn();
         voiceOn[1] = true;
+        if (glideSpeed > 0 && note != prevNote)
+        {
+          glide2.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide2.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+        }
         break;
       case 3:
         keytracking3.amplitude(note * DIV127 * keytrackingAmount);
@@ -359,6 +362,11 @@ void myNoteOn(byte channel, byte note, byte velocity)
         filterEnvelope3.noteOn();
         ampEnvelope3.noteOn();
         voiceOn[2] = true;
+        if (glideSpeed > 0 && note != prevNote)
+        {
+          glide3.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide3.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+        }
         break;
       case 4:
         keytracking4.amplitude(note * DIV127 * keytrackingAmount);
@@ -368,6 +376,11 @@ void myNoteOn(byte channel, byte note, byte velocity)
         filterEnvelope4.noteOn();
         ampEnvelope4.noteOn();
         voiceOn[3] = true;
+        if (glideSpeed > 0 && note != prevNote)
+        {
+          glide4.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide4.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+        }
         break;
       case 5:
         keytracking5.amplitude(note * DIV127 * keytrackingAmount);
@@ -377,6 +390,11 @@ void myNoteOn(byte channel, byte note, byte velocity)
         filterEnvelope5.noteOn();
         ampEnvelope5.noteOn();
         voiceOn[4] = true;
+        if (glideSpeed > 0 && note != prevNote)
+        {
+          glide5.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide5.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+        }
         break;
       case 6:
         keytracking6.amplitude(note * DIV127 * keytrackingAmount);
@@ -386,6 +404,11 @@ void myNoteOn(byte channel, byte note, byte velocity)
         filterEnvelope6.noteOn();
         ampEnvelope6.noteOn();
         voiceOn[5] = true;
+        if (glideSpeed > 0 && note != prevNote)
+        {
+          glide6.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide6.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+        }
         break;
     }
   }
@@ -451,6 +474,22 @@ void myNoteOn(byte channel, byte note, byte velocity)
     voiceOn[3] = true;
     voiceOn[4] = true;
     voiceOn[5] = true;
+
+    if (glideSpeed > 0 && note != prevNote)
+    {
+      glide1.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide1.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+      glide2.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide2.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+      glide3.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide3.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+      glide4.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide4.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+      glide5.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide5.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+      glide6.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide6.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
+    }
   }
 }
 
@@ -463,36 +502,42 @@ void myNoteOff(byte channel, byte note, byte velocity)
       case 1:
         filterEnvelope1.noteOff();
         ampEnvelope1.noteOff();
+        prevNote = voices[0].note;
         voices[0].note = -1;
         voiceOn[0] = false;
         break;
       case 2:
         filterEnvelope2.noteOff();
         ampEnvelope2.noteOff();
+        prevNote = voices[1].note;
         voices[1].note = -1;
         voiceOn[1] = false;
         break;
       case 3:
         filterEnvelope3.noteOff();
         ampEnvelope3.noteOff();
+        prevNote = voices[2].note;
         voices[2].note = -1;
         voiceOn[2] = false;
         break;
       case 4:
         filterEnvelope4.noteOff();
         ampEnvelope4.noteOff();
+        prevNote = voices[3].note;
         voices[3].note = -1;
         voiceOn[3] = false;
         break;
       case 5:
         filterEnvelope5.noteOff();
         ampEnvelope5.noteOff();
+        prevNote = voices[4].note;
         voices[4].note = -1;
         voiceOn[4] = false;
         break;
       case 6:
         filterEnvelope6.noteOff();
         ampEnvelope6.noteOff();
+        prevNote = voices[5].note;
         voices[5].note = -1;
         voiceOn[5] = false;
         break;
@@ -504,6 +549,7 @@ void myNoteOff(byte channel, byte note, byte velocity)
     //If statement prevents the previous different note
     //ending the current note when released
     if (voices[0].note == note)allNotesOff();
+    prevNote = note;
   }
 }
 
@@ -1935,7 +1981,7 @@ void myMIDIClock()
   //This recalculates the LFO frequencies if the tempo changes (MIDI cLock is 24ppq)
   if ((oscLFOMidiClkSync == 1 || filterLFOMidiClkSync == 1) && count > 23)
   {
-      MIDIClkSignal = !MIDIClkSignal;
+    MIDIClkSignal = !MIDIClkSignal;
     float timeNow = millis();
     midiClkTimeInterval = (timeNow - previousMillis);
     lfoSyncFreq = 1000.0 / midiClkTimeInterval;

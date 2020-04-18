@@ -25,7 +25,12 @@ AudioMixer4              pwMixer5b;         //xy=323.75,553.75
 AudioMixer4              pwMixer6a;         //xy=353.75,688.75
 AudioMixer4              pwMixer6b;         //xy=358.75,763.75
 AudioSynthWaveform       pitchLfo;         //xy=122,111
-AudioSynthWaveformDc     glide;          //xy=124,152
+AudioSynthWaveformDc     glide1;          //xy=124,152
+AudioSynthWaveformDc     glide2;          //xy=124,152
+AudioSynthWaveformDc     glide3;          //xy=124,152
+AudioSynthWaveformDc     glide4;          //xy=124,152
+AudioSynthWaveformDc     glide5;          //xy=124,152
+AudioSynthWaveformDc     glide6;          //xy=124,152
 AudioSynthWaveformDc     pitchBend;      //xy=128,74
 AudioSynthWaveform       filterLfo;         //xy=166,632
 AudioSynthWaveformDc     keytracking1;    //xy=176,745
@@ -125,7 +130,6 @@ AudioConnection          patchCord18(pwb, 0, pwMixer2b, 1);
 AudioConnection          patchCord19(pwb, 0, pwMixer3b, 1);
 AudioConnection          patchCord20(pwb, 0, pwMixer4b, 1);
 AudioConnection          patchCord21(pitchLfo, 0, oscGlobalModMixer, 1);
-AudioConnection          patchCord22(glide, 0, oscGlobalModMixer, 2);
 AudioConnection          patchCord23(pitchBend, 0, oscGlobalModMixer, 0);
 AudioConnection          patchCord24(filterLfo, 0, filterModMixer1, 1);
 AudioConnection          patchCord25(filterLfo, 0, filterModMixer2, 1);
@@ -250,6 +254,18 @@ AudioConnection          patchCord133(filterEnvelope3, 0, oscModMixer3a, 1);
 AudioConnection          patchCord134(filterEnvelope3, 0, oscModMixer3b, 1);
 AudioConnection          patchCord135(filterEnvelope4, 0, oscModMixer4a, 1);
 AudioConnection          patchCord136(filterEnvelope4, 0, oscModMixer4b, 1);
+AudioConnection          patchCord22(glide1, 0, oscModMixer1a, 2);
+AudioConnection          patchCord204(glide1, 0, oscModMixer1b, 2);
+AudioConnection          patchCord205(glide2, 0, oscModMixer2a, 2);
+AudioConnection          patchCord206(glide2, 0, oscModMixer2b, 2);
+AudioConnection          patchCord207(glide3, 0, oscModMixer3a, 2);
+AudioConnection          patchCord208(glide3, 0, oscModMixer3b, 2);
+AudioConnection          patchCord209(glide4, 0, oscModMixer4a, 2);
+AudioConnection          patchCord210(glide4, 0, oscModMixer4b, 2);
+AudioConnection          patchCord211(glide5, 0, oscModMixer5a, 2);
+AudioConnection          patchCord212(glide5, 0, oscModMixer5b, 2);
+AudioConnection          patchCord213(glide6, 0, oscModMixer6a, 2);
+AudioConnection          patchCord214(glide6, 0, oscModMixer6b, 2);
 AudioConnection          patchCord137(pink, 0, noiseMixer, 0);
 AudioConnection          patchCord138(white, 0, noiseMixer, 1);
 AudioConnection          patchCord139(pwmLfo, 0, pwMixer5a, 0);

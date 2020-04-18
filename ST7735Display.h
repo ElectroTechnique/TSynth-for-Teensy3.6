@@ -363,6 +363,7 @@ void showCurrentParameterPage(const char *param, float val, int pType)
 
 void showCurrentParameterPage(const char *param, String val, int pType)
 {
+  if (state == MENU || state == MENUVALUE)state = PARAMETER;//Exit menu page if showing
   currentParameter = param;
   currentValue = val;
   paramType = pType;
