@@ -1,8 +1,8 @@
 //Values below are just for initialising and will be changed when synth is initialised to current panel controls & EEPROM settings
 byte midiChannel = MIDI_CHANNEL_OMNI;//(EEPROM)
 String patchName = INITPATCHNAME;
-float VCOALevel = 1;
-float VCOBLevel = 1;
+float oscALevel = 1;
+float oscBLevel = 1;
 float noiseLevel = 0;
 int unison = 0;
 int oscFX = 0;

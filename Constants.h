@@ -31,8 +31,8 @@ const float PWMRATE[128] = { -10, -10, -5, -5, -5, -5, -5, 0.02, 0.03, 0.05, 0.0
 #define SGTL_MAXVOLUME 0.9f
 #define VOICEMIXERLEVEL 0.33f
 #define ONE 1.0f
-#define VCOMODMIXERMAX 1.0f
-#define VCFMODMIXERMAX 1.0f
+#define OSCMODMIXERMAX 1.0f
+#define FILTERMODMIXERMAX 1.0f
 #define FILTEROCTAVERANGE 7.0f//Better low frequencies but less accurate cutoff
 #define GLIDEFACTOR 1000.0f//Maximum time in milliseconds limited by precision
 #define  NO_OF_VOICES 6

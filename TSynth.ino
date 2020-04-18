@@ -313,7 +313,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
   if (note + oscOctaveA < 0 || note + oscOctaveA > 127 || note + oscOctaveB < 0 || note + oscOctaveB > 127)
     return;
 
-  if (glideSpeed > 0)
+  if (glideSpeed > 0 && note != prevNote)
   {
     glide.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
     glide.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
@@ -776,7 +776,7 @@ float getLFOTempoRate(int value)
   return lfoSyncFreq * LFOTEMPO[value];
 }
 
-int getVCOWaveformA(int value)
+int getWaveformA(int value)
 {
   if (value >= 0 && value < 7)
   {
@@ -813,7 +813,7 @@ int getVCOWaveformA(int value)
   }
 }
 
-int getVCOWaveformB(int value)
+int getWaveformB(int value)
 {
   if (value >= 0 && value < 7)
   {
@@ -850,7 +850,7 @@ int getVCOWaveformB(int value)
   }
 }
 
-int getVCOOctave(int value)
+int getPitch(int value)
 {
   return PITCH[value];
 }
@@ -1183,44 +1183,44 @@ void updatePWB()
   pwb.amplitude(pwB);
 }
 
-void updateVcoLevelA()
+void updateOscLevelA()
 {
-  waveformMixer1.gain(0, VCOALevel);
-  waveformMixer2.gain(0, VCOALevel);
-  waveformMixer3.gain(0, VCOALevel);
-  waveformMixer4.gain(0, VCOALevel);
-  waveformMixer5.gain(0, VCOALevel);
-  waveformMixer6.gain(0, VCOALevel);
+  waveformMixer1.gain(0, oscALevel);
+  waveformMixer2.gain(0, oscALevel);
+  waveformMixer3.gain(0, oscALevel);
+  waveformMixer4.gain(0, oscALevel);
+  waveformMixer5.gain(0, oscALevel);
+  waveformMixer6.gain(0, oscALevel);
   if (oscFX == 1)
   {
-    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
+    waveformMixer1.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer2.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer3.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer4.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer5.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer6.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
   }
-  showCurrentParameterPage("Osc Levels", "   " + String(VCOALevel) + " - " + String(VCOBLevel));
+  showCurrentParameterPage("Osc Levels", "   " + String(oscALevel) + " - " + String(oscBLevel));
 }
 
-void updateVcoLevelB()
+void updateOscLevelB()
 {
-  waveformMixer1.gain(1, VCOBLevel);
-  waveformMixer2.gain(1, VCOBLevel);
-  waveformMixer3.gain(1, VCOBLevel);
-  waveformMixer4.gain(1, VCOBLevel);
-  waveformMixer5.gain(1, VCOBLevel);
-  waveformMixer6.gain(1, VCOBLevel);
+  waveformMixer1.gain(1, oscBLevel);
+  waveformMixer2.gain(1, oscBLevel);
+  waveformMixer3.gain(1, oscBLevel);
+  waveformMixer4.gain(1, oscBLevel);
+  waveformMixer5.gain(1, oscBLevel);
+  waveformMixer6.gain(1, oscBLevel);
   if (oscFX == 1)
   {
-    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
-    waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0f); //Osc FX
+    waveformMixer1.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer2.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer3.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer4.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer5.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
+    waveformMixer6.gain(3, (oscALevel + oscBLevel) / 2.0f); //Osc FX
   }
-  showCurrentParameterPage("Osc Levels", "   " + String(VCOALevel) + " - " + String(VCOBLevel));
+  showCurrentParameterPage("Osc Levels", "   " + String(oscALevel) + " - " + String(oscBLevel));
 }
 
 void updateNoiseLevel()
@@ -1376,7 +1376,7 @@ void updateKeyTracking()
   showCurrentParameterPage("Key Tracking", String(keytrackingAmount));
 }
 
-void updateVcoLFOAmt()
+void updateOscLFOAmt()
 {
   pitchLfo.amplitude(oscLfoAmt);
   char buf[10];
@@ -1388,25 +1388,25 @@ void updateModWheel()
   pitchLfo.amplitude(oscLfoAmt);
 }
 
-void updateVcoLFORate()
+void updatePitchLFORate()
 {
   pitchLfo.frequency(oscLfoRate);
   showCurrentParameterPage("LFO Rate", String(oscLfoRate) + " Hz");
 }
 
-void updateVcoLFOWaveform()
+void updatePitchLFOWaveform()
 {
   pitchLfo.begin(oscLFOWaveform);
   showCurrentParameterPage("Pitch LFO", getWaveformStr(oscLFOWaveform));
 }
 
 //MIDI CC only
-void updateVcoLFOMidiClkSync()
+void updatePitchLFOMidiClkSync()
 {
   showCurrentParameterPage("P. LFO Sync", oscLFOMidiClkSync == 1 ? "On" : "Off");
 }
 
-void updateVcfLfoRate()
+void updateFilterLfoRate()
 {
   filterLfo.frequency(filterLfoRate);
   if (filterLFOMidiClkSync)
@@ -1419,36 +1419,36 @@ void updateVcfLfoRate()
   }
 }
 
-void updateVcfLfoAmt()
+void updateFilterLfoAmt()
 {
   filterLfo.amplitude(filterLfoAmt);
   showCurrentParameterPage("F. LFO Amt", String(filterLfoAmt));
 }
 
-void updateVcfLFOWaveform()
+void updateFilterLFOWaveform()
 {
   filterLfo.begin(filterLfoWaveform);
   showCurrentParameterPage("Filter LFO", getWaveformStr(filterLfoWaveform));
 }
 
-void updateVcoLFORetrig()
+void updatePitchLFORetrig()
 {
   showCurrentParameterPage("P. LFO Retrig", oscLfoRetrig == 1 ? "On" : "Off");
 }
 
-void updateVcfLFORetrig()
+void updateFilterLFORetrig()
 {
   showCurrentParameterPage("F. LFO Retrig", filterLfoRetrig == 1 ? "On" : "Off");
   digitalWrite(RETRIG_LED, filterLfoRetrig == 1 ? HIGH : LOW);  // LED
 }
 
-void updateVcfLFOMidiClkSync()
+void updateFilterLFOMidiClkSync()
 {
   showCurrentParameterPage("Tempo Sync", filterLFOMidiClkSync == 1 ? "On" : "Off");
   digitalWrite(TEMPO_LED, filterLFOMidiClkSync == 1 ? HIGH : LOW);  // LED
 }
 
-void updateVcfAttack()
+void updateFilterAttack()
 {
   filterEnvelope1.attack(filterAttack);
   filterEnvelope2.attack(filterAttack);
@@ -1466,7 +1466,7 @@ void updateVcfAttack()
   }
 }
 
-void updateVcfDecay()
+void updateFilterDecay()
 {
   filterEnvelope1.decay(filterDecay);
   filterEnvelope2.decay(filterDecay);
@@ -1484,7 +1484,7 @@ void updateVcfDecay()
   }
 }
 
-void updateVcfSustain()
+void updateFilterSustain()
 {
   filterEnvelope1.sustain(filterSustain);
   filterEnvelope2.sustain(filterSustain);
@@ -1495,7 +1495,7 @@ void updateVcfSustain()
   showCurrentParameterPage("Filter Sustain", String(filterSustain), FILTER_ENV);
 }
 
-void updateVcfRelease()
+void updateFilterRelease()
 {
   filterEnvelope1.release(filterRelease);
   filterEnvelope2.release(filterRelease);
@@ -1513,7 +1513,7 @@ void updateVcfRelease()
   }
 }
 
-void updateVcaAttack()
+void updateAttack()
 {
   ampEnvelope1.attack(ampAttack);
   ampEnvelope2.attack(ampAttack);
@@ -1531,7 +1531,7 @@ void updateVcaAttack()
   }
 }
 
-void updateVcaDecay()
+void updateDecay()
 {
   ampEnvelope1.decay(ampDecay);
   ampEnvelope2.decay(ampDecay);
@@ -1549,7 +1549,7 @@ void updateVcaDecay()
   }
 }
 
-void updateVcaSustain()
+void updateSustain()
 {
   ampEnvelope1.sustain(ampSustain);
   ampEnvelope2.sustain(ampSustain);
@@ -1560,7 +1560,7 @@ void updateVcaSustain()
   showCurrentParameterPage("Sustain", String(ampSustain), AMP_ENV);
 }
 
-void updateVcaRelease()
+void updateRelease()
 {
   ampEnvelope1.release(ampRelease);
   ampEnvelope2.release(ampRelease);
@@ -1588,12 +1588,12 @@ void updateOscFX()
     oscFX4.setCombineMode(AudioEffectDigitalCombine::XOR);
     oscFX5.setCombineMode(AudioEffectDigitalCombine::XOR);
     oscFX6.setCombineMode(AudioEffectDigitalCombine::XOR);
-    waveformMixer1.gain(3, (VCOALevel + VCOBLevel) / 2.0); //Osc FX
-    waveformMixer2.gain(3, (VCOALevel + VCOBLevel) / 2.0); //Osc FX
-    waveformMixer3.gain(3, (VCOALevel + VCOBLevel) / 2.0); //Osc FX
-    waveformMixer4.gain(3, (VCOALevel + VCOBLevel) / 2.0); //Osc FX
-    waveformMixer5.gain(3, (VCOALevel + VCOBLevel) / 2.0); //Osc FX
-    waveformMixer6.gain(3, (VCOALevel + VCOBLevel) / 2.0); //Osc FX
+    waveformMixer1.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
+    waveformMixer2.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
+    waveformMixer3.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
+    waveformMixer4.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
+    waveformMixer5.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
+    waveformMixer6.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     showCurrentParameterPage("Osc FX", "On");
     digitalWrite(OSC_FX_LED, HIGH);  // LED on
   }
@@ -1659,32 +1659,32 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCglide:
-      glideSpeed = LINEAR[value];
+      glideSpeed = POWER[value];
       updateGlide();
       break;
 
     case CCpitchenv:
-      pitchEnv = LINEARCENTREZERO[value] * VCOMODMIXERMAX;
+      pitchEnv = LINEARCENTREZERO[value] * OSCMODMIXERMAX;
       updatePitchEnv();
       break;
 
     case CCoscwaveformA:
-      oscWaveformA = getVCOWaveformA(value);
+      oscWaveformA = getWaveformA(value);
       updateWaveformA();
       break;
 
     case CCoscwaveformB:
-      oscWaveformB = getVCOWaveformB(value);
+      oscWaveformB = getWaveformB(value);
       updateWaveformB();
       break;
 
     case CCoctaveA:
-      oscOctaveA = getVCOOctave(value);
+      oscOctaveA = getPitch(value);
       updateOctaveA();
       break;
 
     case CCoctaveB:
-      oscOctaveB = getVCOOctave(value);
+      oscOctaveB = getPitch(value);
       updateOctaveB();
       break;
 
@@ -1725,13 +1725,13 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCoscLevelA:
-      VCOALevel = LINEAR[value];
-      updateVcoLevelA();
+      oscALevel = LINEAR[value];
+      updateOscLevelA();
       break;
 
     case CCoscLevelB:
-      VCOBLevel = LINEAR[value];
-      updateVcoLevelB();
+      oscBLevel = LINEAR[value];
+      updateOscLevelB();
       break;
 
     case CCnoiseLevel:
@@ -1756,7 +1756,7 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCfilterenv:
-      filterEnv = LINEARCENTREZERO[value] * VCFMODMIXERMAX; //Bipolar
+      filterEnv = LINEARCENTREZERO[value] * FILTERMODMIXERMAX; //Bipolar
       updateFilterEnv();
       break;
 
@@ -1772,7 +1772,7 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCosclfoamt:
       oscLfoAmt = POWER[value];
-      updateVcoLFOAmt();
+      updateOscLFOAmt();
       break;
 
     case CCoscLfoRate:
@@ -1785,22 +1785,22 @@ void myControlChange(byte channel, byte control, byte value)
       {
         oscLfoRate = LFOMAXRATE * POWER[value];
       }
-      updateVcoLFORate();
+      updatePitchLFORate();
       break;
 
     case CCoscLfoWaveform:
       oscLFOWaveform = getLFOWaveform(value);
-      updateVcoLFOWaveform();
+      updatePitchLFOWaveform();
       break;
 
     case CCosclforetrig:
       value > 0 ? oscLfoRetrig = 1 : oscLfoRetrig = 0;
-      updateVcoLFORetrig();
+      updatePitchLFORetrig();
       break;
 
     case CCfilterLFOMidiClkSync:
       value > 0 ? filterLFOMidiClkSync = 1 : filterLFOMidiClkSync = 0;
-      updateVcfLFOMidiClkSync();
+      updateFilterLFOMidiClkSync();
       break;
 
     case CCfilterlforate:
@@ -1813,68 +1813,68 @@ void myControlChange(byte channel, byte control, byte value)
       {
         filterLfoRate = LFOMAXRATE * POWER[value];
       }
-      updateVcfLfoRate();
+      updateFilterLfoRate();
       break;
 
     case CCfilterlfoamt:
-      filterLfoAmt = LINEAR[value] * VCFMODMIXERMAX;
-      updateVcfLfoAmt();
+      filterLfoAmt = LINEAR[value] * FILTERMODMIXERMAX;
+      updateFilterLfoAmt();
       break;
 
     case CCfilterlfowaveform:
       filterLfoWaveform = getLFOWaveform(value);
-      updateVcfLFOWaveform();
+      updateFilterLFOWaveform();
       break;
 
     case CCfilterlforetrig:
       value > 0 ? filterLfoRetrig = 1 : filterLfoRetrig = 0;
-      updateVcfLFORetrig();
+      updateFilterLFORetrig();
       break;
 
     //MIDI Only
     case CCoscLFOMidiClkSync:
       value > 0 ? oscLFOMidiClkSync = 1 : oscLFOMidiClkSync = 0;
-      updateVcoLFOMidiClkSync();
+      updatePitchLFOMidiClkSync();
       break;
 
     case CCfilterattack:
       filterAttack = ENVTIMES[value];
-      updateVcfAttack();
+      updateFilterAttack();
       break;
 
     case CCfilterdecay:
       filterDecay = ENVTIMES[value];
-      updateVcfDecay();
+      updateFilterDecay();
       break;
 
     case CCfiltersustain:
       filterSustain = LINEAR[value];
-      updateVcfSustain();
+      updateFilterSustain();
       break;
 
     case CCfilterrelease:
       filterRelease = ENVTIMES[value];
-      updateVcfRelease();
+      updateFilterRelease();
       break;
 
     case CCampattack:
       ampAttack = ENVTIMES[value];
-      updateVcaAttack();
+      updateAttack();
       break;
 
     case CCampdecay:
       ampDecay = ENVTIMES[value];
-      updateVcaDecay();
+      updateDecay();
       break;
 
     case CCampsustain:
       ampSustain = LINEAR[value];
-      updateVcaSustain();
+      updateSustain();
       break;
 
     case CCamprelease:
       ampRelease = ENVTIMES[value];
-      updateVcaRelease();
+      updateRelease();
       break;
 
     case CCringmod:
@@ -1967,8 +1967,8 @@ void recallPatch(int patchNo)
 void setCurrentPatchData(String data[])
 {
   patchName = data[0];
-  VCOALevel = data[1].toFloat();
-  VCOBLevel = data[2].toFloat();
+  oscALevel = data[1].toFloat();
+  oscBLevel = data[2].toFloat();
   noiseLevel = data[3].toFloat();
   unison = data[4].toInt();
   oscFX = data[5].toInt();
@@ -2026,31 +2026,31 @@ void setCurrentPatchData(String data[])
   updatePWA();
   updatePWB();
   updatePWMRate();
-  updateVcoLevelA();
-  updateVcoLevelB();
+  updateOscLevelA();
+  updateOscLevelB();
   updateNoiseLevel();
   updateFilterFreq();
   updateFilterRes();
   updateFilterMixer();
   updateFilterEnv();
   updateKeyTracking();
-  updateVcoLFOAmt();
-  updateVcoLFORate();
-  updateVcoLFOWaveform();
-  updateVcoLFOMidiClkSync();
-  updateVcfLfoRate();
-  updateVcfLfoAmt();
-  updateVcfLFOWaveform();
-  updateVcfLFOMidiClkSync();
-  updateVcfLFORetrig();
-  updateVcfAttack();
-  updateVcfDecay();
-  updateVcfSustain();
-  updateVcfRelease();
-  updateVcaAttack();
-  updateVcaDecay();
-  updateVcaSustain();
-  updateVcaRelease();
+  updateOscLFOAmt();
+  updatePitchLFORate();
+  updatePitchLFOWaveform();
+  updatePitchLFOMidiClkSync();
+  updateFilterLfoRate();
+  updateFilterLfoAmt();
+  updateFilterLFOWaveform();
+  updateFilterLFOMidiClkSync();
+  updateFilterLFORetrig();
+  updateFilterAttack();
+  updateFilterDecay();
+  updateFilterSustain();
+  updateFilterRelease();
+  updateAttack();
+  updateDecay();
+  updateSustain();
+  updateRelease();
   updateOscFX();
   updateFXAmt();
   updateFXMix();
@@ -2061,7 +2061,7 @@ void setCurrentPatchData(String data[])
 
 String getCurrentPatchData()
 {
-  return patchName + "," + String(VCOALevel) + "," + String(VCOBLevel) + "," + String(noiseLevel) + "," + String(unison) + "," + String(oscFX) + "," + String(detune) + "," + String(lfoSyncFreq) + "," + String(midiClkTimeInterval) + "," + String(lfoTempoValue) + "," + String(keytrackingAmount) + "," + String(glideSpeed) + "," + String(oscOctaveA) + "," + String(oscOctaveB) + "," + String(oscWaveformA) + "," + String(oscWaveformB) + "," +
+  return patchName + "," + String(oscALevel) + "," + String(oscBLevel) + "," + String(noiseLevel) + "," + String(unison) + "," + String(oscFX) + "," + String(detune) + "," + String(lfoSyncFreq) + "," + String(midiClkTimeInterval) + "," + String(lfoTempoValue) + "," + String(keytrackingAmount) + "," + String(glideSpeed) + "," + String(oscOctaveA) + "," + String(oscOctaveB) + "," + String(oscWaveformA) + "," + String(oscWaveformB) + "," +
          String(pwmSource) + "," + String(pwmAmtA) + "," + String(pwmAmtB) + "," + String(pwmRate) + "," + String(pwA) + "," + String(pwB) + "," + String(filterRes) + "," + String(filterFreq) + "," + String(filterMix) + "," + String(filterEnv) + "," + String(oscLfoAmt) + "," + String(oscLfoRate) + "," + String(oscLFOWaveform) + "," + String(oscLfoRetrig) + "," + String(oscLFOMidiClkSync) + "," + String(filterLfoRate) + "," +
          filterLfoRetrig + "," + filterLFOMidiClkSync + "," + filterLfoAmt + "," + filterLfoWaveform + "," + filterAttack + "," + filterDecay + "," + filterSustain + "," + filterRelease + "," + ampAttack + "," + ampDecay + "," + ampSustain + "," + ampRelease + "," +
          String(fxAmt) + "," + String(fxMix) + "," + String(pitchEnv);
