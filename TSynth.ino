@@ -310,7 +310,7 @@ void setup()
 void myNoteOn(byte channel, byte note, byte velocity)
 {
   //Check for out of range notes
-  if (note + oscOctaveA < 0 || note + oscOctaveA > 127 || note + oscOctaveB < 0 || note + oscOctaveB > 127)
+  if (note + oscPitchA < 0 || note + oscPitchA > 127 || note + oscPitchB < 0 || note + oscPitchB > 127)
     return;
 
   if (glideSpeed > 0 && note != prevNote)
@@ -587,108 +587,108 @@ int getVoiceNo(int note)
 
 void updateVoice1()
 {
-  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod1a.arbitraryWaveform(sawtoothWavetable[(voices[0].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod1b.arbitraryWaveform(sawtoothWavetable[(voices[0].note + oscOctaveB) / 3 + 1], AWFREQ);
-  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod1a.arbitraryWaveform(squareWavetable[(voices[0].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod1b.arbitraryWaveform(squareWavetable[(voices[0].note + oscOctaveB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod1a.arbitraryWaveform(sawtoothWavetable[(voices[0].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod1b.arbitraryWaveform(sawtoothWavetable[(voices[0].note + oscPitchB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod1a.arbitraryWaveform(squareWavetable[(voices[0].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod1b.arbitraryWaveform(squareWavetable[(voices[0].note + oscPitchB) / 3 + 1], AWFREQ);
 
-  waveformMod1a.frequency(NOTEFREQS[voices[0].note + oscOctaveA]);
+  waveformMod1a.frequency(NOTEFREQS[voices[0].note + oscPitchA]);
   if (unison == 1)
   {
-    waveformMod1b.frequency(NOTEFREQS[voices[0].note + oscOctaveB] * (detune + ((1 - detune) * 0.09)));
+    waveformMod1b.frequency(NOTEFREQS[voices[0].note + oscPitchB] * (detune + ((1 - detune) * 0.09)));
   }
   else
   {
-    waveformMod1b.frequency(NOTEFREQS[voices[0].note + oscOctaveB] * detune);
+    waveformMod1b.frequency(NOTEFREQS[voices[0].note + oscPitchB] * detune);
   }
 }
 
 void updateVoice2()
 {
-  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod2a.arbitraryWaveform(sawtoothWavetable[(voices[1].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod2b.arbitraryWaveform(sawtoothWavetable[(voices[1].note + oscOctaveB) / 3 + 1], AWFREQ);
-  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod2a.arbitraryWaveform(squareWavetable[(voices[1].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod2b.arbitraryWaveform(squareWavetable[(voices[1].note + oscOctaveB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod2a.arbitraryWaveform(sawtoothWavetable[(voices[1].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod2b.arbitraryWaveform(sawtoothWavetable[(voices[1].note + oscPitchB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod2a.arbitraryWaveform(squareWavetable[(voices[1].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod2b.arbitraryWaveform(squareWavetable[(voices[1].note + oscPitchB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
-    waveformMod2a.frequency(NOTEFREQS[voices[1].note + oscOctaveA] * (detune + ((1 - detune) * 0.18)));
-    waveformMod2b.frequency(NOTEFREQS[voices[1].note + oscOctaveB] * (detune + ((1 - detune) * 0.27)));
+    waveformMod2a.frequency(NOTEFREQS[voices[1].note + oscPitchA] * (detune + ((1 - detune) * 0.18)));
+    waveformMod2b.frequency(NOTEFREQS[voices[1].note + oscPitchB] * (detune + ((1 - detune) * 0.27)));
   }
   else
   {
-    waveformMod2a.frequency(NOTEFREQS[voices[1].note + oscOctaveA]);
-    waveformMod2b.frequency(NOTEFREQS[voices[1].note + oscOctaveB] * detune);
+    waveformMod2a.frequency(NOTEFREQS[voices[1].note + oscPitchA]);
+    waveformMod2b.frequency(NOTEFREQS[voices[1].note + oscPitchB] * detune);
   }
 }
 
 void updateVoice3()
 {
-  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod3a.arbitraryWaveform(sawtoothWavetable[(voices[2].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod3b.arbitraryWaveform(sawtoothWavetable[(voices[2].note + oscOctaveB) / 3 + 1], AWFREQ);
-  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod3a.arbitraryWaveform(squareWavetable[(voices[2].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod3b.arbitraryWaveform(squareWavetable[(voices[2].note + oscOctaveB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod3a.arbitraryWaveform(sawtoothWavetable[(voices[2].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod3b.arbitraryWaveform(sawtoothWavetable[(voices[2].note + oscPitchB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod3a.arbitraryWaveform(squareWavetable[(voices[2].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod3b.arbitraryWaveform(squareWavetable[(voices[2].note + oscPitchB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
-    waveformMod3a.frequency(NOTEFREQS[voices[2].note + oscOctaveA] * (detune + ((1 - detune) * 0.36)));
-    waveformMod3b.frequency(NOTEFREQS[voices[2].note + oscOctaveB] * (detune + ((1 - detune) * 0.46)));
+    waveformMod3a.frequency(NOTEFREQS[voices[2].note + oscPitchA] * (detune + ((1 - detune) * 0.36)));
+    waveformMod3b.frequency(NOTEFREQS[voices[2].note + oscPitchB] * (detune + ((1 - detune) * 0.46)));
   }
   else
   {
-    waveformMod3a.frequency(NOTEFREQS[voices[2].note + oscOctaveA]);
-    waveformMod3b.frequency(NOTEFREQS[voices[2].note + oscOctaveB] * detune);
+    waveformMod3a.frequency(NOTEFREQS[voices[2].note + oscPitchA]);
+    waveformMod3b.frequency(NOTEFREQS[voices[2].note + oscPitchB] * detune);
   }
 }
 void updateVoice4()
 {
-  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod4a.arbitraryWaveform(sawtoothWavetable[(voices[3].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod4b.arbitraryWaveform(sawtoothWavetable[(voices[3].note + oscOctaveB) / 3 + 1], AWFREQ);
-  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod4a.arbitraryWaveform(squareWavetable[(voices[3].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod4b.arbitraryWaveform(squareWavetable[(voices[3].note + oscOctaveB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod4a.arbitraryWaveform(sawtoothWavetable[(voices[3].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod4b.arbitraryWaveform(sawtoothWavetable[(voices[3].note + oscPitchB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod4a.arbitraryWaveform(squareWavetable[(voices[3].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod4b.arbitraryWaveform(squareWavetable[(voices[3].note + oscPitchB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
-    waveformMod4a.frequency(NOTEFREQS[voices[3].note + oscOctaveA] * (detune + ((1 - detune) * 0.55)));
-    waveformMod4b.frequency(NOTEFREQS[voices[3].note + oscOctaveB] * (detune + ((1 - detune) * 0.64)));
+    waveformMod4a.frequency(NOTEFREQS[voices[3].note + oscPitchA] * (detune + ((1 - detune) * 0.55)));
+    waveformMod4b.frequency(NOTEFREQS[voices[3].note + oscPitchB] * (detune + ((1 - detune) * 0.64)));
   }
   else
   {
-    waveformMod4a.frequency(NOTEFREQS[voices[3].note + oscOctaveA]);
-    waveformMod4b.frequency(NOTEFREQS[voices[3].note + oscOctaveB] * detune);
+    waveformMod4a.frequency(NOTEFREQS[voices[3].note + oscPitchA]);
+    waveformMod4b.frequency(NOTEFREQS[voices[3].note + oscPitchB] * detune);
   }
 }
 
 void updateVoice5()
 {
-  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod5a.arbitraryWaveform(sawtoothWavetable[(voices[4].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod5b.arbitraryWaveform(sawtoothWavetable[(voices[4].note + oscOctaveB) / 3 + 1], AWFREQ);
-  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod5a.arbitraryWaveform(squareWavetable[(voices[4].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod5b.arbitraryWaveform(squareWavetable[(voices[4].note + oscOctaveB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod5a.arbitraryWaveform(sawtoothWavetable[(voices[4].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod5b.arbitraryWaveform(sawtoothWavetable[(voices[4].note + oscPitchB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod5a.arbitraryWaveform(squareWavetable[(voices[4].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod5b.arbitraryWaveform(squareWavetable[(voices[4].note + oscPitchB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
-    waveformMod5a.frequency(NOTEFREQS[voices[4].note + oscOctaveA] * (detune + ((1 - detune) * 0.73)));
-    waveformMod5b.frequency(NOTEFREQS[voices[4].note + oscOctaveB] * (detune + ((1 - detune) * 0.82)));
+    waveformMod5a.frequency(NOTEFREQS[voices[4].note + oscPitchA] * (detune + ((1 - detune) * 0.73)));
+    waveformMod5b.frequency(NOTEFREQS[voices[4].note + oscPitchB] * (detune + ((1 - detune) * 0.82)));
   }
   else
   {
-    waveformMod5a.frequency(NOTEFREQS[voices[4].note + oscOctaveA]);
-    waveformMod5b.frequency(NOTEFREQS[voices[4].note + oscOctaveB] * detune);
+    waveformMod5a.frequency(NOTEFREQS[voices[4].note + oscPitchA]);
+    waveformMod5b.frequency(NOTEFREQS[voices[4].note + oscPitchB] * detune);
   }
 }
 
 void updateVoice6()
 {
-  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod6a.arbitraryWaveform(sawtoothWavetable[(voices[5].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod6b.arbitraryWaveform(sawtoothWavetable[(voices[5].note + oscOctaveB) / 3 + 1], AWFREQ);
-  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod6a.arbitraryWaveform(squareWavetable[(voices[5].note + oscOctaveA) / 3 + 1], AWFREQ);
-  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod6b.arbitraryWaveform(squareWavetable[(voices[5].note + oscOctaveB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SAWTOOTH_WT) waveformMod6a.arbitraryWaveform(sawtoothWavetable[(voices[5].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SAWTOOTH_WT) waveformMod6b.arbitraryWaveform(sawtoothWavetable[(voices[5].note + oscPitchB) / 3 + 1], AWFREQ);
+  if (oscWaveformA == WAVEFORM_SQUARE_WT) waveformMod6a.arbitraryWaveform(squareWavetable[(voices[5].note + oscPitchA) / 3 + 1], AWFREQ);
+  if (oscWaveformB == WAVEFORM_SQUARE_WT) waveformMod6b.arbitraryWaveform(squareWavetable[(voices[5].note + oscPitchB) / 3 + 1], AWFREQ);
   if (unison == 1)
   {
-    waveformMod6a.frequency(NOTEFREQS[voices[5].note + oscOctaveA] * (detune + ((1 - detune) * 0.90)));
+    waveformMod6a.frequency(NOTEFREQS[voices[5].note + oscPitchA] * (detune + ((1 - detune) * 0.90)));
   }
   else
   {
-    waveformMod6a.frequency(NOTEFREQS[voices[5].note + oscOctaveA]);
+    waveformMod6a.frequency(NOTEFREQS[voices[5].note + oscPitchA]);
   }
-  waveformMod6b.frequency(NOTEFREQS[voices[5].note + oscOctaveB] * detune);
+  waveformMod6b.frequency(NOTEFREQS[voices[5].note + oscPitchB] * detune);
 }
 
 int getLFOWaveform(int value)
@@ -994,24 +994,24 @@ void updateWaveformB()
   showCurrentParameterPage("2. Waveform", getWaveformStr(oscWaveformB));
 }
 
-void updateOctaveA()
+void updatePitchA()
 {
   //update waveforms with new frequencies if notes are on
   if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
   {
     updatesAllVoices();
   }
-  showCurrentParameterPage("1. Semitones", (oscOctaveA > 0 ? "+" : "") + String(oscOctaveA));
+  showCurrentParameterPage("1. Semitones", (oscPitchA > 0 ? "+" : "") + String(oscPitchA));
 }
 
-void updateOctaveB()
+void updatePitchB()
 {
   //update waveforms with new frequencies if notes are on
   if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
   {
     updatesAllVoices();
   }
-  showCurrentParameterPage("2. Semitones", (oscOctaveB > 0 ? "+" : "") + String(oscOctaveB));
+  showCurrentParameterPage("2. Semitones", (oscPitchB > 0 ? "+" : "") + String(oscPitchB));
 }
 
 void updateDetune()
@@ -1678,14 +1678,14 @@ void myControlChange(byte channel, byte control, byte value)
       updateWaveformB();
       break;
 
-    case CCoctaveA:
-      oscOctaveA = getPitch(value);
-      updateOctaveA();
+    case CCpitchA:
+      oscPitchA = getPitch(value);
+      updatePitchA();
       break;
 
-    case CCoctaveB:
-      oscOctaveB = getPitch(value);
-      updateOctaveB();
+    case CCpitchB:
+      oscPitchB = getPitch(value);
+      updatePitchB();
       break;
 
     case CCdetune:
@@ -1978,8 +1978,8 @@ void setCurrentPatchData(String data[])
   lfoTempoValue = data[9].toFloat();
   keytrackingAmount = data[10].toFloat();
   glideSpeed = data[11].toFloat();
-  oscOctaveA = data[12].toFloat();
-  oscOctaveB = data[13].toFloat();
+  oscPitchA = data[12].toFloat();
+  oscPitchB = data[13].toFloat();
   oscWaveformA = data[14].toInt();
   oscWaveformB = data[15].toInt();
   pwmSource = data[16].toInt();
@@ -2018,8 +2018,8 @@ void setCurrentPatchData(String data[])
   updateUnison();
   updateWaveformA();
   updateWaveformB();
-  updateOctaveA();
-  updateOctaveB();
+  updatePitchA();
+  updatePitchB();
   updateDetune();
   updatePWMSource();
   updatePWMAmount();
@@ -2061,7 +2061,7 @@ void setCurrentPatchData(String data[])
 
 String getCurrentPatchData()
 {
-  return patchName + "," + String(oscALevel) + "," + String(oscBLevel) + "," + String(noiseLevel) + "," + String(unison) + "," + String(oscFX) + "," + String(detune) + "," + String(lfoSyncFreq) + "," + String(midiClkTimeInterval) + "," + String(lfoTempoValue) + "," + String(keytrackingAmount) + "," + String(glideSpeed) + "," + String(oscOctaveA) + "," + String(oscOctaveB) + "," + String(oscWaveformA) + "," + String(oscWaveformB) + "," +
+  return patchName + "," + String(oscALevel) + "," + String(oscBLevel) + "," + String(noiseLevel) + "," + String(unison) + "," + String(oscFX) + "," + String(detune) + "," + String(lfoSyncFreq) + "," + String(midiClkTimeInterval) + "," + String(lfoTempoValue) + "," + String(keytrackingAmount) + "," + String(glideSpeed) + "," + String(oscPitchA) + "," + String(oscPitchB) + "," + String(oscWaveformA) + "," + String(oscWaveformB) + "," +
          String(pwmSource) + "," + String(pwmAmtA) + "," + String(pwmAmtB) + "," + String(pwmRate) + "," + String(pwA) + "," + String(pwB) + "," + String(filterRes) + "," + String(filterFreq) + "," + String(filterMix) + "," + String(filterEnv) + "," + String(oscLfoAmt) + "," + String(oscLfoRate) + "," + String(oscLFOWaveform) + "," + String(oscLfoRetrig) + "," + String(oscLFOMidiClkSync) + "," + String(filterLfoRate) + "," +
          filterLfoRetrig + "," + filterLFOMidiClkSync + "," + filterLfoAmt + "," + filterLfoWaveform + "," + filterAttack + "," + filterDecay + "," + filterSustain + "," + filterRelease + "," + ampAttack + "," + ampDecay + "," + ampSustain + "," + ampRelease + "," +
          String(fxAmt) + "," + String(fxMix) + "," + String(pitchEnv);
@@ -2109,8 +2109,8 @@ void checkMux()
       case MUX1_waveformA:
         myControlChange(midiChannel, CCoscwaveformA, mux1Read);
         break;
-      case MUX1_octaveA:
-        myControlChange(midiChannel, CCoctaveA, mux1Read);
+      case MUX1_pitchA:
+        myControlChange(midiChannel, CCpitchA, mux1Read);
         break;
       case MUX1_pwmAmountB:
         myControlChange(midiChannel, CCpwB, mux1Read);
@@ -2118,8 +2118,8 @@ void checkMux()
       case MUX1_waveformB:
         myControlChange(midiChannel, CCoscwaveformB, mux1Read);
         break;
-      case MUX1_octaveB:
-        myControlChange(midiChannel, CCoctaveB, mux1Read);
+      case MUX1_pitchB:
+        myControlChange(midiChannel, CCpitchB, mux1Read);
         break;
       case MUX1_pwmRate:
         myControlChange(midiChannel, CCpwmRate, mux1Read);
@@ -2568,7 +2568,6 @@ void CPUMonitor() {
   Serial.print("  MEM:");
   Serial.println(AudioMemoryUsageMax());
 }
-
 
 void loop()
 {

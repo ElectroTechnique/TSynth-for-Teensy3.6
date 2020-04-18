@@ -12,8 +12,8 @@
 #define   CCoscLevelB 21
 #define   CCnoiseLevel  23
 #define   CCringmod 24//Off/On
-#define   CCoctaveA 26
-#define   CCoctaveB 27
+#define   CCpitchA 26
+#define   CCpitchB 27
 #define   CCpitchenv 28
 #define   CCosclforetrig  30//Off/On
 #define   CCfilterlforetrig  31//Off/On

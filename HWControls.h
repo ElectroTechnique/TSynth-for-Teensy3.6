@@ -22,10 +22,10 @@
 #define MUX1_filterDecay 7
 #define MUX1_pwmAmountA 8
 #define MUX1_waveformA 9
-#define MUX1_octaveA 10
+#define MUX1_pitchA 10
 #define MUX1_pwmAmountB 11
 #define MUX1_waveformB 12
-#define MUX1_octaveB 13
+#define MUX1_pitchB 13
 #define MUX1_pwmRate 14
 #define MUX1_pitchEnv 15
 //Mux 2 Connections
