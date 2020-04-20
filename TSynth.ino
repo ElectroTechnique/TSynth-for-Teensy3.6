@@ -2312,22 +2312,24 @@ void checkSwitches()
           }
           break;
         case SAVE:
-          //Save as new patch with INITIALPATCH or overwrite existing keeping name - bypassing patch renaming
+          //Save as new patch with INITIALPATCH name or overwrite existing keeping name - bypassing patch renaming
           patchName = patches.last().patchName;
           state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
-          loadPatches(); //Get rid of pushed patchNo if it wasn't saved
+          loadPatches(); //Get rid of pushed patch if it wasn't saved
+          patchNo = patches.last().patchNo;
           setPatchesOrdering(patchNo);
           renamedPatch = "";
           state = PARAMETER;
           break;
         case PATCHNAMING:
-          if (strcmp(renamedPatch.c_str(), 0) != 0)patchName = renamedPatch;//Prevent empty strings
+          if (renamedPatch.length() > 0) patchName = renamedPatch;//Prevent empty strings
           state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patchName);
-          loadPatches(); //Get rid of pushed patchNo if it wasn't saved
+          loadPatches(); //Get rid of pushed patch if it wasn't saved
+          patchNo = patches.last().patchNo;
           setPatchesOrdering(patchNo);
           renamedPatch = "";
           state = PARAMETER;
@@ -2439,7 +2441,6 @@ void checkSwitches()
     patchNo = patches.first().patchNo;
     recallPatch(patchNo);
     state = PARAMETER;
-
     recallButton.write(HIGH); //Come out of this state
     recall = true;            //Hack
   }
