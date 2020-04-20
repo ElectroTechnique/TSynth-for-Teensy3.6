@@ -31,7 +31,7 @@
 #include "PatchMgr.h"
 #include "HWControls.h"
 #include "EepromMgr.h"
-#include "MenuOptions.h"
+#include "Settings.h"
 #include "sawtoothWave.h"
 #include "squareWave.h"
 
@@ -42,11 +42,11 @@
 #define PATCH 4 // Show current patch bypassing PARAMETER
 #define PATCHNAMING 5 // Patch naming page
 #define DELETE 6 //Delete patch page
-#define DELETEMSG 7 //Delete patch page
-#define MENU 8 //Menu for settings page
-#define MENUVALUE 9 //Menu values for settings page
+#define DELETEMSG 7 //Delete patch message page
+#define SETTINGS 8 //Settings page
+#define SETTINGSVALUE 9 //Settings page
 
-volatile unsigned int state = PARAMETER;
+unsigned int state = PARAMETER;
 
 #define WAVEFORM_SAWTOOTH_WT 101
 #define WAVEFORM_SQUARE_WT 102
@@ -92,7 +92,7 @@ long earliestTime = millis(); //For voice allocation - initialise to now
 void setup()
 {
   setupDisplay();
-  setUpMenus();
+  setUpSettings();
   setupHardware();
 
   AudioMemory(48);
@@ -1812,7 +1812,7 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCmodwheel:
-      oscLfoAmt = POWER[value] * modWheelDepth; //Variable LFO amount from mod wheel - Menu Option
+      oscLfoAmt = POWER[value] * modWheelDepth; //Variable LFO amount from mod wheel - Settings Option
       updateModWheel();
       break;
 
@@ -2340,36 +2340,36 @@ void checkSwitches()
     }
   }
 
-  menuButton.update();
-  if (menuButton.read() == LOW && menuButton.duration() > HOLD_DURATION)
+  settingsButton.update();
+  if (settingsButton.read() == LOW && settingsButton.duration() > HOLD_DURATION)
   {
     //If recall held, set current patch to match current hardware state
     //Reinitialise all hardware values to force them to be re-read if different
     state = REINITIALISE;
     reinitialiseToPanel();
-    menuButton.write(HIGH); //Come out of this state
+    settingsButton.write(HIGH); //Come out of this state
     reini = true;           //Hack
   }
-  else if (menuButton.risingEdge())
+  else if (settingsButton.risingEdge())
   { //cannot be fallingEdge because holding button won't work
     if (!reini)
     {
       switch (state)
       {
         case PARAMETER:
-          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
-          state = MENU;
+          settingsValueIndex = getCurrentIndex(settingsOptions.first().currentIndex);
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGS);
+          state = SETTINGS;
           break;
-        case MENU:
-          menuOptions.push(menuOptions.shift());
-          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
-        case MENUVALUE:
-          //Same as pushing Recall - store current menu item and go back to options
-          menuHandler(menuOptions.first().value[menuValueIndex], menuOptions.first().handler);
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
-          state = MENU;
+        case SETTINGS:
+          settingsOptions.push(settingsOptions.shift());
+          settingsValueIndex = getCurrentIndex(settingsOptions.first().currentIndex);
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGS);
+        case SETTINGSVALUE:
+          //Same as pushing Recall - store current settings item and go back to options
+          settingsHandler(settingsOptions.first().value[settingsValueIndex], settingsOptions.first().handler);
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGS);
+          state = SETTINGS;
           break;
       }
     }
@@ -2412,13 +2412,13 @@ void checkSwitches()
           setPatchesOrdering(patchNo);
           state = PARAMETER;
           break;
-        case MENU:
+        case SETTINGS:
           state = PARAMETER;
           break;
-        case MENUVALUE:
-          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
-          state = MENU;
+        case SETTINGSVALUE:
+          settingsValueIndex = getCurrentIndex(settingsOptions.first().currentIndex);
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGS);
+          state = SETTINGS;
           break;
       }
     }
@@ -2488,17 +2488,17 @@ void checkSwitches()
           }
           state = PARAMETER;
           break;
-        case MENU:
+        case SETTINGS:
           //Choose this option and allow value choice
-          menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENUVALUE);
-          state = MENUVALUE;
+          settingsValueIndex = getCurrentIndex(settingsOptions.first().currentIndex);
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGSVALUE);
+          state = SETTINGSVALUE;
           break;
-        case MENUVALUE:
-          //Store current menu item and go back to options
-          menuHandler(menuOptions.first().value[menuValueIndex], menuOptions.first().handler);
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
-          state = MENU;
+        case SETTINGSVALUE:
+          //Store current settings item and go back to options
+          settingsHandler(settingsOptions.first().value[settingsValueIndex], settingsOptions.first().handler);
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGS);
+          state = SETTINGS;
           break;
       }
     }
@@ -2556,14 +2556,14 @@ void checkEncoder()
       case DELETE:
         patches.push(patches.shift());
         break;
-      case MENU:
-        menuOptions.push(menuOptions.shift());
-        menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
-        showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex] , MENU);
+      case SETTINGS:
+        settingsOptions.push(settingsOptions.shift());
+        settingsValueIndex = getCurrentIndex(settingsOptions.first().currentIndex);
+        showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex] , SETTINGS);
         break;
-      case MENUVALUE:
-        if (menuOptions.first().value[menuValueIndex + 1] != '\0')
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[++menuValueIndex], MENUVALUE);
+      case SETTINGSVALUE:
+        if (settingsOptions.first().value[settingsValueIndex + 1] != '\0')
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[++settingsValueIndex], SETTINGSVALUE);
         break;
     }
     encPrevious = encRead;
@@ -2594,14 +2594,14 @@ void checkEncoder()
       case DELETE:
         patches.unshift(patches.pop());
         break;
-      case MENU:
-        menuOptions.unshift(menuOptions.pop());
-        menuValueIndex = getCurrentIndex(menuOptions.first().currentIndex);
-        showMenuPage(menuOptions.first().option, menuOptions.first().value[menuValueIndex], MENU);
+      case SETTINGS:
+        settingsOptions.unshift(settingsOptions.pop());
+        settingsValueIndex = getCurrentIndex(settingsOptions.first().currentIndex);
+        showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[settingsValueIndex], SETTINGS);
         break;
-      case MENUVALUE:
-        if (menuValueIndex > 0)
-          showMenuPage(menuOptions.first().option, menuOptions.first().value[--menuValueIndex], MENUVALUE);
+      case SETTINGSVALUE:
+        if (settingsValueIndex > 0)
+          showSettingsPage(settingsOptions.first().option, settingsOptions.first().value[--settingsValueIndex], SETTINGSVALUE);
         break;
     }
     encPrevious = encRead;

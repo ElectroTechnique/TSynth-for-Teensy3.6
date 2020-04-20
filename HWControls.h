@@ -53,7 +53,7 @@
 #define TEMPO_SW 16
 #define RECALL_SW 17
 #define SAVE_SW 24
-#define MENU_SW 12
+#define SETTINGS_SW 12
 #define BACK_SW 10
 #define VOLUME_POT A14
 
@@ -90,8 +90,8 @@ Bounce recallButton = Bounce(RECALL_SW, DEBOUNCE); //On encoder
 boolean recall = true; //Hack for recall button
 Bounce saveButton = Bounce(SAVE_SW, DEBOUNCE);
 boolean del = true; //Hack for save button
-Bounce menuButton = Bounce(MENU_SW, DEBOUNCE);
-boolean reini = true; //Hack for menu button
+Bounce settingsButton = Bounce(SETTINGS_SW, DEBOUNCE);
+boolean reini = true; //Hack for settings button
 Bounce backButton = Bounce(BACK_SW, DEBOUNCE);
 boolean panic = true; //Hack for back button
 Encoder encoder(ENCODER_PINB, ENCODER_PINA);//This often needs the pins swapping depending on the encoder
@@ -111,7 +111,7 @@ void setupHardware()
   pinMode(TEMPO_SW, INPUT_PULLUP);
   pinMode(RECALL_SW, INPUT_PULLUP); //On encoder
   pinMode(SAVE_SW, INPUT_PULLUP);
-  pinMode(MENU_SW, INPUT_PULLUP);
+  pinMode(SETTINGS_SW, INPUT_PULLUP);
   pinMode(BACK_SW, INPUT_PULLUP);
 
   //LEDs

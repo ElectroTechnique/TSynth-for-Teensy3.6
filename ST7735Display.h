@@ -32,9 +32,9 @@ float currentFloatValue = 0.0;
 String currentPgmNum = "";
 String currentPatchName = "";
 String newPatchName = "";
-char * currentMenuOption = "";
-char * currentMenuValue = "";
-int currentMenuPart = MENU;
+char * currentSettingsOption = "";
+char * currentSettingsValue = "";
+int currentSettingsPart = SETTINGS;
 int paramType = PARAMETER;
 
 boolean voiceOn[NO_OF_VOICES] = {false, false, false, false, false, false};
@@ -336,20 +336,20 @@ void renderUpDown(uint16_t  x, uint16_t  y, uint16_t  colour)
 }
 
 
-void renderMenuPage()
+void renderSettingsPage()
 {
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
   tft.setCursor(0, 53);
-  tft.println(currentMenuOption);
-  if (currentMenuPart == MENU) renderUpDown(140, 42, ST7735_YELLOW);
+  tft.println(currentSettingsOption);
+  if (currentSettingsPart == SETTINGS) renderUpDown(140, 42, ST7735_YELLOW);
   tft.drawFastHLine(10, 62, tft.width() - 20, ST7735_RED);
   tft.setTextColor(ST7735_WHITE);
   tft.setCursor(5, 90);
-  tft.println(currentMenuValue);
-  if (currentMenuPart == MENUVALUE) renderUpDown(140, 80, ST7735_WHITE);
+  tft.println(currentSettingsValue);
+  if (currentSettingsPart == SETTINGSVALUE) renderUpDown(140, 80, ST7735_WHITE);
 }
 
 void showCurrentParameterPage(const char *param, float val, int pType)
@@ -363,7 +363,7 @@ void showCurrentParameterPage(const char *param, float val, int pType)
 
 void showCurrentParameterPage(const char *param, String val, int pType)
 {
-  if (state == MENU || state == MENUVALUE)state = PARAMETER;//Exit menu page if showing
+  if (state == SETTINGS || state == SETTINGSVALUE)state = PARAMETER;//Exit settings page if showing
   currentParameter = param;
   currentValue = val;
   paramType = pType;
@@ -381,11 +381,11 @@ void showPatchPage(String number, String patchName)
   currentPatchName = patchName;
 }
 
-void showMenuPage(char *  option, char * value, int menuPart)
+void showSettingsPage(char *  option, char * value, int settingsPart)
 {
-  currentMenuOption = option;
-  currentMenuValue = value;
-  currentMenuPart = menuPart;
+  currentSettingsOption = option;
+  currentSettingsValue = value;
+  currentSettingsPart = settingsPart;
 }
 
 void displayThread()
@@ -429,9 +429,9 @@ void displayThread()
       case DELETEMSG:
         renderDeleteMessagePage();
         break;
-      case MENU:
-      case MENUVALUE:
-        renderMenuPage();
+      case SETTINGS:
+      case SETTINGSVALUE:
+        renderSettingsPage();
         break;
     }
     tft.updateScreen();

@@ -139,8 +139,8 @@ void loadPatches()
 
 void savePatch(const char *patchNo, String patchData)
 {
- // Serial.print("savePatch Patch No:");
-//  Serial.println(patchNo);
+  // Serial.print("savePatch Patch No:");
+  //  Serial.println(patchNo);
   //Overwrite existing patch by deleting
   if (SD.exists(patchNo))
   {
@@ -149,8 +149,8 @@ void savePatch(const char *patchNo, String patchData)
   File patchFile = SD.open(patchNo, FILE_WRITE);
   if (patchFile)
   {
-//    Serial.print("Writing Patch No:");
-//    Serial.println(patchNo);
+    //    Serial.print("Writing Patch No:");
+    //    Serial.println(patchNo);
     //Serial.println(patchData);
     patchFile.println(patchData);
     patchFile.close();
@@ -174,7 +174,7 @@ void savePatch(const char *patchNo, String patchData[])
 
 void deletePatch(const char *patchNo)
 {
-  if (SD.exists(patchNo)) SD.remove(patchNo); 
+  if (SD.exists(patchNo)) SD.remove(patchNo);
 }
 
 void renumberPatchesOnSD() {
@@ -185,19 +185,19 @@ void renumberPatchesOnSD() {
     if (file) {
       recallPatchData(file, data);
       file.close();
-      savePatch(String(i+1).c_str(), data);
+      savePatch(String(i + 1).c_str(), data);
     }
   }
-  deletePatch(String(patches.size()+1).c_str());//Delete final patch which is duplicate of penultimate patch
+  deletePatch(String(patches.size() + 1).c_str()); //Delete final patch which is duplicate of penultimate patch
 }
 
-void setPatchesOrdering(int no){
-  while(patches.first().patchNo != no){
-    Serial.println(patches.first().patchNo);
+void setPatchesOrdering(int no) {
+  if (patches.size() < 2)return;
+  while (patches.first().patchNo != no) {
     patches.push(patches.shift());
   }
 }
 
-void resetPatchesOrdering(){
+void resetPatchesOrdering() {
   setPatchesOrdering(1);
 }
