@@ -224,8 +224,8 @@ void renderDeletePatchPage()
   tft.setCursor(35, 78);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.last().patchName);
-  tft.fillRect(0, 87, tft.width(), 21, 0xA000);
-  tft.setCursor(0, 100);
+  tft.fillRect(0, 85, tft.width(), 23, ST77XX_DARKRED);
+  tft.setCursor(0, 98);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.first().patchNo);
   tft.setCursor(35, 98);
@@ -260,11 +260,11 @@ void renderSavePage()
   tft.setCursor(35, 78);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches[patches.size() - 2].patchName);
-  tft.fillRect(0, 87, tft.width(), 21, 0xA000);
-  tft.setCursor(0, 100);
+  tft.fillRect(0, 85, tft.width(), 23, ST77XX_DARKRED);
+  tft.setCursor(0, 98);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.last().patchNo);
-  tft.setCursor(35, 100);
+  tft.setCursor(35, 98);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.last().patchName);
 }

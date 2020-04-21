@@ -2317,8 +2317,8 @@ void checkSwitches()
           state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patches.last().patchName);
-          loadPatches(); //Get rid of pushed patch if it wasn't saved
           patchNo = patches.last().patchNo;
+          loadPatches(); //Get rid of pushed patch if it wasn't saved
           setPatchesOrdering(patchNo);
           renamedPatch = "";
           state = PARAMETER;
@@ -2328,8 +2328,8 @@ void checkSwitches()
           state = PATCH;
           savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
           showPatchPage(patches.last().patchNo, patchName);
-          loadPatches(); //Get rid of pushed patch if it wasn't saved
           patchNo = patches.last().patchNo;
+          loadPatches(); //Get rid of pushed patch if it wasn't saved
           setPatchesOrdering(patchNo);
           renamedPatch = "";
           state = PARAMETER;
@@ -2462,6 +2462,7 @@ void checkSwitches()
           break;
         case SAVE:
           showRenamingPage(patches.last().patchName);
+          patchName  = patches.last().patchName;
           state = PATCHNAMING;
           break;
         case PATCHNAMING:
