@@ -4,6 +4,7 @@
 #define EEPROM_KEY_TRACKING 1
 #define EEPROM_PITCHBEND 2
 #define EEPROM_MODWHEEL_DEPTH 3
+#define EEPROM_ENCODER_DIR 4
 
 int getMIDIChannel() {
   byte midiChannel = EEPROM.read(EEPROM_MIDI_CH);
@@ -44,11 +45,22 @@ void storePitchBendRange(byte pitchbend)
 float getModWheelDepth() {
   byte mw = EEPROM.read(EEPROM_MODWHEEL_DEPTH);
   if (mw < 1 || mw > 10) return modWheelDepth; //If EEPROM has no mod wheel depth stored
-  return mw/10.0f;
+  return mw / 10.0f;
 }
 
 void storeModWheelDepth(float mwDepth)
 {
-   byte mw =  mwDepth*10;
+  byte mw =  mwDepth * 10;
   EEPROM.update(EEPROM_MODWHEEL_DEPTH, mw);
+}
+
+boolean getEncoderDir() {
+  byte ed = EEPROM.read(EEPROM_ENCODER_DIR); 
+  if (ed < 0 || ed > 1)return true; //If EEPROM has no encoder direction stored
+  return ed == 1 ? true : false;
+}
+
+void storeEncoderDir(byte encoderDir)
+{
+  EEPROM.update(EEPROM_ENCODER_DIR, encoderDir);
 }

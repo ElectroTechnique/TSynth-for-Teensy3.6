@@ -304,6 +304,9 @@ void setup()
   //Read Mod Wheel Depth from EEPROM
   modWheelDepth = getModWheelDepth();
 
+  //Read Encoder Direction from EEPROM
+  encCW = getEncoderDir();
+
   recallPatch(patchNo); //Load first patch
 }
 
@@ -2533,7 +2536,7 @@ void checkEncoder()
   //Detent encoder goes up in 4 steps, hence +/-3
 
   long encRead = encoder.read();
-  if (encRead > encPrevious + 3)
+  if ((encCW && encRead > encPrevious + 3) || (!encCW && encRead < encPrevious - 3) )
   {
     switch (state)
     {
@@ -2570,7 +2573,7 @@ void checkEncoder()
     }
     encPrevious = encRead;
   }
-  else if (encRead < encPrevious - 3)
+  else if ((encCW && encRead < encPrevious - 3) || (!encCW && encRead > encPrevious + 3))
   {
     switch (state)
     {
