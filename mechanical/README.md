@@ -1,6 +1,6 @@
 - Electrical schematic
 - 3D models
-- Lasercut plans
+- Laser cutter plans
 - Mechanical plans
 
 Fusion 360 models. These have internal dimensions for slots that are slightly bigger, to account for shrinkage of PLA plastic:
