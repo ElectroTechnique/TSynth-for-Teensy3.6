@@ -29,10 +29,10 @@ base_radius=8;
 knob_height=10;//16
 knob_radius=5.5;
 
-shaft_radius=3.23;//3.1
+shaft_radius=3.18;//3.1
 nut_radius=7.2;
 nut_height=2.7;
-shaft_height=8;//16
+shaft_height=8.8;//16
 shaft_height_total=13;//18
 
 
