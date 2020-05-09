@@ -236,10 +236,10 @@ void renderDeletePatchPage()
 void renderDeleteMessagePage() {
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
-  tft.setCursor(5, 53);
+  tft.setCursor(2, 53);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
-  tft.println("Reordering");
+  tft.println("Renumbering");
   tft.setCursor(10, 90);
   tft.println("SD Card");
 }
