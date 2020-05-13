@@ -10,7 +10,15 @@
   Tools Settings:
   Board: "Teensy3.6"
   USB Type: "Serial + MIDI + Audio"
-  CPU Speed: "180MHz"
+  CPU Speed: "240MHz"
+  Optimize: "Fastest with LTO"
+
+  Performance Tests   CPU  Mem
+  180Mhz Faster       81.6 44
+  180Mhz Fastest      77.8 44
+  180Mhz Fastest+PC   79.0 44
+  180Mhz Fastest+LTO  76.7 44
+  240MHz Fastest+LTO  55.9 44
 
   Additional libraries:
     Agileware CircularBuffer available in Arduino libraries manager
@@ -95,7 +103,7 @@ void setup()
   setUpSettings();
   setupHardware();
 
-  AudioMemory(48);
+  AudioMemory(45);
   sgtl5000_1.enable();
   sgtl5000_1.volume(SGTL_MAXVOLUME * 0.5); //Headphones - do not initialise to maximum, but this is re-read
 
@@ -2131,15 +2139,18 @@ void checkMux()
         myControlChange(midiChannel, CCnoiseLevel, mux1Read);
         break;
       case MUX1_pitchLfoRate:
+        //Pick-up
         myControlChange(midiChannel, CCoscLfoRate, mux1Read);
         break;
       case MUX1_pitchLfoWaveform:
         myControlChange(midiChannel, CCoscLfoWaveform, mux1Read);
         break;
       case MUX1_pitchLfoAmount:
+        //Pick-up
         myControlChange(midiChannel, CCosclfoamt, mux1Read);
         break;
       case MUX1_detune:
+        //Pick-up
         myControlChange(midiChannel, CCdetune, mux1Read);
         break;
       case MUX1_oscMix:
@@ -2153,6 +2164,7 @@ void checkMux()
         myControlChange(midiChannel, CCfilterdecay, mux1Read);
         break;
       case MUX1_pwmAmountA:
+        //Pick-up
         myControlChange(midiChannel, CCpwA, mux1Read);
         break;
       case MUX1_waveformA:
@@ -2162,6 +2174,7 @@ void checkMux()
         myControlChange(midiChannel, CCpitchA, mux1Read);
         break;
       case MUX1_pwmAmountB:
+        //Pick-up
         myControlChange(midiChannel, CCpwB, mux1Read);
         break;
       case MUX1_waveformB:
@@ -2171,9 +2184,11 @@ void checkMux()
         myControlChange(midiChannel, CCpitchB, mux1Read);
         break;
       case MUX1_pwmRate:
+        //Pick-up
         myControlChange(midiChannel, CCpwmRate, mux1Read);
         break;
       case MUX1_pitchEnv:
+        //Pick-up
         myControlChange(midiChannel, CCpitchenv, mux1Read);
         break;
     }
@@ -2199,18 +2214,22 @@ void checkMux()
         myControlChange(midiChannel, CCamprelease, mux2Read);
         break;
       case MUX2_filterLFOAmount:
+        //Pick-up
         myControlChange(midiChannel, CCfilterlfoamt, mux2Read);
         break;
       case MUX2_FXMix:
+        //Pick-up
         myControlChange(midiChannel, CCfxmix, mux2Read);
         break;
       case MUX2_FXAmount:
+        //Pick-up
         myControlChange(midiChannel, CCfxamt, mux2Read);
         break;
       case MUX2_glide:
         myControlChange(midiChannel, CCglide, mux2Read);
         break;
       case MUX2_filterEnv:
+        //Pick-up
         myControlChange(midiChannel, CCfilterenv, mux2Read);
         break;
       case MUX2_filterRelease:
@@ -2220,15 +2239,19 @@ void checkMux()
         myControlChange(midiChannel, CCfiltersustain, mux2Read);
         break;
       case MUX2_filterType:
+        //Pick-up
         myControlChange(midiChannel, CCfiltermixer, mux2Read);
         break;
       case MUX2_resonance:
+        //Pick-up
         myControlChange(midiChannel, CCfilterres, mux2Read);
         break;
       case MUX2_cutoff:
+        //Pick-up
         myControlChange(midiChannel, CCfilterfreq, mux2Read);
         break;
       case MUX2_filterLFORate:
+        //Pick-up
         myControlChange(midiChannel, CCfilterlforate, mux2Read);
         break;
       case MUX2_filterLFOWaveform:
@@ -2469,7 +2492,7 @@ void checkSwitches()
           state = PATCHNAMING;
           break;
         case PATCHNAMING:
-          if (renamedPatch.length() < 16)
+          if (renamedPatch.length() < 13)
           {
             renamedPatch.concat(String(currentCharacter));
             charIndex = 0;
@@ -2632,5 +2655,5 @@ void loop()
   checkSwitches();
   checkEncoder();
 
-  // CPUMonitor();
+  //CPUMonitor();
 }
