@@ -1797,16 +1797,21 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCfilterfreq:
+      //Pick up
+      //if (pickUp && (filterfreqPrevValue <  value - 5 || filterfreqPrevValue >  value + 5))return;
       filterFreq = FILTERFREQS[value];
       updateFilterFreq();
+      //filterfreqPrevValue = value;
       break;
 
     case CCfilterres:
+      //Pick up
       filterRes = (13.9f * POWER[value]) + 1.1f; //If <1.1 there is noise at high cutoff freq
       updateFilterRes();
       break;
 
     case CCfiltermixer:
+      //Pick up
       filterMix = LINEAR_FILTERMIXER[value];
       filterMixStr = LINEAR_FILTERMIXERSTR[value];
       updateFilterMixer();
@@ -1828,11 +1833,13 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCosclfoamt:
+      //Pick up
       oscLfoAmt = POWER[value];
       updateOscLFOAmt();
       break;
 
     case CCoscLfoRate:
+      //Pick up
       if (oscLFOMidiClkSync == 1)
       {
         oscLfoRate = getLFOTempoRate(value);
@@ -1861,6 +1868,7 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCfilterlforate:
+      //Pick up
       if (filterLFOMidiClkSync == 1)
       {
         filterLfoRate = getLFOTempoRate(value);
@@ -1874,6 +1882,7 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCfilterlfoamt:
+      //Pick up
       filterLfoAmt = LINEAR[value] * FILTERMODMIXERMAX;
       updateFilterLfoAmt();
       break;
@@ -1940,11 +1949,13 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCfxamt:
+      //Pick up
       fxAmt = ENSEMBLE_LFO[value];
       updateFXAmt();
       break;
 
     case CCfxmix:
+      //Pick up
       fxMix = LINEAR[value];
       updateFXMix();
       break;
@@ -2139,18 +2150,15 @@ void checkMux()
         myControlChange(midiChannel, CCnoiseLevel, mux1Read);
         break;
       case MUX1_pitchLfoRate:
-        //Pick-up
         myControlChange(midiChannel, CCoscLfoRate, mux1Read);
         break;
       case MUX1_pitchLfoWaveform:
         myControlChange(midiChannel, CCoscLfoWaveform, mux1Read);
         break;
       case MUX1_pitchLfoAmount:
-        //Pick-up
         myControlChange(midiChannel, CCosclfoamt, mux1Read);
         break;
       case MUX1_detune:
-        //Pick-up
         myControlChange(midiChannel, CCdetune, mux1Read);
         break;
       case MUX1_oscMix:
@@ -2164,7 +2172,6 @@ void checkMux()
         myControlChange(midiChannel, CCfilterdecay, mux1Read);
         break;
       case MUX1_pwmAmountA:
-        //Pick-up
         myControlChange(midiChannel, CCpwA, mux1Read);
         break;
       case MUX1_waveformA:
@@ -2174,7 +2181,6 @@ void checkMux()
         myControlChange(midiChannel, CCpitchA, mux1Read);
         break;
       case MUX1_pwmAmountB:
-        //Pick-up
         myControlChange(midiChannel, CCpwB, mux1Read);
         break;
       case MUX1_waveformB:
@@ -2184,11 +2190,9 @@ void checkMux()
         myControlChange(midiChannel, CCpitchB, mux1Read);
         break;
       case MUX1_pwmRate:
-        //Pick-up
         myControlChange(midiChannel, CCpwmRate, mux1Read);
         break;
       case MUX1_pitchEnv:
-        //Pick-up
         myControlChange(midiChannel, CCpitchenv, mux1Read);
         break;
     }
@@ -2214,22 +2218,18 @@ void checkMux()
         myControlChange(midiChannel, CCamprelease, mux2Read);
         break;
       case MUX2_filterLFOAmount:
-        //Pick-up
         myControlChange(midiChannel, CCfilterlfoamt, mux2Read);
         break;
       case MUX2_FXMix:
-        //Pick-up
         myControlChange(midiChannel, CCfxmix, mux2Read);
         break;
       case MUX2_FXAmount:
-        //Pick-up
         myControlChange(midiChannel, CCfxamt, mux2Read);
         break;
       case MUX2_glide:
         myControlChange(midiChannel, CCglide, mux2Read);
         break;
       case MUX2_filterEnv:
-        //Pick-up
         myControlChange(midiChannel, CCfilterenv, mux2Read);
         break;
       case MUX2_filterRelease:
@@ -2239,19 +2239,15 @@ void checkMux()
         myControlChange(midiChannel, CCfiltersustain, mux2Read);
         break;
       case MUX2_filterType:
-        //Pick-up
         myControlChange(midiChannel, CCfiltermixer, mux2Read);
         break;
       case MUX2_resonance:
-        //Pick-up
         myControlChange(midiChannel, CCfilterres, mux2Read);
         break;
       case MUX2_cutoff:
-        //Pick-up
         myControlChange(midiChannel, CCfilterfreq, mux2Read);
         break;
       case MUX2_filterLFORate:
-        //Pick-up
         myControlChange(midiChannel, CCfilterlforate, mux2Read);
         break;
       case MUX2_filterLFOWaveform:
@@ -2492,7 +2488,7 @@ void checkSwitches()
           state = PATCHNAMING;
           break;
         case PATCHNAMING:
-          if (renamedPatch.length() < 13)
+          if (renamedPatch.length() < 12) //actually 12 chars
           {
             renamedPatch.concat(String(currentCharacter));
             charIndex = 0;
