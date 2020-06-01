@@ -145,7 +145,7 @@ AudioConnection          patchCord34(noiseMixer, 0, waveformMixer3, 2);
 AudioConnection          patchCord35(noiseMixer, 0, waveformMixer4, 2);
 AudioConnection          patchCord36(pwMixer1a, 0, waveformMod1a, 1);
 AudioConnection          patchCord37(pwMixer1b, 0, waveformMod1b, 1);
-AudioConnection          patchCord38(pwMixer1b, 0, waveformMod3b, 1);
+AudioConnection          patchCord38(pwMixer3b, 0, waveformMod3b, 1);
 AudioConnection          patchCord39(oscGlobalModMixer, 0, oscModMixer1a, 0);
 AudioConnection          patchCord40(oscGlobalModMixer, 0, oscModMixer1b, 0);
 AudioConnection          patchCord41(oscGlobalModMixer, 0, oscModMixer2a, 0);
