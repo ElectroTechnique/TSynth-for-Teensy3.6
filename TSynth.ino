@@ -1311,12 +1311,12 @@ void updateFilterFreq()
   filter5.frequency(filterFreq);
   filter6.frequency(filterFreq);
 
-  if (filterFreq > 1300) {
-    filterOctave = 1;
-  } else if (filterFreq < 100) {
-    filterOctave = 7;
+  if (filterFreq > 2500) {
+    filterOctave = 2.0f;//Allows more accurate filter cutoff
+  } else if (filterFreq < 60) {
+    filterOctave = 7.0f; //Allows deeper bass
   } else {
-    filterOctave = 1 + ((1300 - filterFreq) / 200);
+    filterOctave = 2.0f + ((2560 - filterFreq) / 500);//In between
   }
 
   filter1.octaveControl(filterOctave);
