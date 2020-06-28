@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.1
+  ElectroTechnique TSynth - Firmware Rev 1.11
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -996,9 +996,13 @@ void updateVolume(float vol)
   showCurrentParameterPage("Volume", vol);
 }
 
-void updateGlide()
-{
-  showCurrentParameterPage("Glide", String(int(glideSpeed * GLIDEFACTOR)) + " ms");
+void updateGlide() {
+  if (glideSpeed * GLIDEFACTOR < 1000) {
+    showCurrentParameterPage("Glide", String(int(glideSpeed * GLIDEFACTOR)) + " ms");
+  }
+  else {
+    showCurrentParameterPage("Glide", String((glideSpeed * GLIDEFACTOR) / 1000) + " s");
+  }
 }
 
 void updateWaveformA()
@@ -2256,8 +2260,10 @@ void checkMux()
     }
   }
   muxInput++;
-  if (muxInput >= MUXCHANNELS)
+  if (muxInput >= MUXCHANNELS) {
     muxInput = 0;
+    checkVolumePot();//Check volume here
+  }
 
   digitalWrite(MUX_0, muxInput & B0001);
   digitalWrite(MUX_1, muxInput & B0010);
@@ -2647,7 +2653,6 @@ void loop()
   MIDI.read(midiChannel);    //MIDI 5 Pin DIN
 
   checkMux();
-  checkVolumePot();
   checkSwitches();
   checkEncoder();
 

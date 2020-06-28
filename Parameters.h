@@ -58,3 +58,7 @@ float ampRelease = 300;
 
 float fxAmt = 1;
 float fxMix = 0;
+
+//For T4.1, T3.6 isn't fast enough to read MUX
+//boolean pickUp = true;
+//int filterfreqPrevValue = 63;
