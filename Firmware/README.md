@@ -1,1 +1,1 @@
-This is the current firmware for TSynth. It is a hex file that is flashed to Teensy using [Teensy Loader from PJRC](https://www.pjrc.com/teensy/loader.html) You will need to press the button on a new Teensy for the firmware to flash the first time.
+This is the current firmware for TSynth - use the latest, earlier ones will be left here. It is a hex file that is flashed to Teensy using [Teensy Loader from PJRC](https://www.pjrc.com/teensy/loader.html) You will need to press the button on a new Teensy for the firmware to flash the first time.
