@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.11
+  ElectroTechnique TSynth - Firmware Rev 1.12
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -61,6 +61,21 @@ unsigned int state = PARAMETER;
 #define WAVEFORM_PARABOLIC 103
 #define WAVEFORM_HARMONIC 104
 
+struct VoiceAndNote {
+  int note;
+  long timeOn;
+  boolean voiceOn;
+};
+
+struct VoiceAndNote voices[NO_OF_VOICES] = {
+  { -1, 0, false},
+  { -1, 0, false},
+  { -1, 0, false},
+  { -1, 0, false},
+  { -1, 0, false},
+  { -1, 0, false}
+};
+
 #include "ST7735Display.h"
 
 boolean cardStatus = false;
@@ -73,21 +88,6 @@ MIDIDevice midi1(myusb);
 
 //MIDI 5 Pin DIN
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial4, MIDI); //RX - Pin 31
-
-struct VoiceAndNote
-{
-  int note;
-  long timeOn;
-};
-
-struct VoiceAndNote voices[NO_OF_VOICES] = {
-  { -1, 0},
-  { -1, 0},
-  { -1, 0},
-  { -1, 0},
-  { -1, 0},
-  { -1, 0}
-};
 
 int prevNote = 48;//This is for glide to use previous note to glide from
 float previousMillis = millis(); //For MIDI Clk Sync
@@ -344,7 +344,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         updateVoice1();
         filterEnvelope1.noteOn();
         ampEnvelope1.noteOn();
-        voiceOn[0] = true;
+        voices[0].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
           glide1.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
@@ -358,7 +358,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         updateVoice2();
         filterEnvelope2.noteOn();
         ampEnvelope2.noteOn();
-        voiceOn[1] = true;
+        voices[1].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
           glide2.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
@@ -372,7 +372,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         updateVoice3();
         filterEnvelope3.noteOn();
         ampEnvelope3.noteOn();
-        voiceOn[2] = true;
+        voices[2].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
           glide3.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
@@ -386,7 +386,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         updateVoice4();
         filterEnvelope4.noteOn();
         ampEnvelope4.noteOn();
-        voiceOn[3] = true;
+        voices[3].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
           glide4.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
@@ -400,7 +400,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         updateVoice5();
         filterEnvelope5.noteOn();
         ampEnvelope5.noteOn();
-        voiceOn[4] = true;
+        voices[4].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
           glide5.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
@@ -414,7 +414,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         updateVoice6();
         filterEnvelope6.noteOn();
         ampEnvelope6.noteOn();
-        voiceOn[5] = true;
+        voices[5].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
           glide6.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
@@ -479,12 +479,12 @@ void myNoteOn(byte channel, byte note, byte velocity)
     ampEnvelope5.noteOn();
     ampEnvelope6.noteOn();
 
-    voiceOn[0] = true;
-    voiceOn[1] = true;
-    voiceOn[2] = true;
-    voiceOn[3] = true;
-    voiceOn[4] = true;
-    voiceOn[5] = true;
+    voices[0].voiceOn = true;
+    voices[1].voiceOn = true;
+    voices[2].voiceOn = true;
+    voices[3].voiceOn = true;
+    voices[4].voiceOn = true;
+    voices[5].voiceOn = true;
 
     if (glideSpeed > 0 && note != prevNote)
     {
@@ -514,43 +514,37 @@ void myNoteOff(byte channel, byte note, byte velocity)
         filterEnvelope1.noteOff();
         ampEnvelope1.noteOff();
         prevNote = voices[0].note;
-        voices[0].note = -1;
-        voiceOn[0] = false;
+        voices[0].voiceOn = false;
         break;
       case 2:
         filterEnvelope2.noteOff();
         ampEnvelope2.noteOff();
         prevNote = voices[1].note;
-        voices[1].note = -1;
-        voiceOn[1] = false;
+        voices[1].voiceOn = false;
         break;
       case 3:
         filterEnvelope3.noteOff();
         ampEnvelope3.noteOff();
         prevNote = voices[2].note;
-        voices[2].note = -1;
-        voiceOn[2] = false;
+        voices[2].voiceOn = false;
         break;
       case 4:
         filterEnvelope4.noteOff();
         ampEnvelope4.noteOff();
         prevNote = voices[3].note;
-        voices[3].note = -1;
-        voiceOn[3] = false;
+        voices[3].voiceOn = false;
         break;
       case 5:
         filterEnvelope5.noteOff();
         ampEnvelope5.noteOff();
         prevNote = voices[4].note;
-        voices[4].note = -1;
-        voiceOn[4] = false;
+        voices[4].voiceOn = false;
         break;
       case 6:
         filterEnvelope6.noteOff();
         ampEnvelope6.noteOff();
         prevNote = voices[5].note;
-        voices[5].note = -1;
-        voiceOn[5] = false;
+        voices[5].voiceOn = false;
         break;
     }
   }
@@ -579,19 +573,12 @@ void allNotesOff()
   filterEnvelope6.noteOff();
   ampEnvelope6.noteOff();
 
-  voices[0].note = -1;
-  voices[1].note = -1;
-  voices[2].note = -1;
-  voices[3].note = -1;
-  voices[4].note = -1;
-  voices[5].note = -1;
-
-  voiceOn[0] = false;
-  voiceOn[1] = false;
-  voiceOn[2] = false;
-  voiceOn[3] = false;
-  voiceOn[4] = false;
-  voiceOn[5] = false;
+  voices[0].voiceOn = false;
+  voices[1].voiceOn = false;
+  voices[2].voiceOn = false;
+  voices[3].voiceOn = false;
+  voices[4].voiceOn = false;
+  voices[5].voiceOn = false;
 }
 
 int getVoiceNo(int note)
@@ -603,7 +590,7 @@ int getVoiceNo(int note)
     //NoteOn() - Get the oldest free voice (recent voices may be still on release stage)
     for (int i = 0; i < NO_OF_VOICES; i++)
     {
-      if (voices[i].note == -1)
+      if (voices[i].voiceOn == false)
       {
         if (voices[i].timeOn < earliestTime)
         {
@@ -632,7 +619,7 @@ int getVoiceNo(int note)
     //NoteOff() - Get voice number from note
     for (int i = 0; i < NO_OF_VOICES; i++)
     {
-      if (voices[i].note == note)
+      if (voices[i].note == note && voices[i].voiceOn)
       {
         return i + 1;
       }
@@ -982,12 +969,12 @@ void updateUnison()
   {
     allNotesOff();//Avoid hanging notes
     showCurrentParameterPage("Unison", "Off");
-    digitalWrite(UNISON_LED, LOW);  // LED off
+    digitalWriteFast(UNISON_LED, LOW);  // LED off
   }
   else
   {
     showCurrentParameterPage("Unison", "On");
-    digitalWrite(UNISON_LED, HIGH);  // LED on
+    digitalWriteFast(UNISON_LED, HIGH);  // LED on
   }
 }
 
@@ -1055,33 +1042,18 @@ void updateWaveformB()
   showCurrentParameterPage("2. Waveform", getWaveformStr(oscWaveformB));
 }
 
-void updatePitchA()
-{
-  //update waveforms with new frequencies if notes are on
-  if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
-  {
-    updatesAllVoices();
-  }
+void updatePitchA() {
+  updatesAllVoices();
   showCurrentParameterPage("1. Semitones", (oscPitchA > 0 ? "+" : "") + String(oscPitchA));
 }
 
-void updatePitchB()
-{
-  //update waveforms with new frequencies if notes are on
-  if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
-  {
-    updatesAllVoices();
-  }
+void updatePitchB() {
+  updatesAllVoices();
   showCurrentParameterPage("2. Semitones", (oscPitchB > 0 ? "+" : "") + String(oscPitchB));
 }
 
-void updateDetune()
-{
-  //update waveforms with new frequencies if notes are on
-  if (voices[0].note != -1 || voices[1].note != -1 || voices[2].note != -1 || voices[3].note != -1 || voices[4].note != -1 || voices[5].note != -1)
-  {
-    updatesAllVoices();
-  }
+void updateDetune() {
+  updatesAllVoices();
   showCurrentParameterPage("Detune", String((1 - detune) * 100) + " %");
 }
 
@@ -1500,13 +1472,13 @@ void updatePitchLFORetrig()
 void updateFilterLFORetrig()
 {
   showCurrentParameterPage("F. LFO Retrig", filterLfoRetrig == 1 ? "On" : "Off");
-  digitalWrite(RETRIG_LED, filterLfoRetrig == 1 ? HIGH : LOW);  // LED
+  digitalWriteFast(RETRIG_LED, filterLfoRetrig == 1 ? HIGH : LOW);  // LED
 }
 
 void updateFilterLFOMidiClkSync()
 {
   showCurrentParameterPage("Tempo Sync", filterLFOMidiClkSync == 1 ? "On" : "Off");
-  digitalWrite(TEMPO_LED, filterLFOMidiClkSync == 1 ? HIGH : LOW);  // LED
+  digitalWriteFast(TEMPO_LED, filterLFOMidiClkSync == 1 ? HIGH : LOW);  // LED
 }
 
 void updateFilterAttack()
@@ -1656,7 +1628,7 @@ void updateOscFX()
     waveformMixer5.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     waveformMixer6.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     showCurrentParameterPage("Osc FX", "On");
-    digitalWrite(OSC_FX_LED, HIGH);  // LED on
+    digitalWriteFast(OSC_FX_LED, HIGH);  // LED on
   }
   else
   {
@@ -1673,7 +1645,7 @@ void updateOscFX()
     waveformMixer5.gain(3, 0); //Osc FX
     waveformMixer6.gain(3, 0); //Osc FX
     showCurrentParameterPage("Osc FX", "Off");
-    digitalWrite(OSC_FX_LED, LOW);  // LED off
+    digitalWriteFast(OSC_FX_LED, LOW);  // LED off
   }
 }
 
@@ -2265,10 +2237,10 @@ void checkMux()
     checkVolumePot();//Check volume here
   }
 
-  digitalWrite(MUX_0, muxInput & B0001);
-  digitalWrite(MUX_1, muxInput & B0010);
-  digitalWrite(MUX_2, muxInput & B0100);
-  digitalWrite(MUX_3, muxInput & B1000);
+  digitalWriteFast(MUX_0, muxInput & B0001);
+  digitalWriteFast(MUX_1, muxInput & B0010);
+  digitalWriteFast(MUX_2, muxInput & B0100);
+  digitalWriteFast(MUX_3, muxInput & B1000);
 }
 
 void checkVolumePot()

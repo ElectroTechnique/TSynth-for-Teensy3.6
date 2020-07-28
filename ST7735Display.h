@@ -37,7 +37,6 @@ char * currentSettingsValue = "";
 int currentSettingsPart = SETTINGS;
 int paramType = PARAMETER;
 
-boolean voiceOn[NO_OF_VOICES] = {false, false, false, false, false, false};
 boolean MIDIClkSignal = false;
 
 unsigned long timer = 0;
@@ -100,37 +99,37 @@ void renderCurrentPatchPage()
   tft.drawRect(145, 43, 12, 12, ST7735_BLUE);
 
 
-  if (voiceOn[0])
+ if (voices[0].voiceOn)
   {
     tft.fillRect(115, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(120, 36);
     tft.println("1");
   }
-  if (voiceOn[1])
+  if (voices[1].voiceOn)
   {
     tft.fillRect(130, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(133, 36);
     tft.println("2");
   }
-  if (voiceOn[2])
+  if (voices[2].voiceOn)
   {
     tft.fillRect(145, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(148, 36);
     tft.println("3");
   }
-  if (voiceOn[3])
+  if (voices[3].voiceOn)
   {
     tft.fillRect(115, 43, 12, 12, ST7735_BLUE);
     tft.setCursor(118, 51);
     tft.println("4");
   }
-  if (voiceOn[4])
+  if (voices[4].voiceOn)
   {
     tft.fillRect(130, 43, 12, 12, ST7735_BLUE);
     tft.setCursor(133, 51);
     tft.println("5");
   }
-  if (voiceOn[5])
+  if (voices[5].voiceOn)
   {
     tft.fillRect(145, 43, 12, 12, ST7735_BLUE);
     tft.setCursor(148, 51);
