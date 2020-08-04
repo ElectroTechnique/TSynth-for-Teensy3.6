@@ -28,7 +28,7 @@
  */
 
 #include <Arduino.h>
-#include "synth_waveform.h"
+#include "synth_waveform_new.h"
 #include "arm_math.h"
 #include "utility/dspinst.h"
 
@@ -36,7 +36,7 @@
 // uncomment for more accurate but more computationally expensive frequency modulation
 #define IMPROVE_EXPONENTIAL_ACCURACY
 
-void AudioSynthWaveform::update(void)
+void AudioSynthWaveformNew::update(void)
 {
 	audio_block_t *block;
 	int16_t *bp, *end;
@@ -195,7 +195,7 @@ void AudioSynthWaveform::update(void)
 
 //--------------------------------------------------------------------------------
 
-void AudioSynthWaveformModulated::update(void)
+void AudioSynthWaveformModulatedNew::update(void)
 {
 	audio_block_t *block, *moddata, *shapedata;
 	int16_t *bp, *end;
@@ -423,5 +423,3 @@ void AudioSynthWaveformModulated::update(void)
 	transmit(block, 0);
 	release(block);
 }
-
-

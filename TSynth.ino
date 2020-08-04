@@ -32,6 +32,10 @@
 #include <SerialFlash.h>
 #include <MIDI.h>
 #include <USBHost_t36.h>
+#include "synth_waveform_new.h"
+#include "effect_combine_new.h"
+#include "effect_ensemble.h"
+#include "filter_variable_new.h"
 #include "MidiCC.h"
 #include "AudioPatching.h"
 #include "Constants.h"
@@ -1621,12 +1625,12 @@ void updateOscFX()
 {
   if (oscFX == 1)
   {
-    oscFX1.setCombineMode(AudioEffectDigitalCombine::XOR);
-    oscFX2.setCombineMode(AudioEffectDigitalCombine::XOR);
-    oscFX3.setCombineMode(AudioEffectDigitalCombine::XOR);
-    oscFX4.setCombineMode(AudioEffectDigitalCombine::XOR);
-    oscFX5.setCombineMode(AudioEffectDigitalCombine::XOR);
-    oscFX6.setCombineMode(AudioEffectDigitalCombine::XOR);
+    oscFX1.setCombineMode(AudioEffectDigitalCombineNew::XOR);
+    oscFX2.setCombineMode(AudioEffectDigitalCombineNew::XOR);
+    oscFX3.setCombineMode(AudioEffectDigitalCombineNew::XOR);
+    oscFX4.setCombineMode(AudioEffectDigitalCombineNew::XOR);
+    oscFX5.setCombineMode(AudioEffectDigitalCombineNew::XOR);
+    oscFX6.setCombineMode(AudioEffectDigitalCombineNew::XOR);
     waveformMixer1.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     waveformMixer2.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     waveformMixer3.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
@@ -1638,12 +1642,12 @@ void updateOscFX()
   }
   else
   {
-    oscFX1.setCombineMode(AudioEffectDigitalCombine::OFF);
-    oscFX2.setCombineMode(AudioEffectDigitalCombine::OFF);
-    oscFX3.setCombineMode(AudioEffectDigitalCombine::OFF);
-    oscFX4.setCombineMode(AudioEffectDigitalCombine::OFF);
-    oscFX5.setCombineMode(AudioEffectDigitalCombine::OFF);
-    oscFX6.setCombineMode(AudioEffectDigitalCombine::OFF);
+    oscFX1.setCombineMode(AudioEffectDigitalCombineNew::OFF);
+    oscFX2.setCombineMode(AudioEffectDigitalCombineNew::OFF);
+    oscFX3.setCombineMode(AudioEffectDigitalCombineNew::OFF);
+    oscFX4.setCombineMode(AudioEffectDigitalCombineNew::OFF);
+    oscFX5.setCombineMode(AudioEffectDigitalCombineNew::OFF);
+    oscFX6.setCombineMode(AudioEffectDigitalCombineNew::OFF);
     waveformMixer1.gain(3, 0); //Osc FX
     waveformMixer2.gain(3, 0); //Osc FX
     waveformMixer3.gain(3, 0); //Osc FX
