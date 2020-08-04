@@ -136,10 +136,10 @@ private:
 };
 
 
-class AudioSynthWaveformNewModulated : public AudioStream
+class AudioSynthWaveformModulatedNew : public AudioStream
 {
 public:
-	AudioSynthWaveformNewModulated(void) : AudioStream(2, inputQueueArray),
+	AudioSynthWaveformModulatedNew(void) : AudioStream(2, inputQueueArray),
 		phase_accumulator(0), phase_increment(0), modulation_factor(32768),
 		magnitude(0), arbdata(NULL), sample(0), tone_offset(0),
 		tone_type(WAVEFORM_SINE), modulation_type(0),syncFlag(0) {

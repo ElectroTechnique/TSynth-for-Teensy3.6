@@ -195,7 +195,7 @@ void AudioSynthWaveformNew::update(void)
 
 //--------------------------------------------------------------------------------
 
-void AudioSynthWaveformNewModulated::update(void)
+void AudioSynthWaveformModulatedNew::update(void)
 {
 	audio_block_t *block, *moddata, *shapedata;
 	int16_t *bp, *end;
