@@ -27,8 +27,8 @@
  Added WAVEFORM_SILENT, sync()
  */
 
-#ifndef synth_waveform_h_
-#define synth_waveform_h_
+#ifndef synth_waveform_new_h_
+#define synth_waveform_new_h_
 
 #include <Arduino.h>
 #include "AudioStream.h"
@@ -50,10 +50,10 @@ extern const int16_t AudioWaveformSine[257];
 #define WAVEFORM_TRIANGLE_VARIABLE 8
 #define WAVEFORM_SILENT			   9
 
-class AudioSynthWaveform : public AudioStream
+class AudioSynthWaveformNew : public AudioStream
 {
 public:
-	AudioSynthWaveform(void) : AudioStream(0,NULL),
+	AudioSynthWaveformNew(void) : AudioStream(0,NULL),
 		phase_accumulator(0), phase_increment(0), phase_offset(0),
 		magnitude(0), pulse_width(0x40000000),
 		arbdata(NULL), sample(0), tone_type(WAVEFORM_SINE),
@@ -136,10 +136,10 @@ private:
 };
 
 
-class AudioSynthWaveformModulated : public AudioStream
+class AudioSynthWaveformNewModulated : public AudioStream
 {
 public:
-	AudioSynthWaveformModulated(void) : AudioStream(2, inputQueueArray),
+	AudioSynthWaveformNewModulated(void) : AudioStream(2, inputQueueArray),
 		phase_accumulator(0), phase_increment(0), modulation_factor(32768),
 		magnitude(0), arbdata(NULL), sample(0), tone_offset(0),
 		tone_type(WAVEFORM_SINE), modulation_type(0),syncFlag(0) {
