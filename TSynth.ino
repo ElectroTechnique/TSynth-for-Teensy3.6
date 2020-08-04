@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.12
+  ElectroTechnique TSynth - Firmware Rev 1.13
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -1173,7 +1173,10 @@ void updatePWA()
       showCurrentParameterPage("1. PWM Amt", "F. Env " + String(pwmAmtA));
     }
   }
-  pwa.amplitude(pwA);
+  float pwA_Adj = pwA;//Prevent silence when pw = +/-1 on pulse
+  if (pwA > 0.98) pwA_Adj = 0.98f;
+  if (pwA < -0.98) pwA_Adj = -0.98f;
+  pwa.amplitude(pwA_Adj);
 }
 
 void updatePWB()
@@ -1213,7 +1216,10 @@ void updatePWB()
       showCurrentParameterPage("2. PWM Amt", "F. Env " + String(pwmAmtB));
     }
   }
-  pwb.amplitude(pwB);
+  float pwB_Adj = pwB;//Prevent silence when pw = +/-1 on pulse
+  if (pwB > 0.98) pwB_Adj = 0.98f;
+  if (pwB < -0.98) pwB_Adj = -0.98f;
+  pwb.amplitude(pwB_Adj);
 }
 
 void updateOscLevelA()
@@ -1702,11 +1708,13 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCoscwaveformA:
+      if (oscWaveformA == getWaveformA(value))return;
       oscWaveformA = getWaveformA(value);
       updateWaveformA();
       break;
 
     case CCoscwaveformB:
+      if (oscWaveformB == getWaveformB(value))return;
       oscWaveformB = getWaveformB(value);
       updateWaveformB();
       break;
