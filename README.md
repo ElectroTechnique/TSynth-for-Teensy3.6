@@ -9,4 +9,4 @@ Questions: info@electrotechnique.cc
 
 # Instructions
 
-The source code requires Teensyduino from [PJRC](https://pjrc.com) to compile. You also need to put the files in Modified Libraries into the Teensy Audio folder to replace the installed versions. You also need CircularBuffer from Agileware, which is available in the Arduino Library Manager.
+The source code requires Teensyduino from [PJRC](https://pjrc.com) to compile. You also need CircularBuffer from Agileware, which is available in the Arduino Library Manager.
