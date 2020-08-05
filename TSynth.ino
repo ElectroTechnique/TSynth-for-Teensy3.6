@@ -21,8 +21,7 @@
   240MHz Fastest+LTO  55.9 44
 
   Additional libraries:
-    Agileware CircularBuffer available in Arduino libraries manager
-    Replacement files are in the Modified Libraries folder and need to be placed in the teensy Audio folder.
+    Agileware CircularBuffer, Adafruit_GFX (available in Arduino libraries manager)
 */
 
 #include <Audio.h>
