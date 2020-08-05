@@ -1,18 +1,20 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.13
+  ElectroTechnique TSynth - Firmware Rev 1.14
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
     Alexander Davis - Stereo ensemble chorus effect https://github.com/quarterturn/teensy3-ensemble-chorus
     Gustavo Silveira - Band limited wavetables https://forum.pjrc.com/threads/41905-Band-limited-Sawtooth-wavetable-C-generator-for-quot-Arbitrary-Waveform-quot-(and-its-use)
+    Holger Wirtz - Modified library integration and special thanks https://www.parasitstudio.de/
 
   Arduino IDE
   Tools Settings:
   Board: "Teensy3.6"
   USB Type: "Serial + MIDI + Audio"
-  CPU Speed: "240MHz"
-  Optimize: "Fastest with LTO"
+  CPU Speed: "180MHz"
+  Optimize: "Faster"
 
+  +++ Compiling with overclocking can lead to problems, test carefully +++
   Performance Tests   CPU  Mem
   180Mhz Faster       81.6 44
   180Mhz Fastest      77.8 44
