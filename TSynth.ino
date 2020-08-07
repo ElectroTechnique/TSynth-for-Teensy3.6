@@ -1,11 +1,10 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.14
+  ElectroTechnique TSynth - Firmware Rev 1.15
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
     Alexander Davis - Stereo ensemble chorus effect https://github.com/quarterturn/teensy3-ensemble-chorus
     Gustavo Silveira - Band limited wavetables https://forum.pjrc.com/threads/41905-Band-limited-Sawtooth-wavetable-C-generator-for-quot-Arbitrary-Waveform-quot-(and-its-use)
-    Holger Wirtz - Modified library integration and special thanks https://www.parasitstudio.de/
 
   Arduino IDE
   Tools Settings:
@@ -25,11 +24,8 @@
   Additional libraries:
     Agileware CircularBuffer, Adafruit_GFX (available in Arduino libraries manager)
 */
-#include "synth_waveform_new.h"
-#include "effect_combine_new.h"
-#include "effect_ensemble.h"
-#include "filter_variable_new.h"
-#include <Audio.h>
+
+#include "Audio.h" //Using local version to override Teensyduino version
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
@@ -83,6 +79,7 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
 #include "ST7735Display.h"
 
 boolean cardStatus = false;
+boolean firstPatchLoaded = false;
 
 //USB HOST MIDI Class Compliant
 USBHost myusb;
@@ -318,8 +315,6 @@ void setup()
 
   //Read Encoder Direction from EEPROM
   encCW = getEncoderDir();
-
-  recallPatch(patchNo); //Load first patch
 }
 
 void myNoteOn(byte channel, byte note, byte velocity)
@@ -1625,12 +1620,12 @@ void updateOscFX()
 {
   if (oscFX == 1)
   {
-    oscFX1.setCombineMode(AudioEffectDigitalCombineNew::XOR);
-    oscFX2.setCombineMode(AudioEffectDigitalCombineNew::XOR);
-    oscFX3.setCombineMode(AudioEffectDigitalCombineNew::XOR);
-    oscFX4.setCombineMode(AudioEffectDigitalCombineNew::XOR);
-    oscFX5.setCombineMode(AudioEffectDigitalCombineNew::XOR);
-    oscFX6.setCombineMode(AudioEffectDigitalCombineNew::XOR);
+    oscFX1.setCombineMode(AudioEffectDigitalCombine::XOR);
+    oscFX2.setCombineMode(AudioEffectDigitalCombine::XOR);
+    oscFX3.setCombineMode(AudioEffectDigitalCombine::XOR);
+    oscFX4.setCombineMode(AudioEffectDigitalCombine::XOR);
+    oscFX5.setCombineMode(AudioEffectDigitalCombine::XOR);
+    oscFX6.setCombineMode(AudioEffectDigitalCombine::XOR);
     waveformMixer1.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     waveformMixer2.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
     waveformMixer3.gain(3, (oscALevel + oscBLevel) / 2.0); //Osc FX
@@ -1642,12 +1637,12 @@ void updateOscFX()
   }
   else
   {
-    oscFX1.setCombineMode(AudioEffectDigitalCombineNew::OFF);
-    oscFX2.setCombineMode(AudioEffectDigitalCombineNew::OFF);
-    oscFX3.setCombineMode(AudioEffectDigitalCombineNew::OFF);
-    oscFX4.setCombineMode(AudioEffectDigitalCombineNew::OFF);
-    oscFX5.setCombineMode(AudioEffectDigitalCombineNew::OFF);
-    oscFX6.setCombineMode(AudioEffectDigitalCombineNew::OFF);
+    oscFX1.setCombineMode(AudioEffectDigitalCombine::OFF);
+    oscFX2.setCombineMode(AudioEffectDigitalCombine::OFF);
+    oscFX3.setCombineMode(AudioEffectDigitalCombine::OFF);
+    oscFX4.setCombineMode(AudioEffectDigitalCombine::OFF);
+    oscFX5.setCombineMode(AudioEffectDigitalCombine::OFF);
+    oscFX6.setCombineMode(AudioEffectDigitalCombine::OFF);
     waveformMixer1.gain(3, 0); //Osc FX
     waveformMixer2.gain(3, 0); //Osc FX
     waveformMixer3.gain(3, 0); //Osc FX
@@ -2247,6 +2242,10 @@ void checkMux()
   if (muxInput >= MUXCHANNELS) {
     muxInput = 0;
     checkVolumePot();//Check volume here
+    if (!firstPatchLoaded) {
+      recallPatch(patchNo); //Load first patch after all controls read
+      firstPatchLoaded = true;
+    }
   }
 
   digitalWriteFast(MUX_0, muxInput & B0001);
@@ -2639,6 +2638,5 @@ void loop()
   checkMux();
   checkSwitches();
   checkEncoder();
-
   //CPUMonitor();
 }
