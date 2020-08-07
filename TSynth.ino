@@ -25,7 +25,10 @@
   Additional libraries:
     Agileware CircularBuffer, Adafruit_GFX (available in Arduino libraries manager)
 */
-
+#include "synth_waveform_new.h"
+#include "effect_combine_new.h"
+#include "effect_ensemble.h"
+#include "filter_variable_new.h"
 #include <Audio.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -33,10 +36,6 @@
 #include <SerialFlash.h>
 #include <MIDI.h>
 #include <USBHost_t36.h>
-#include "synth_waveform_new.h"
-#include "effect_combine_new.h"
-#include "effect_ensemble.h"
-#include "filter_variable_new.h"
 #include "MidiCC.h"
 #include "AudioPatching.h"
 #include "Constants.h"
