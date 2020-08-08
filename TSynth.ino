@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.15
+  ElectroTechnique TSynth - Firmware Rev 1.16
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -1999,9 +1999,25 @@ void myMIDIClock()
   if (count < 24) count++; //prevent eventual overflow
 }
 
+void closeEnvelopes() {
+  filterEnvelope1.close();
+  filterEnvelope2.close();
+  filterEnvelope3.close();
+  filterEnvelope4.close();
+  filterEnvelope5.close();
+  filterEnvelope6.close();
+  ampEnvelope1.close();
+  ampEnvelope2.close();
+  ampEnvelope3.close();
+  ampEnvelope4.close();
+  ampEnvelope5.close();
+  ampEnvelope6.close();
+}
+
 void recallPatch(int patchNo)
 {
   allNotesOff();
+  closeEnvelopes();
   File patchFile = SD.open(String(patchNo).c_str());
   if (!patchFile)
   {
@@ -2398,6 +2414,7 @@ void checkSwitches()
   {
     //If Back button held, Panic - all notes off
     allNotesOff();
+    closeEnvelopes();
     backButton.write(HIGH); //Come out of this state
     panic = true;           //Hack
   }

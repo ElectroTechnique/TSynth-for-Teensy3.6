@@ -57,7 +57,7 @@
 
 #include "control_sgtl5000.h"
 #include "effect_ensemble.h"
-#include "effect_envelope.h"
+#include "effect_envelope.h"//Local version
 #include "effect_combine.h"//Local version
 #include "filter_variable.h"//Local version
 #include "mixer.h"
