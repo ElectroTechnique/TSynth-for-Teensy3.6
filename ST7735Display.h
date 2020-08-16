@@ -11,13 +11,13 @@
 #include <Adafruit_GFX.h>
 #include "ST7735_t3.h" // Local copy from TD1.48 that works for 0.96" IPS 160x80 display
 
-#include <Fonts/Org_01.h>
+#include "Fonts/Org_01.h"
 #include "Yeysk16pt7b.h"
-#include <Fonts/FreeSansBold18pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSansOblique24pt7b.h>
-#include <Fonts/FreeSansBoldOblique24pt7b.h>
+#include "Fonts/FreeSansBold18pt7b.h"
+#include "Fonts/FreeSans12pt7b.h"
+#include "Fonts/FreeSans9pt7b.h"
+#include "Fonts/FreeSansOblique24pt7b.h"
+#include "Fonts/FreeSansBoldOblique24pt7b.h"
 
 #define PULSE 1
 #define VAR_TRI 2
