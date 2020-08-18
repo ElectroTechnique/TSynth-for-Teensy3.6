@@ -1,4 +1,4 @@
-#define SETTINGSOPTIONSNO 5
+#define SETTINGSOPTIONSNO 6
 #define SETTINGSVALUESNO 18//Maximum number of settings option values needed
 int settingsValueIndex = 0;//currently selected settings option value index
 
@@ -11,6 +11,7 @@ struct SettingsOption
 };
 
 void settingsMIDICh(char * value);
+void settingsVelocitySens(char * value);
 void settingsKeyTracking(char * value);
 void settingsPitchBend(char * value);
 void settingsModWheelDepth(char * value);
@@ -18,6 +19,7 @@ void settingsEncoderDir(char * value);
 void settingsHandler(char * s, void (*f)(char*));
 
 int currentIndexMIDICh();
+int currentIndexVelocitySens();
 int currentIndexKeyTracking();
 int currentIndexPitchBend();
 int currentIndexModWheelDepth();
@@ -33,6 +35,15 @@ void settingsMIDICh(char * value) {
   }
   storeMidiChannel(midiChannel);
 }
+
+void settingsVelocitySens(char * value) {
+  if (strcmp(value, "Off") == 0) {
+    velocitySens = 0;
+  } else {
+    velocitySens = atoi(value);
+  }
+}
+
 void settingsKeyTracking(char * value) {
   if (strcmp(value, "None") == 0) keytrackingAmount = 0;
   if (strcmp(value, "Half") == 0)  keytrackingAmount =  0.5;
@@ -68,6 +79,10 @@ int currentIndexMIDICh() {
   return getMIDIChannel();
 }
 
+int currentIndexVelocitySens() {
+  return velocitySens;
+}
+
 int currentIndexKeyTracking() {
   float value = getKeyTracking();
   if (value == 0) return 0;
@@ -98,6 +113,7 @@ CircularBuffer<SettingsOption, SETTINGSOPTIONSNO>  settingsOptions;
 // add settings to the circular buffer
 void setUpSettings() {
   settingsOptions.push(SettingsOption{"MIDI Ch.", {"All", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", '\0'}, settingsMIDICh, currentIndexMIDICh});
+  settingsOptions.push(SettingsOption{"Vel. Sens.", {"Off", "1", "2", "3", "4", '\0'}, settingsVelocitySens, currentIndexVelocitySens});
   settingsOptions.push(SettingsOption{"Key Tracking", {"None", "Half", "Full", '\0'}, settingsKeyTracking, currentIndexKeyTracking});
   settingsOptions.push(SettingsOption{"Pitch Bend", {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", '\0'}, settingsPitchBend, currentIndexPitchBend});
   settingsOptions.push(SettingsOption{"MW Depth", {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", '\0'}, settingsModWheelDepth, currentIndexModWheelDepth});

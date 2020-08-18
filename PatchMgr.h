@@ -77,12 +77,13 @@ void recallPatchData(File patchFile, String data[])
     else
     {
       // At eof, too long, or read error.  Too long is error.
+      
       Serial.print(patchFile.available() ? F("error: ") : F("eof:   "));
     }
     // Print the field.
-    //    Serial.print(i);
-    //    Serial.print(" - ");
-    //    Serial.println(str);
+//        Serial.print(i);
+//        Serial.print(" - ");
+//        Serial.println(str);
     data[i++] = String(str);
   }
 }

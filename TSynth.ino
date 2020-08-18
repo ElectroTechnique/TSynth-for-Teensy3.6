@@ -1,12 +1,12 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.16
+  ElectroTechnique TSynth - Firmware Rev 1.17
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
     Alexander Davis - Stereo ensemble chorus effect https://github.com/quarterturn/teensy3-ensemble-chorus
     Gustavo Silveira - Band limited wavetables https://forum.pjrc.com/threads/41905-Band-limited-Sawtooth-wavetable-C-generator-for-quot-Arbitrary-Waveform-quot-(and-its-use)
-    Holger Wirtz - Special thanks for modified file inclusion assistance
-    
+    Holger Wirtz - Modified library integration and special thanks https://www.parasitstudio.de/
+
   Arduino IDE
   Tools Settings:
   Board: "Teensy3.6"
@@ -43,6 +43,7 @@
 #include "Settings.h"
 #include "sawtoothWave.h"
 #include "squareWave.h"
+#include "Velocity.h"
 
 #define PARAMETER 0 //The main page for displaying the current patch and control (parameter) changes
 #define RECALL 1 //Patches list
@@ -341,6 +342,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         keytracking1.amplitude(note * DIV127 * keytrackingAmount);
         voices[0].note = note;
         voices[0].timeOn = millis();
+        voiceMixer1.gain(0, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
         updateVoice1();
         filterEnvelope1.noteOn();
         ampEnvelope1.noteOn();
@@ -355,6 +357,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         keytracking2.amplitude(note * DIV127 * keytrackingAmount);
         voices[1].note = note;
         voices[1].timeOn = millis();
+        voiceMixer1.gain(1, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
         updateVoice2();
         filterEnvelope2.noteOn();
         ampEnvelope2.noteOn();
@@ -369,6 +372,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         keytracking3.amplitude(note * DIV127 * keytrackingAmount);
         voices[2].note = note;
         voices[2].timeOn = millis();
+        voiceMixer1.gain(2, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
         updateVoice3();
         filterEnvelope3.noteOn();
         ampEnvelope3.noteOn();
@@ -383,6 +387,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         keytracking4.amplitude(note * DIV127 * keytrackingAmount);
         voices[3].note = note;
         voices[3].timeOn = millis();
+        voiceMixer2.gain(0, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
         updateVoice4();
         filterEnvelope4.noteOn();
         ampEnvelope4.noteOn();
@@ -397,6 +402,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         keytracking5.amplitude(note * DIV127 * keytrackingAmount);
         voices[4].note = note;
         voices[4].timeOn = millis();
+        voiceMixer2.gain(1, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
         updateVoice5();
         filterEnvelope5.noteOn();
         ampEnvelope5.noteOn();
@@ -411,6 +417,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         keytracking6.amplitude(note * DIV127 * keytrackingAmount);
         voices[5].note = note;
         voices[5].timeOn = millis();
+        voiceMixer2.gain(2, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
         updateVoice6();
         filterEnvelope6.noteOn();
         ampEnvelope6.noteOn();
@@ -448,21 +455,27 @@ void myNoteOn(byte channel, byte note, byte velocity)
     keytracking6.amplitude(note * DIV127 * keytrackingAmount);
     voices[0].note = note;
     voices[0].timeOn = millis();
+    voiceMixer1.gain(0, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
     updateVoice1();
     voices[1].note = note;
     voices[1].timeOn = millis();
+    voiceMixer1.gain(1, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
     updateVoice2();
     voices[2].note = note;
     voices[2].timeOn = millis();
+    voiceMixer1.gain(2, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
     updateVoice3();
     voices[3].note = note;
     voices[3].timeOn = millis();
+    voiceMixer2.gain(0, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
     updateVoice4();
     voices[4].note = note;
     voices[4].timeOn = millis();
+    voiceMixer2.gain(1, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
     updateVoice5();
     voices[5].note = note;
     voices[5].timeOn = millis();
+    voiceMixer2.gain(2, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
     updateVoice6();
 
     filterEnvelope1.noteOn();
@@ -1066,25 +1079,19 @@ void updatesAllVoices() {
   updateVoice6();
 }
 
-void updatePWMSource()
-{
-  if (pwmSource == PWMSOURCELFO)
-  {
+void updatePWMSource() {
+  if (pwmSource == PWMSOURCELFO) {
     setPwmMixerAFEnv(0);
     setPwmMixerBFEnv(0);
-    if (pwmRate > -5)
-    {
+    if (pwmRate > -5) {
       setPwmMixerALFO(pwmAmtA);
       setPwmMixerBLFO(pwmAmtB);
     }
     showCurrentParameterPage("PWM Source", "LFO"); //Only shown when updated via MIDI
-  }
-  else
-  {
+  } else {
     setPwmMixerALFO(0);
     setPwmMixerBLFO(0);
-    if (pwmRate > -5)
-    {
+    if (pwmRate > -5) {
       setPwmMixerAFEnv(pwmAmtA);
       setPwmMixerBFEnv(pwmAmtB);
     }
@@ -1095,8 +1102,7 @@ void updatePWMSource()
 void updatePWMRate()
 {
   pwmLfo.frequency(pwmRate);
-  if (pwmRate < -5)
-  {
+  if (pwmRate == -10) {
     //Set to fixed PW mode
     setPwmMixerALFO(0);//LFO Source off
     setPwmMixerBLFO(0);
@@ -1105,19 +1111,19 @@ void updatePWMRate()
     setPwmMixerAPW(1);//Manually adjustable pulse width on
     setPwmMixerBPW(1);
     showCurrentParameterPage("PW Mode", "On");
-  }
-  else if (pwmRate > -10 && pwmRate < 0) {
+  } else if (pwmRate == -5) {
     //Set to Filter Env Mod source
     pwmSource = PWMSOURCEFENV;
     updatePWMSource();
     //Filter env mod - pwmRate does nothing
     setPwmMixerALFO(0);
     setPwmMixerBLFO(0);
+    setPwmMixerAPW(0);
+    setPwmMixerBPW(0);
     setPwmMixerAFEnv(pwmAmtA);
     setPwmMixerBFEnv(pwmAmtB);
     showCurrentParameterPage("PWM Source", "Filter Env");
   } else {
-
     pwmSource = PWMSOURCELFO;
     updatePWMSource();
     setPwmMixerAPW(0);
@@ -1138,8 +1144,7 @@ void updatePWMAmount()
 
 void updatePWA()
 {
-  if (pwmRate < -5)
-  {
+  if (pwmRate == -10) {
     //if PWM amount is around zero, fixed PW is enabled
     setPwmMixerALFO(0);
     setPwmMixerBLFO(0);
@@ -1181,8 +1186,7 @@ void updatePWA()
 
 void updatePWB()
 {
-  if (pwmRate < -5)
-  {
+  if (pwmRate == -10) {
     //if PWM amount is around zero, fixed PW is enabled
     setPwmMixerALFO(0);
     setPwmMixerBLFO(0);
@@ -1190,17 +1194,12 @@ void updatePWB()
     setPwmMixerBFEnv(0);
     setPwmMixerAPW(1);
     setPwmMixerBPW(1);
-    if (oscWaveformB == WAVEFORM_TRIANGLE_VARIABLE)
-    {
+    if (oscWaveformB == WAVEFORM_TRIANGLE_VARIABLE) {
       showCurrentParameterPage("2. PW Amt", pwB, VAR_TRI);
-    }
-    else
-    {
+    } else {
       showCurrentParameterPage("2. PW Amt", pwB, PULSE);
     }
-  }
-  else
-  {
+  } else {
     setPwmMixerAPW(0);
     setPwmMixerBPW(0);
     if (pwmSource == PWMSOURCELFO)
@@ -1208,9 +1207,7 @@ void updatePWB()
       //PW alters PWM LFO amount for waveform B
       setPwmMixerBLFO(pwmAmtB);
       showCurrentParameterPage("2. PWM Amt", "LFO " + String(pwmAmtB));
-    }
-    else
-    {
+    } else {
       //PW alters PWM Filter Env amount for waveform B
       setPwmMixerBFEnv(pwmAmtB);
       showCurrentParameterPage("2. PWM Amt", "F. Env " + String(pwmAmtB));
@@ -2081,6 +2078,7 @@ void setCurrentPatchData(String data[])
   fxAmt = data[44].toFloat();
   fxMix = data[45].toFloat();
   pitchEnv = data[46].toFloat();
+  velocitySens = data[47].toFloat();
 
   updatePatchname();
   updateUnison();
@@ -2132,7 +2130,7 @@ String getCurrentPatchData()
   return patchName + "," + String(oscALevel) + "," + String(oscBLevel) + "," + String(noiseLevel) + "," + String(unison) + "," + String(oscFX) + "," + String(detune) + "," + String(lfoSyncFreq) + "," + String(midiClkTimeInterval) + "," + String(lfoTempoValue) + "," + String(keytrackingAmount) + "," + String(glideSpeed) + "," + String(oscPitchA) + "," + String(oscPitchB) + "," + String(oscWaveformA) + "," + String(oscWaveformB) + "," +
          String(pwmSource) + "," + String(pwmAmtA) + "," + String(pwmAmtB) + "," + String(pwmRate) + "," + String(pwA) + "," + String(pwB) + "," + String(filterRes) + "," + String(filterFreq) + "," + String(filterMix) + "," + String(filterEnv) + "," + String(oscLfoAmt) + "," + String(oscLfoRate) + "," + String(oscLFOWaveform) + "," + String(oscLfoRetrig) + "," + String(oscLFOMidiClkSync) + "," + String(filterLfoRate) + "," +
          filterLfoRetrig + "," + filterLFOMidiClkSync + "," + filterLfoAmt + "," + filterLfoWaveform + "," + filterAttack + "," + filterDecay + "," + filterSustain + "," + filterRelease + "," + ampAttack + "," + ampDecay + "," + ampSustain + "," + ampRelease + "," +
-         String(fxAmt) + "," + String(fxMix) + "," + String(pitchEnv);
+         String(fxAmt) + "," + String(fxMix) + "," + String(pitchEnv) + "," + String(velocitySens);
 }
 
 void checkMux()
