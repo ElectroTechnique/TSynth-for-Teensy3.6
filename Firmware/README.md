@@ -2,3 +2,5 @@ This is the current firmware for TSynth - use the latest, earlier ones will be l
 
 
 V1.17 - Velocity sensitivity added. There are four velocity curves (see [electrotechnique.cc](https://electrotechnique.cc) post about this) that change the volume level with the velocity value. Also a minor fix to PWM source changing that failed to switch the filter envelope on when coming from fixed PW.
+
+V1.16 - Envelopes closed when a patch changes or the Panic button is pressed, to prevent next patch sounding.
