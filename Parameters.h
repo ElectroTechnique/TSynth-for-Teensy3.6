@@ -60,3 +60,19 @@ float fxAmt = 1;
 float fxMix = 0;
 
 int velocitySens = 0;//Default off - settings option
+
+//Pick-up - Experimental feature
+//Control will only start changing when the Knob/MIDI control reaches the current parameter value
+//Prevents jumps in value when the patch parameter and control are different values
+volatile boolean pickUp = false;//settings option (EEPROM)
+volatile boolean pickUpActive = false;
+#define TOLERANCE 2 //Gives a window of when pick-up occurs, this is due to the speed of control changing and Mux reading
+uint32_t filterfreqPrevValue = 0;//Need to set these when patch loaded
+float filterMixPrevValue = 0.0f;//Need to set these when patch loaded
+float resonancePrevValue = 0.0f;//Need to set these when patch loaded
+float oscLfoAmtPrevValue = 0.0f;//Need to set these when patch loaded
+float oscLfoRatePrevValue = 0.0f;//Need to set these when patch loaded
+float filterLfoRatePrevValue = 0.0f;//Need to set these when patch loaded
+float filterLfoAmtPrevValue = 0.0f;//Need to set these when patch loaded
+float fxAmtPrevValue = 0.0f;//Need to set these when patch loaded
+float fxMixPrevValue = 0.0f;//Need to set these when patch loaded

@@ -99,7 +99,7 @@ void renderCurrentPatchPage()
   tft.drawRect(145, 43, 12, 12, ST7735_BLUE);
 
 
- if (voices[0].voiceOn)
+  if (voices[0].voiceOn)
   {
     tft.fillRect(115, 28, 12, 12, ST7735_BLUE);
     tft.setCursor(120, 36);
@@ -188,6 +188,13 @@ void renderCurrentParameterPage()
       tft.setCursor(1, 90);
       tft.setTextColor(ST7735_WHITE);
       tft.println(currentValue);
+      if (pickUpActive) {
+        tft.setTextColor(ST77XX_ORANGE);
+        tft.setFont(&Org_01);
+        tft.setTextSize(2);
+        tft.setCursor(131, 73);
+        tft.println("PK");
+      }
       switch (paramType)
       {
         case PULSE:
@@ -395,12 +402,12 @@ void displayThread()
     switch (state)
     {
       case PARAMETER:
-        if ((millis() - timer) > DISPLAYTIMEOUT)
-        {
+        if ((millis() - timer) > DISPLAYTIMEOUT) {
+          pickUpActive = false;
           renderCurrentPatchPage();
         }
-        else
-        {
+        else {
+          pickUpActive = pickUp;
           renderCurrentParameterPage();
         }
         break;

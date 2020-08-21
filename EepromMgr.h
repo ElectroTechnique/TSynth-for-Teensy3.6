@@ -5,6 +5,8 @@
 #define EEPROM_PITCHBEND 2
 #define EEPROM_MODWHEEL_DEPTH 3
 #define EEPROM_ENCODER_DIR 4
+#define EEPROM_BASSENHANCE_ENABLE 5
+#define EEPROM_PICKUP_ENABLE 6
 
 int getMIDIChannel() {
   byte midiChannel = EEPROM.read(EEPROM_MIDI_CH);
@@ -55,7 +57,7 @@ void storeModWheelDepth(float mwDepth)
 }
 
 boolean getEncoderDir() {
-  byte ed = EEPROM.read(EEPROM_ENCODER_DIR); 
+  byte ed = EEPROM.read(EEPROM_ENCODER_DIR);
   if (ed < 0 || ed > 1)return true; //If EEPROM has no encoder direction stored
   return ed == 1 ? true : false;
 }
@@ -63,4 +65,25 @@ boolean getEncoderDir() {
 void storeEncoderDir(byte encoderDir)
 {
   EEPROM.update(EEPROM_ENCODER_DIR, encoderDir);
+}
+
+boolean getPickupEnable() {
+  byte pu = EEPROM.read(EEPROM_PICKUP_ENABLE); 
+  if (pu < 0 || pu > 1)return false; //If EEPROM has no pickup enable stored
+  return pu == 1 ? true : false;
+}
+
+void storePickupEnable(byte pickupEnable){
+  EEPROM.update(EEPROM_PICKUP_ENABLE, pickupEnable);
+}
+
+
+boolean getBassEnhanceEnable() {
+  byte eh = EEPROM.read(EEPROM_BASSENHANCE_ENABLE);
+  if (eh < 0 || eh > 1)return false; //If EEPROM has no bass enhance enable stored
+  return eh == 1 ? true : false;
+}
+
+void storeBassEnhanceEnable(byte bassEnhanceEnable) {
+  EEPROM.update(EEPROM_BASSENHANCE_ENABLE, bassEnhanceEnable);
 }

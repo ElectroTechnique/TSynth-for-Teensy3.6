@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.17
+  ElectroTechnique TSynth - Firmware Rev 1.19
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -108,7 +108,11 @@ void setup()
 
   AudioMemory(45);
   sgtl5000_1.enable();
+  sgtl5000_1.dacVolumeRamp();
   sgtl5000_1.volume(SGTL_MAXVOLUME * 0.5); //Headphones - do not initialise to maximum, but this is re-read
+  sgtl5000_1.audioPostProcessorEnable();
+  sgtl5000_1.enhanceBass(0.85, 0.87, 0, 4);//Normal level, bass level, HPF bypass (1 - on), bass cutoff freq
+  sgtl5000_1.enhanceBassDisable();//Turned on from EEPROM
 
   cardStatus = SD.begin(BUILTIN_SDCARD);
   if (cardStatus)
@@ -317,6 +321,12 @@ void setup()
 
   //Read Encoder Direction from EEPROM
   encCW = getEncoderDir();
+
+  //Read bass enhance enable from EEPROM
+  if (getBassEnhanceEnable()) sgtl5000_1.enhanceBassEnable();
+
+  //Read Pick-up enable from EEPROM - experimental feature
+  pickUp = getPickupEnable();
 }
 
 void myNoteOn(byte channel, byte note, byte velocity)
@@ -1779,23 +1789,27 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCfilterfreq:
       //Pick up
-      //if (pickUp && (filterfreqPrevValue <  value - 5 || filterfreqPrevValue >  value + 5))return;
+      if (!pickUpActive && pickUp && (filterfreqPrevValue <  FILTERFREQS[value - TOLERANCE] || filterfreqPrevValue >  FILTERFREQS[value + TOLERANCE])) return; //PICK-UP
       filterFreq = FILTERFREQS[value];
       updateFilterFreq();
-      //filterfreqPrevValue = value;
+      filterfreqPrevValue = filterFreq;//PICK-UP
       break;
 
     case CCfilterres:
       //Pick up
+      if (!pickUpActive && pickUp && (resonancePrevValue <  ((13.9f * POWER[value - TOLERANCE]) + 1.1f) || resonancePrevValue >  ((13.9f * POWER[value + TOLERANCE]) + 1.1f))) return; //PICK-UP
       filterRes = (13.9f * POWER[value]) + 1.1f; //If <1.1 there is noise at high cutoff freq
       updateFilterRes();
+      resonancePrevValue = filterRes;//PICK-UP
       break;
 
     case CCfiltermixer:
       //Pick up
+      if (!pickUpActive && pickUp && (filterMixPrevValue <  LINEAR_FILTERMIXER[value - TOLERANCE] || filterMixPrevValue >  LINEAR_FILTERMIXER[value + TOLERANCE])) return; //PICK-UP
       filterMix = LINEAR_FILTERMIXER[value];
       filterMixStr = LINEAR_FILTERMIXERSTR[value];
       updateFilterMixer();
+      filterMixPrevValue = filterMix;//PICK-UP
       break;
 
     case CCfilterenv:
@@ -1815,22 +1829,24 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCosclfoamt:
       //Pick up
+      if (!pickUpActive && pickUp && (oscLfoAmtPrevValue <  POWER[value - TOLERANCE] || oscLfoAmtPrevValue >  POWER[value + TOLERANCE])) return; //PICK-UP
       oscLfoAmt = POWER[value];
       updateOscLFOAmt();
+      oscLfoAmtPrevValue = oscLfoAmt;//PICK-UP
       break;
 
     case CCoscLfoRate:
       //Pick up
-      if (oscLFOMidiClkSync == 1)
-      {
+      if (!pickUpActive && pickUp && (oscLfoRatePrevValue <  LFOMAXRATE * POWER[value - TOLERANCE] || oscLfoRatePrevValue > LFOMAXRATE * POWER[value + TOLERANCE])) return; //PICK-UP
+      if (oscLFOMidiClkSync == 1) {
         oscLfoRate = getLFOTempoRate(value);
         oscLFOTimeDivStr = LFOTEMPOSTR[value];
       }
-      else
-      {
+      else {
         oscLfoRate = LFOMAXRATE * POWER[value];
       }
       updatePitchLFORate();
+      oscLfoRatePrevValue = oscLfoRate;//PICK-UP
       break;
 
     case CCoscLfoWaveform:
@@ -1850,22 +1866,23 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCfilterlforate:
       //Pick up
-      if (filterLFOMidiClkSync == 1)
-      {
+      if (!pickUpActive && pickUp && (filterLfoRatePrevValue <  LFOMAXRATE * POWER[value - TOLERANCE] || filterLfoRatePrevValue > LFOMAXRATE * POWER[value + TOLERANCE])) return; //PICK-UP
+      if (filterLFOMidiClkSync == 1) {
         filterLfoRate = getLFOTempoRate(value);
         filterLFOTimeDivStr = LFOTEMPOSTR[value];
-      }
-      else
-      {
+      } else {
         filterLfoRate = LFOMAXRATE * POWER[value];
       }
       updateFilterLfoRate();
+      filterLfoRatePrevValue = filterLfoRate;//PICK-UP
       break;
 
     case CCfilterlfoamt:
       //Pick up
+      if (!pickUpActive && pickUp && (filterLfoAmtPrevValue <  LINEAR[value - TOLERANCE] * FILTERMODMIXERMAX || filterLfoAmtPrevValue >  LINEAR[value + TOLERANCE] * FILTERMODMIXERMAX)) return; //PICK-UP
       filterLfoAmt = LINEAR[value] * FILTERMODMIXERMAX;
       updateFilterLfoAmt();
+      filterLfoAmtPrevValue = filterLfoAmt;//PICK-UP
       break;
 
     case CCfilterlfowaveform:
@@ -1931,14 +1948,18 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCfxamt:
       //Pick up
+      if (!pickUpActive && pickUp && (fxAmtPrevValue <  ENSEMBLE_LFO[value - TOLERANCE] || fxAmtPrevValue >  ENSEMBLE_LFO[value + TOLERANCE])) return; //PICK-UP
       fxAmt = ENSEMBLE_LFO[value];
       updateFXAmt();
+      fxAmtPrevValue = fxAmt;//PICK-UP
       break;
 
     case CCfxmix:
       //Pick up
+      if (!pickUpActive && pickUp && (fxMixPrevValue <  LINEAR[value - TOLERANCE] || fxMixPrevValue >  LINEAR[value + TOLERANCE])) return; //PICK-UP
       fxMix = LINEAR[value];
       updateFXMix();
+      fxMixPrevValue = fxMix;//PICK-UP
       break;
 
     case CCallnotesoff:
@@ -2054,18 +2075,25 @@ void setCurrentPatchData(String data[])
   pwA = data[20].toFloat();
   pwB = data[21].toFloat();
   filterRes = data[22].toFloat();
-  filterFreq = data[23].toFloat();
+  resonancePrevValue = filterRes;//Pick-up
+  filterFreq = data[23].toInt();
+  filterfreqPrevValue = filterFreq; //Pick-up
   filterMix = data[24].toFloat();
+  filterMixPrevValue = filterMix; //Pick-up
   filterEnv = data[25].toFloat();
   oscLfoAmt = data[26].toFloat();
+  oscLfoAmtPrevValue = oscLfoAmt;//PICK-UP
   oscLfoRate = data[27].toFloat();
+  oscLfoRatePrevValue = oscLfoRate;//PICK-UP
   oscLFOWaveform = data[28].toFloat();
   oscLfoRetrig = data[29].toInt();
   oscLFOMidiClkSync = data[30].toFloat(); //MIDI CC Only
   filterLfoRate = data[31].toFloat();
+  filterLfoRatePrevValue = filterLfoRate;//PICK-UP
   filterLfoRetrig = data[32].toInt();
   filterLFOMidiClkSync = data[33].toFloat();
   filterLfoAmt = data[34].toFloat();
+  filterLfoAmtPrevValue = filterLfoAmt;//PICK-UP
   filterLfoWaveform = data[35].toFloat();
   filterAttack = data[36].toFloat();
   filterDecay = data[37].toFloat();
@@ -2076,7 +2104,9 @@ void setCurrentPatchData(String data[])
   ampSustain = data[42].toFloat();
   ampRelease = data[43].toFloat();
   fxAmt = data[44].toFloat();
+  fxAmtPrevValue = fxAmt;//PICK-UP
   fxMix = data[45].toFloat();
+  fxMixPrevValue = fxMix;//PICK-UP
   pitchEnv = data[46].toFloat();
   velocitySens = data[47].toFloat();
 
