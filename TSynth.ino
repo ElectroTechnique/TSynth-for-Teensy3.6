@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.19
+  ElectroTechnique TSynth - Firmware Rev 1.20
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -40,7 +40,6 @@
 #include "PatchMgr.h"
 #include "HWControls.h"
 #include "EepromMgr.h"
-#include "Settings.h"
 #include "sawtoothWave.h"
 #include "squareWave.h"
 #include "Velocity.h"
@@ -79,6 +78,7 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
 };
 
 #include "ST7735Display.h"
+#include "Settings.h"
 
 boolean cardStatus = false;
 boolean firstPatchLoaded = false;
@@ -327,6 +327,9 @@ void setup()
 
   //Read Pick-up enable from EEPROM - experimental feature
   pickUp = getPickupEnable();
+
+  //Read oscilloscope enable from EEPROM
+  enableScope(getScopeEnable());
 }
 
 void myNoteOn(byte channel, byte note, byte velocity)
@@ -2684,5 +2687,5 @@ void loop()
   checkMux();
   checkSwitches();
   checkEncoder();
-  //CPUMonitor();
+ // CPUMonitor();
 }

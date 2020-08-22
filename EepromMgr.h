@@ -7,6 +7,7 @@
 #define EEPROM_ENCODER_DIR 4
 #define EEPROM_BASSENHANCE_ENABLE 5
 #define EEPROM_PICKUP_ENABLE 6
+#define EEPROM_SCOPE_ENABLE 7
 
 int getMIDIChannel() {
   byte midiChannel = EEPROM.read(EEPROM_MIDI_CH);
@@ -68,12 +69,12 @@ void storeEncoderDir(byte encoderDir)
 }
 
 boolean getPickupEnable() {
-  byte pu = EEPROM.read(EEPROM_PICKUP_ENABLE); 
+  byte pu = EEPROM.read(EEPROM_PICKUP_ENABLE);
   if (pu < 0 || pu > 1)return false; //If EEPROM has no pickup enable stored
   return pu == 1 ? true : false;
 }
 
-void storePickupEnable(byte pickupEnable){
+void storePickupEnable(byte pickupEnable) {
   EEPROM.update(EEPROM_PICKUP_ENABLE, pickupEnable);
 }
 
@@ -86,4 +87,14 @@ boolean getBassEnhanceEnable() {
 
 void storeBassEnhanceEnable(byte bassEnhanceEnable) {
   EEPROM.update(EEPROM_BASSENHANCE_ENABLE, bassEnhanceEnable);
+}
+
+boolean getScopeEnable() {
+  byte sc = EEPROM.read(EEPROM_SCOPE_ENABLE);
+  if (sc < 0 || sc > 1)return false; //If EEPROM has no scope enable stored
+  return sc == 1 ? true : false;
+}
+
+void storeScopeEnable(byte ScopeEnable) {
+  EEPROM.update(EEPROM_SCOPE_ENABLE, ScopeEnable);
 }

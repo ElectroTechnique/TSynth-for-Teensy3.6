@@ -66,5 +66,5 @@
 #include "synth_dc.h"
 #include "synth_whitenoise.h"
 #include "synth_pinknoise.h"
-
+#include "Oscilloscope.h"
 #endif

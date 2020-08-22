@@ -394,6 +394,10 @@ void showSettingsPage(char *  option, char * value, int settingsPart)
   currentSettingsPart = settingsPart;
 }
 
+void enableScope(boolean enable) {
+  enable ? scope.ScreenSetup(&tft) : scope.ScreenSetup(NULL);
+}
+
 void displayThread()
 {
   threads.delay(2000); //Give bootup page chance to display

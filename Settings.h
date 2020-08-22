@@ -1,4 +1,4 @@
-#define SETTINGSOPTIONSNO 8
+#define SETTINGSOPTIONSNO 9
 #define SETTINGSVALUESNO 18//Maximum number of settings option values needed
 int settingsValueIndex = 0;//currently selected settings option value index
 
@@ -18,6 +18,7 @@ void settingsModWheelDepth(char * value);
 void settingsEncoderDir(char * value);
 void settingsPickupEnable(char * value);
 void settingsBassEnhanceEnable(char * value);
+void settingsScopeEnable(char * value);
 void settingsHandler(char * s, void (*f)(char*));
 
 int currentIndexMIDICh();
@@ -28,6 +29,7 @@ int currentIndexModWheelDepth();
 int currentIndexEncoderDir();
 int currentIndexPickupEnable();
 int currentIndexBassEnhanceEnable();
+int currentIndexScopeEnable();
 int getCurrentIndex(int (*f)());
 
 
@@ -93,6 +95,16 @@ void settingsPickupEnable(char * value) {
   storePickupEnable(pickUp ? 1 : 0);
 }
 
+void settingsScopeEnable(char * value) {
+  if (strcmp(value, "Off") == 0) {
+    enableScope(false);
+    storeScopeEnable(0);
+  } else {
+    enableScope(true);
+    storeScopeEnable(1);
+  }
+}
+
 //Takes a pointer to a specific method for the settings option and invokes it.
 void settingsHandler(char * s, void (*f)(char*) ) {
   f(s);
@@ -139,6 +151,10 @@ int getCurrentIndex(int (*f)() ) {
   return f();
 }
 
+int currentIndexScopeEnable() {
+  return getScopeEnable() ? 1 : 0;
+}
+
 CircularBuffer<SettingsOption, SETTINGSOPTIONSNO>  settingsOptions;
 
 // add settings to the circular buffer
@@ -151,4 +167,5 @@ void setUpSettings() {
   settingsOptions.push(SettingsOption{"Encoder", {"Type 1", "Type 2", '\0'}, settingsEncoderDir, currentIndexEncoderDir});
   settingsOptions.push(SettingsOption{"Pick-up", {"Off", "On", '\0'}, settingsPickupEnable, currentIndexPickupEnable});
   settingsOptions.push(SettingsOption{"Bass Enh.", {"Off", "On", '\0'}, settingsBassEnhanceEnable, currentIndexBassEnhanceEnable});
+  settingsOptions.push(SettingsOption{"Oscilloscope", {"Off", "On", '\0'}, settingsScopeEnable, currentIndexScopeEnable});
 }

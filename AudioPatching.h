@@ -105,6 +105,7 @@ AudioMixer4              voiceMixer2;     //xy=1524,570
 AudioMixer4              voiceMixerM;     //xy=1544,580
 AudioFilterStateVariable dcOffsetFilter;     //xy=1564,580
 AudioEffectEnsemble       ensemble;  //xy=1800,600
+Oscilloscope              scope;     
 AudioMixer4              effectMixerR;         //xy=1848,625
 AudioMixer4              effectMixerL;         //xy=1857,539
 AudioOutputI2S           i2s;            //xy=2364,547
@@ -229,6 +230,7 @@ AudioConnection          patchCord110(ampEnvelope4, 0, voiceMixer2, 0);
 AudioConnection          patchCord111(ampEnvelope1, 0, voiceMixer1, 0);
 AudioConnection          patchCord195(ampEnvelope5, 0, voiceMixer2, 1);
 AudioConnection          patchCord196(ampEnvelope6, 0, voiceMixer2, 2);
+AudioConnection          patchCord215(dcOffsetFilter, 2, scope, 0);
 AudioConnection          patchCord112(dcOffsetFilter, 2, ensemble, 0);
 AudioConnection          patchCord113(ensemble, 0, effectMixerL, 1);
 AudioConnection          patchCord114(ensemble, 1, effectMixerR, 1);
