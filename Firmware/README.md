@@ -1,5 +1,7 @@
 This is the current firmware for TSynth - use the latest, earlier ones will be left here. It is a hex file that is flashed to Teensy using [Teensy Loader from PJRC](https://www.pjrc.com/teensy/loader.html) You will probably need to press the button on a the Teensy for the firmware to flash.
 
+- V1.21 - Fixed odd glide behaviour. Now glides correctly from previous note.
+
 - V1.20 - Added oscilloscope display option in Settings. This is an 'experimental feature' that needs more work.
 
 - V1.19 - Added 'Pick-up' option which allows certain controls (both front panel and MIDI) to only change the value when the current patch value is 'picked-up'. For example, if Freq Cutoff is set to 312Hz, adjusting Filter Cutoff will pick-up the value when the control is near 312Hz and then change it. This prevents sudden jumps in sound when playing and adjusting. Filter Cuttoff, Resonance, Filter Type, Pitch LFO Amount, Pitch LFO Rate, Filter LFO Amount, Filter LFO Rate, FX Amount and FX Mix have pick-up as these are most likely to be adjusted during performance. This feature is somewhat experimental but good enough to include. An indicator, 'PK' shows when pick-up is enabled on the parameter value page of the display. Also added 'Bass Enhance' to the Settings menu. This enhances bass frequencies using the SGTL5000 audio codec chip (not the Teensy) and will only be heard through the headphone jack not USB digital audio.
