@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.20
+  ElectroTechnique TSynth - Firmware Rev 1.21
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -362,7 +362,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voices[0].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
-          glide1.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide1.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide1.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
         break;
@@ -377,7 +377,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voices[1].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
-          glide2.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide2.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide2.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
         break;
@@ -392,7 +392,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voices[2].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
-          glide3.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide3.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide3.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
         break;
@@ -407,7 +407,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voices[3].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
-          glide4.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide4.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide4.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
         break;
@@ -422,7 +422,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voices[4].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
-          glide5.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide5.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide5.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
         break;
@@ -437,7 +437,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
         voices[5].voiceOn = true;
         if (glideSpeed > 0 && note != prevNote)
         {
-          glide6.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+          glide6.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide6.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
         break;
@@ -514,17 +514,17 @@ void myNoteOn(byte channel, byte note, byte velocity)
 
     if (glideSpeed > 0 && note != prevNote)
     {
-      glide1.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide1.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide1.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
-      glide2.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide2.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide2.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
-      glide3.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide3.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide3.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
-      glide4.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide4.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide4.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
-      glide5.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide5.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide5.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
-      glide6.amplitude((prevNote - note) * DIV12);   //Set glide to previous note frequency (limited to 1 octave max)
+      glide6.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide6.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
     }
   }
