@@ -1,5 +1,5 @@
 /*
-  ElectroTechnique TSynth - Firmware Rev 1.21
+  ElectroTechnique TSynth - Firmware Rev 1.22
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -169,7 +169,6 @@ void setup()
   MIDI.setHandlePitchBend(myPitchBend);
   MIDI.setHandleControlChange(myControlChange);
   MIDI.setHandleProgramChange(myProgramChange);
-  //Doesn't like continuous Midi Clock signals from DAW, works with USB Midi fine
   MIDI.setHandleClock(myMIDIClock);
   MIDI.setHandleStart(myMIDIClockStart);
   MIDI.setHandleStop(myMIDIClockStop);
@@ -365,6 +364,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
           glide1.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide1.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
+        prevNote = note;
         break;
       case 2:
         keytracking2.amplitude(note * DIV127 * keytrackingAmount);
@@ -380,6 +380,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
           glide2.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide2.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
+        prevNote = note;
         break;
       case 3:
         keytracking3.amplitude(note * DIV127 * keytrackingAmount);
@@ -395,6 +396,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
           glide3.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide3.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
+        prevNote = note;
         break;
       case 4:
         keytracking4.amplitude(note * DIV127 * keytrackingAmount);
@@ -410,6 +412,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
           glide4.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide4.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
+        prevNote = note;
         break;
       case 5:
         keytracking5.amplitude(note * DIV127 * keytrackingAmount);
@@ -425,6 +428,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
           glide5.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide5.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
+        prevNote = note;
         break;
       case 6:
         keytracking6.amplitude(note * DIV127 * keytrackingAmount);
@@ -440,6 +444,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
           glide6.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
           glide6.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
         }
+        prevNote = note;
         break;
     }
   }
@@ -527,6 +532,7 @@ void myNoteOn(byte channel, byte note, byte velocity)
       glide6.amplitude((prevNote - note) * DIV24);   //Set glide to previous note frequency (limited to 1 octave max)
       glide6.amplitude(0, glideSpeed * GLIDEFACTOR); //Glide to current note
     }
+    prevNote = note;
   }
 }
 
@@ -539,37 +545,31 @@ void myNoteOff(byte channel, byte note, byte velocity)
       case 1:
         filterEnvelope1.noteOff();
         ampEnvelope1.noteOff();
-        prevNote = voices[0].note;
         voices[0].voiceOn = false;
         break;
       case 2:
         filterEnvelope2.noteOff();
         ampEnvelope2.noteOff();
-        prevNote = voices[1].note;
         voices[1].voiceOn = false;
         break;
       case 3:
         filterEnvelope3.noteOff();
         ampEnvelope3.noteOff();
-        prevNote = voices[2].note;
         voices[2].voiceOn = false;
         break;
       case 4:
         filterEnvelope4.noteOff();
         ampEnvelope4.noteOff();
-        prevNote = voices[3].note;
         voices[3].voiceOn = false;
         break;
       case 5:
         filterEnvelope5.noteOff();
         ampEnvelope5.noteOff();
-        prevNote = voices[4].note;
         voices[4].voiceOn = false;
         break;
       case 6:
         filterEnvelope6.noteOff();
         ampEnvelope6.noteOff();
-        prevNote = voices[5].note;
         voices[5].voiceOn = false;
         break;
     }
@@ -580,7 +580,6 @@ void myNoteOff(byte channel, byte note, byte velocity)
     //If statement prevents the previous different note
     //ending the current note when released
     if (voices[0].note == note)allNotesOff();
-    prevNote = note;
   }
 }
 
@@ -2687,5 +2686,5 @@ void loop()
   checkMux();
   checkSwitches();
   checkEncoder();
- // CPUMonitor();
+  // CPUMonitor();
 }
