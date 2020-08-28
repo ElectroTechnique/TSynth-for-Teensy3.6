@@ -1,5 +1,7 @@
 This is the current firmware for TSynth - use the latest, earlier ones will be left here. It is a hex file that is flashed to Teensy using [Teensy Loader from PJRC](https://www.pjrc.com/teensy/loader.html) You will probably need to press the button on a the Teensy for the firmware to flash.
 
+- V1.22 - Fixed glide behaviour when notes were held.
+
 - V1.21 - Fixed odd glide behaviour. Now glides correctly from previous note.
 
 - V1.20 - Added oscilloscope display option in Settings. This is an 'experimental feature' that needs more work.
