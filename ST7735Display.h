@@ -38,6 +38,7 @@ int currentSettingsPart = SETTINGS;
 int paramType = PARAMETER;
 
 boolean MIDIClkSignal = false;
+uint32_t peakCount = 0;
 
 unsigned long timer = 0;
 
@@ -73,6 +74,15 @@ void renderBootUpPage()
   tft.println(VERSION);
 }
 
+void renderPeak() {
+  if (vuMeter && peak.available()) {
+    uint16_t len = 0;
+    len = (int)(peak.read() * 75.0f);
+    tft.drawFastVLine(158, 103 - len, len ,  len > 72 ? ST77XX_RED : ST77XX_GREEN);
+    tft.drawFastVLine(159, 103 - len, len ,  len > 72 ? ST77XX_RED : ST77XX_GREEN);
+  }
+}
+
 void renderCurrentPatchPage()
 {
   tft.fillScreen(ST7735_BLACK);
@@ -90,6 +100,8 @@ void renderCurrentPatchPage()
     tft.setCursor(94, 33);
     tft.println("CLK");
   }
+
+  renderPeak();
 
   tft.drawRect(115, 28, 12, 12, ST7735_BLUE);
   tft.drawRect(130, 28, 12, 12, ST7735_BLUE);

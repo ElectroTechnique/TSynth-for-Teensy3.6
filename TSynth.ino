@@ -21,7 +21,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-  ElectroTechnique TSynth - Firmware Rev 1.22
+  ElectroTechnique TSynth - Firmware Rev 1.23
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -331,14 +331,14 @@ void setup()
 
   volumePrevious = RE_READ; //Force volume control to be read and set to current
 
-  //Read Key Tracking from EEPROM, this can be set individually by each patch.
-  keytrackingAmount = getKeyTracking();
-
   //Read Pitch Bend Range from EEPROM
   pitchBendRange = getPitchBendRange();
 
   //Read Mod Wheel Depth from EEPROM
   modWheelDepth = getModWheelDepth();
+
+  //Read MIDI Out Channel from EEPROM
+  midiOutCh = getMIDIOutCh();
 
   //Read Encoder Direction from EEPROM
   encCW = getEncoderDir();
@@ -351,6 +351,9 @@ void setup()
 
   //Read oscilloscope enable from EEPROM
   enableScope(getScopeEnable());
+
+  //Read VU enable from EEPROM
+  vuMeter = getVUEnable();
 }
 
 void myNoteOn(byte channel, byte note, byte velocity)
@@ -2199,52 +2202,69 @@ void checkMux()
     switch (muxInput)
     {
       case MUX1_noiseLevel:
+        midiCCOut(CCnoiseLevel, mux1Read);
         myControlChange(midiChannel, CCnoiseLevel, mux1Read);
         break;
       case MUX1_pitchLfoRate:
+        midiCCOut(CCoscLfoRate, mux1Read);
         myControlChange(midiChannel, CCoscLfoRate, mux1Read);
         break;
       case MUX1_pitchLfoWaveform:
+        midiCCOut(CCoscLfoWaveform, mux1Read);
         myControlChange(midiChannel, CCoscLfoWaveform, mux1Read);
         break;
       case MUX1_pitchLfoAmount:
+        midiCCOut(CCosclfoamt, mux1Read);
         myControlChange(midiChannel, CCosclfoamt, mux1Read);
         break;
       case MUX1_detune:
+        midiCCOut(CCdetune, mux1Read);
         myControlChange(midiChannel, CCdetune, mux1Read);
         break;
       case MUX1_oscMix:
+        midiCCOut(CCoscLevelA, mux1Read);
+        midiCCOut(CCoscLevelB, mux1Read);
         myControlChange(midiChannel, CCoscLevelA, OSCMIXA[mux1Read]);
         myControlChange(midiChannel, CCoscLevelB, OSCMIXB[mux1Read]);
         break;
       case MUX1_filterAttack:
+        midiCCOut(CCfilterattack, mux1Read);
         myControlChange(midiChannel, CCfilterattack, mux1Read);
         break;
       case MUX1_filterDecay:
+        midiCCOut(CCfilterdecay, mux1Read);
         myControlChange(midiChannel, CCfilterdecay, mux1Read);
         break;
       case MUX1_pwmAmountA:
+        midiCCOut(CCpwA, mux1Read);
         myControlChange(midiChannel, CCpwA, mux1Read);
         break;
       case MUX1_waveformA:
+        midiCCOut(CCoscwaveformA, mux1Read);
         myControlChange(midiChannel, CCoscwaveformA, mux1Read);
         break;
       case MUX1_pitchA:
+        midiCCOut(CCpitchA, mux1Read);
         myControlChange(midiChannel, CCpitchA, mux1Read);
         break;
       case MUX1_pwmAmountB:
+        midiCCOut(CCpwB, mux1Read);
         myControlChange(midiChannel, CCpwB, mux1Read);
         break;
       case MUX1_waveformB:
+        midiCCOut(CCoscwaveformB, mux1Read);
         myControlChange(midiChannel, CCoscwaveformB, mux1Read);
         break;
       case MUX1_pitchB:
+        midiCCOut(CCpitchB, mux1Read);
         myControlChange(midiChannel, CCpitchB, mux1Read);
         break;
       case MUX1_pwmRate:
+        midiCCOut(CCpwmRate, mux1Read);
         myControlChange(midiChannel, CCpwmRate, mux1Read);
         break;
       case MUX1_pitchEnv:
+        midiCCOut(CCpitchenv, mux1Read);
         myControlChange(midiChannel, CCpitchenv, mux1Read);
         break;
     }
@@ -2258,51 +2278,67 @@ void checkMux()
     switch (muxInput)
     {
       case MUX2_attack:
+        midiCCOut(CCampattack, mux2Read);
         myControlChange(midiChannel, CCampattack, mux2Read);
         break;
       case MUX2_decay:
+        midiCCOut(CCampdecay, mux2Read);
         myControlChange(midiChannel, CCampdecay, mux2Read);
         break;
       case MUX2_sustain:
+        midiCCOut(CCampsustain, mux2Read);
         myControlChange(midiChannel, CCampsustain, mux2Read);
         break;
       case MUX2_release:
+        midiCCOut(CCamprelease, mux2Read);
         myControlChange(midiChannel, CCamprelease, mux2Read);
         break;
       case MUX2_filterLFOAmount:
+        midiCCOut(CCfilterlfoamt, mux2Read);
         myControlChange(midiChannel, CCfilterlfoamt, mux2Read);
         break;
       case MUX2_FXMix:
+        midiCCOut(CCfxmix, mux2Read);
         myControlChange(midiChannel, CCfxmix, mux2Read);
         break;
       case MUX2_FXAmount:
+        midiCCOut(CCfxamt, mux2Read);
         myControlChange(midiChannel, CCfxamt, mux2Read);
         break;
       case MUX2_glide:
+        midiCCOut(CCglide, mux2Read);
         myControlChange(midiChannel, CCglide, mux2Read);
         break;
       case MUX2_filterEnv:
+        midiCCOut(CCfilterenv, mux2Read);
         myControlChange(midiChannel, CCfilterenv, mux2Read);
         break;
       case MUX2_filterRelease:
+        midiCCOut(CCfilterrelease, mux2Read);
         myControlChange(midiChannel, CCfilterrelease, mux2Read);
         break;
       case MUX2_filterSustain:
+        midiCCOut(CCfiltersustain, mux2Read);
         myControlChange(midiChannel, CCfiltersustain, mux2Read);
         break;
       case MUX2_filterType:
+        midiCCOut(CCfiltermixer, mux2Read);
         myControlChange(midiChannel, CCfiltermixer, mux2Read);
         break;
       case MUX2_resonance:
+        midiCCOut(CCfilterres, mux2Read);
         myControlChange(midiChannel, CCfilterres, mux2Read);
         break;
       case MUX2_cutoff:
+        midiCCOut(CCfilterfreq, mux2Read);
         myControlChange(midiChannel, CCfilterfreq, mux2Read);
         break;
       case MUX2_filterLFORate:
+        midiCCOut(CCfilterlforate, mux2Read);
         myControlChange(midiChannel, CCfilterlforate, mux2Read);
         break;
       case MUX2_filterLFOWaveform:
+        midiCCOut(CCfilterlfowaveform, mux2Read);
         myControlChange(midiChannel, CCfilterlfowaveform, mux2Read);
         break;
     }
@@ -2688,6 +2724,13 @@ void checkEncoder()
         break;
     }
     encPrevious = encRead;
+  }
+}
+
+void midiCCOut(byte cc, byte value) {
+  if (midiOutCh > 0) {
+    usbMIDI.sendControlChange(cc, value, midiOutCh);
+    midi1.sendControlChange(cc, value, midiOutCh);
   }
 }
 

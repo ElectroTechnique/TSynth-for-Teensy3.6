@@ -6,6 +6,7 @@ AudioMixer4              noiseMixer;       //xy=288,369
 AudioSynthWaveformTS       pwmLfo;         //xy=92,208
 AudioSynthWaveformDc     pwa;            //xy=107,256
 AudioSynthWaveformDc     pwb;            //xy=110,301
+AudioAnalyzePeak peak;
 AudioEffectEnvelope      filterEnvelope6;   //xy=629,1107
 AudioEffectEnvelope      filterEnvelope5;   //xy=638,300
 AudioEffectEnvelope      filterEnvelope4;   //xy=617,1107
@@ -325,5 +326,6 @@ AudioConnection          patchCord198(voiceMixer2, 0, voiceMixerM, 1);
 AudioConnection          patchCord199(constant1Dc, filterEnvelope5);
 AudioConnection          patchCord200(constant1Dc, filterEnvelope6);
 AudioConnection          patchCord203(voiceMixerM, 0, dcOffsetFilter, 0);
+AudioConnection          patchCord216(dcOffsetFilter, 2, peak, 0);
 AudioControlSGTL5000     sgtl5000_1;     //xy=2353,505
 // GUItool: end automatically generated code

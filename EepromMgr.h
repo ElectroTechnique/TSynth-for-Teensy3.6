@@ -1,13 +1,15 @@
 #include <EEPROM.h>
 
 #define EEPROM_MIDI_CH 0
-#define EEPROM_KEY_TRACKING 1
+//#define EEPROM_KEY_TRACKING 1  //Don't store any more, saved in patch
 #define EEPROM_PITCHBEND 2
 #define EEPROM_MODWHEEL_DEPTH 3
 #define EEPROM_ENCODER_DIR 4
 #define EEPROM_BASSENHANCE_ENABLE 5
 #define EEPROM_PICKUP_ENABLE 6
 #define EEPROM_SCOPE_ENABLE 7
+#define EEPROM_MIDI_OUT_CH 8
+#define EEPROM_VU_ENABLE 9
 
 int getMIDIChannel() {
   byte midiChannel = EEPROM.read(EEPROM_MIDI_CH);
@@ -18,20 +20,6 @@ int getMIDIChannel() {
 void storeMidiChannel(byte channel)
 {
   EEPROM.update(EEPROM_MIDI_CH, channel);
-}
-
-float getKeyTracking() {
-  byte keyTracking = EEPROM.read(EEPROM_KEY_TRACKING);
-  if (keyTracking == 0) return 0;
-  if (keyTracking == 1) return 0.5;
-  if (keyTracking == 2) return 1.0;
-  return keytrackingAmount; //If EEPROM has no key tracking stored
-}
-
-void storeKeyTracking(float keyTracking)
-{
-  byte keyTrackingByte = keyTracking * 2;//Key tracking is only 0, 0.5, 1.0 at present
-  EEPROM.update(EEPROM_KEY_TRACKING, keyTrackingByte);
 }
 
 int getPitchBendRange() {
@@ -55,6 +43,16 @@ void storeModWheelDepth(float mwDepth)
 {
   byte mw =  mwDepth * 10;
   EEPROM.update(EEPROM_MODWHEEL_DEPTH, mw);
+}
+
+int getMIDIOutCh() {
+  byte mc = EEPROM.read(EEPROM_MIDI_OUT_CH);
+  if (mc < 0 || midiOutCh > 16) mc = 0;//If EEPROM has no MIDI channel stored
+  return mc;
+}
+
+void storeMidiOutCh(byte channel){
+  EEPROM.update(EEPROM_MIDI_OUT_CH, channel);
 }
 
 boolean getEncoderDir() {
@@ -97,4 +95,14 @@ boolean getScopeEnable() {
 
 void storeScopeEnable(byte ScopeEnable) {
   EEPROM.update(EEPROM_SCOPE_ENABLE, ScopeEnable);
+}
+
+boolean getVUEnable() {
+  byte vu = EEPROM.read(EEPROM_VU_ENABLE); 
+  if (vu < 0 || vu > 1)return false; //If EEPROM has no VU enable stored
+  return vu == 1 ? true : false;
+}
+
+void storeVUEnable(byte VUEnable){
+  EEPROM.update(EEPROM_VU_ENABLE, VUEnable);
 }

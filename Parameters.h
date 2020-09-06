@@ -1,5 +1,6 @@
 //Values below are just for initialising and will be changed when synth is initialised to current panel controls & EEPROM settings
 byte midiChannel = MIDI_CHANNEL_OMNI;//(EEPROM)
+byte midiOutCh = 0;//(EEPROM)
 String patchName = INITPATCHNAME;
 boolean encCW = true;//This is to set the encoder to increment when turned CW - Settings Option
 float oscALevel = 1;
@@ -13,7 +14,7 @@ float midiClkTimeInterval = 0.0;
 float lfoTempoValue = 1.0;
 int pitchBendRange = 12;
 float modWheelDepth = 0.2f;
-float keytrackingAmount = 0.5;//MIDI CC & settings option (EEPROM)
+float keytrackingAmount = 0.5;//MIDI CC & settings option
 float glideSpeed = 0;
 int oscPitchA = 0;
 int oscPitchB = 12;
@@ -60,6 +61,8 @@ float fxAmt = 1;
 float fxMix = 0;
 
 int velocitySens = 0;//Default off - settings option
+
+boolean vuMeter = false;
 
 //Pick-up - Experimental feature
 //Control will only start changing when the Knob/MIDI control reaches the current parameter value
