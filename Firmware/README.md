@@ -1,5 +1,7 @@
 This is the current firmware for TSynth - use the latest, earlier ones will be left here. It is a hex file that is flashed to Teensy using [Teensy Loader from PJRC](https://www.pjrc.com/teensy/loader.html) You will probably need to press the button on a the Teensy for the firmware to flash.
 
+- V1.24 - Improved filter response at higher frequencies.
+
 - V1.23 - Added MIDI Out - panel controls will send MIDI CC data over a channel set in Settings through USB Host and Client MIDI ports. Added VU Meter that shows peak amplitude on display (enabled in Settings.) Not a true VU meter, however.
 
 - V1.22 - Fixed glide behaviour when notes were held.
