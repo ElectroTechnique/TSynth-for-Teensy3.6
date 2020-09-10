@@ -21,7 +21,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-  ElectroTechnique TSynth - Firmware Rev 1.23
+  ElectroTechnique TSynth - Firmware Rev 1.24
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -475,20 +475,6 @@ void myNoteOn(byte channel, byte note, byte velocity)
   }
   else
   {
-    //Produces interesting phasing effect on note on - Could be future Osc FX option
-    //    waveformMod1a.sync();
-    //    waveformMod1b.sync();
-    //    waveformMod2a.sync();
-    //    waveformMod2b.sync();
-    //    waveformMod3a.sync();
-    //    waveformMod3b.sync();
-    //    waveformMod4a.sync();
-    //    waveformMod4b.sync();
-    //    waveformMod5a.sync();
-    //    waveformMod5b.sync();
-    //    waveformMod6a.sync();
-    //    waveformMod6b.sync();
-
     //UNISON MODE
     keytracking1.amplitude(note * DIV127 * keytrackingAmount);
     keytracking2.amplitude(note * DIV127 * keytrackingAmount);
@@ -1327,12 +1313,15 @@ void updateFilterFreq()
   filter5.frequency(filterFreq);
   filter6.frequency(filterFreq);
 
-  if (filterFreq > 2500) {
-    filterOctave = 2.0f;//Allows more accurate filter cutoff
-  } else if (filterFreq < 60) {
-    filterOctave = 7.0f; //Allows deeper bass
+  //Altering filterOctave to give more cutoff width for deeper bass, but sharper cuttoff at higher frequncies
+  if (filterFreq <= 2000) {
+    filterOctave = 4.0f + ((2000.0f - filterFreq) / 710.0f);//More bass
+  } else if (filterFreq > 2000 && filterFreq <= 3500) {
+    filterOctave = 3.0f + ((3500.0f - filterFreq) / 1500.0f);//Sharper cutoff
+  } else if (filterFreq > 3500 && filterFreq <= 7000) {
+    filterOctave = 2.0f + ((7000.0f - filterFreq) / 4000.0f);//Sharper cutoff
   } else {
-    filterOctave = 2.0f + ((2560 - filterFreq) / 500);//In between
+    filterOctave = 1.0f + ((12000.0f - filterFreq) / 5100.0f);//Sharper cutoff
   }
 
   filter1.octaveControl(filterOctave);
