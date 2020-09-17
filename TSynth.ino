@@ -21,7 +21,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-  ElectroTechnique TSynth - Firmware Rev 1.24
+  ElectroTechnique TSynth - Firmware Rev 1.26
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -52,7 +52,6 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-#include <SerialFlash.h>
 #include <MIDI.h>
 #include <USBHost_t36.h>
 #include "MidiCC.h"
@@ -128,7 +127,7 @@ void setup()
   setUpSettings();
   setupHardware();
 
-  AudioMemory(45);
+  AudioMemory(48);
   sgtl5000_1.enable();
   sgtl5000_1.dacVolumeRamp();
   sgtl5000_1.volume(SGTL_MAXVOLUME * 0.5); //Headphones - do not initialise to maximum, but this is re-read
@@ -1805,8 +1804,9 @@ void myControlChange(byte channel, byte control, byte value)
 
     case CCfilterfreq:
       //Pick up
-      if (!pickUpActive && pickUp && (filterfreqPrevValue <  FILTERFREQS[value - TOLERANCE] || filterfreqPrevValue >  FILTERFREQS[value + TOLERANCE])) return; //PICK-UP
-      filterFreq = FILTERFREQS[value];
+      //MIDI is 7 bit and needs to choose alternate filterfreqs(8 bit)
+      if (!pickUpActive && pickUp && (filterfreqPrevValue <  FILTERFREQS256[(value - TOLERANCE) * 2] || filterfreqPrevValue >  FILTERFREQS256[(value - TOLERANCE) * 2])) return; //PICK-UP
+      filterFreq = FILTERFREQS256[value * 2];
       updateFilterFreq();
       filterfreqPrevValue = filterFreq;//PICK-UP
       break;
@@ -2181,8 +2181,8 @@ String getCurrentPatchData()
 
 void checkMux()
 {
-  mux1Read = analogRead(MUX1_S);
-  mux2Read = analogRead(MUX2_S);
+  mux1Read = adc->adc1->analogRead(MUX1_S);
+  mux2Read = adc->adc1->analogRead(MUX2_S);
   if (mux1Read > (mux1ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux1Read < (mux1ValuesPrev[muxInput] - QUANTISE_FACTOR))
   {
     mux1ValuesPrev[muxInput] = mux1Read;
@@ -2262,7 +2262,7 @@ void checkMux()
   if (mux2Read > (mux2ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux2Read < (mux2ValuesPrev[muxInput] - QUANTISE_FACTOR))
   {
     mux2ValuesPrev[muxInput] = mux2Read;
-    mux2Read = (mux2Read >> 3); //Change range to 0-127
+    if (muxInput != MUX2_cutoff) mux2Read = (mux2Read >> 3); //Change range to 0-127
 
     switch (muxInput)
     {
@@ -2319,8 +2319,13 @@ void checkMux()
         myControlChange(midiChannel, CCfilterres, mux2Read);
         break;
       case MUX2_cutoff:
-        midiCCOut(CCfilterfreq, mux2Read);
-        myControlChange(midiChannel, CCfilterfreq, mux2Read);
+        mux2Read = (mux2Read >> 2);
+        //Serial.println(mux2Read);
+        if (!pickUpActive && pickUp && (filterfreqPrevValue <  FILTERFREQS256[mux2Read - TOLERANCE] || filterfreqPrevValue >  FILTERFREQS256[mux2Read + TOLERANCE])) return; //PICK-UP
+        filterFreq = FILTERFREQS256[mux2Read];
+        updateFilterFreq();
+        filterfreqPrevValue = filterFreq;//PICK-UP
+        midiCCOut(CCfilterfreq, mux2Read >> 1);
         break;
       case MUX2_filterLFORate:
         midiCCOut(CCfilterlforate, mux2Read);
@@ -2350,7 +2355,7 @@ void checkMux()
 
 void checkVolumePot()
 {
-  volumeRead = analogRead(VOLUME_POT);
+  volumeRead = adc->adc0->analogRead(VOLUME_POT);
   if (volumeRead > (volumePrevious + QUANTISE_FACTOR) || volumeRead < (volumePrevious - QUANTISE_FACTOR))
   {
     volumePrevious = volumeRead;
@@ -2740,5 +2745,5 @@ void loop()
   checkMux();
   checkSwitches();
   checkEncoder();
-  // CPUMonitor();
+  //CPUMonitor();
 }
