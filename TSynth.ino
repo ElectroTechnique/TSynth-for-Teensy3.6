@@ -21,7 +21,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-  ElectroTechnique TSynth - Firmware Rev 1.26
+  ElectroTechnique TSynth - Firmware Rev 1.27
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -130,7 +130,7 @@ void setup()
   AudioMemory(48);
   sgtl5000_1.enable();
   sgtl5000_1.dacVolumeRamp();
-  sgtl5000_1.volume(SGTL_MAXVOLUME * 0.5); //Headphones - do not initialise to maximum, but this is re-read
+  sgtl5000_1.volume(SGTL_MAXVOLUME); //Headphones
   sgtl5000_1.audioPostProcessorEnable();
   sgtl5000_1.enhanceBass(0.85, 0.87, 0, 4);//Normal level, bass level, HPF bypass (1 - on), bass cutoff freq
   sgtl5000_1.enhanceBassDisable();//Turned on from EEPROM
@@ -212,8 +212,8 @@ void setup()
   voiceMixer2.gain(2, VOICEMIXERLEVEL);
   voiceMixer2.gain(3, 0);
 
-  voiceMixerM.gain(0, 0.5);
-  voiceMixerM.gain(1, 0.5);
+  voiceMixerM.gain(0, 0.5f);
+  voiceMixerM.gain(1, 0.5f);
   voiceMixerM.gain(2, 0);
   voiceMixerM.gain(3, 0);
 
@@ -1709,8 +1709,7 @@ void myControlChange(byte channel, byte control, byte value)
   switch (control)
   {
     case CCvolume:
-      sgtl5000_1.volume(SGTL_MAXVOLUME * LINEAR[value]); //Headphones
-      //sgtl5000_1.lineOutLevel(31 - (18 * LINEAR[value])); //Line out, weird inverted values
+      volumeMixer.gain(0, LINEAR[value]);
       updateVolume(LINEAR[value]);
       break;
 
@@ -2186,7 +2185,7 @@ void checkMux()
   if (mux1Read > (mux1ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux1Read < (mux1ValuesPrev[muxInput] - QUANTISE_FACTOR))
   {
     mux1ValuesPrev[muxInput] = mux1Read;
-    mux1Read = (mux1Read >> 3); //Change range to 0-127
+    mux1Read = (mux1Read >> 5); //Change range to 0-127
 
     switch (muxInput)
     {
@@ -2262,7 +2261,7 @@ void checkMux()
   if (mux2Read > (mux2ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux2Read < (mux2ValuesPrev[muxInput] - QUANTISE_FACTOR))
   {
     mux2ValuesPrev[muxInput] = mux2Read;
-    if (muxInput != MUX2_cutoff) mux2Read = (mux2Read >> 3); //Change range to 0-127
+    if (muxInput != MUX2_cutoff) mux2Read = (mux2Read >> 5); //Change range to 0-127
 
     switch (muxInput)
     {
@@ -2319,7 +2318,7 @@ void checkMux()
         myControlChange(midiChannel, CCfilterres, mux2Read);
         break;
       case MUX2_cutoff:
-        mux2Read = (mux2Read >> 2);
+        mux2Read = (mux2Read >> 4);
         //Serial.println(mux2Read);
         if (!pickUpActive && pickUp && (filterfreqPrevValue <  FILTERFREQS256[mux2Read - TOLERANCE] || filterfreqPrevValue >  FILTERFREQS256[mux2Read + TOLERANCE])) return; //PICK-UP
         filterFreq = FILTERFREQS256[mux2Read];
@@ -2359,7 +2358,7 @@ void checkVolumePot()
   if (volumeRead > (volumePrevious + QUANTISE_FACTOR) || volumeRead < (volumePrevious - QUANTISE_FACTOR))
   {
     volumePrevious = volumeRead;
-    volumeRead = (volumeRead >> 3); //Change range to 0-127
+    volumeRead = (volumeRead >> 5); //Change range to 0-127
     myControlChange(midiChannel, CCvolume, volumeRead);
   }
 }
