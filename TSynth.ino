@@ -21,7 +21,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-  ElectroTechnique TSynth - Firmware Rev 1.27
+  ElectroTechnique TSynth - Firmware Rev 1.28
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
@@ -1439,14 +1439,14 @@ void updateKeyTracking()
 
 void updateOscLFOAmt()
 {
-  pitchLfo.amplitude(oscLfoAmt);
+  pitchLfo.amplitude(oscLfoAmt + modWhAmt);
   char buf[10];
   showCurrentParameterPage("LFO Amount", dtostrf(oscLfoAmt, 4, 3, buf));
 }
 
 void updateModWheel()
 {
-  pitchLfo.amplitude(oscLfoAmt);
+  pitchLfo.amplitude(oscLfoAmt + modWhAmt);
 }
 
 void updatePitchLFORate()
@@ -1838,7 +1838,7 @@ void myControlChange(byte channel, byte control, byte value)
       break;
 
     case CCmodwheel:
-      oscLfoAmt = POWER[value] * modWheelDepth; //Variable LFO amount from mod wheel - Settings Option
+      modWhAmt = POWER[value] * modWheelDepth; //Variable LFO amount from mod wheel - Settings Option
       updateModWheel();
       break;
 

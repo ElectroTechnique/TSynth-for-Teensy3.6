@@ -14,6 +14,7 @@ float midiClkTimeInterval = 0.0;
 float lfoTempoValue = 1.0;
 int pitchBendRange = 12;
 float modWheelDepth = 0.2f;
+float modWhAmt = 0.0f;
 float keytrackingAmount = 0.5;//MIDI CC & settings option
 float glideSpeed = 0;
 int oscPitchA = 0;
