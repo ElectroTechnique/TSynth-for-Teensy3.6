@@ -68,4 +68,5 @@
 #include "synth_pinknoise.h"
 #include "Oscilloscope.h"
 #include "analyze_peak.h"
+#include "filter_biquad.h"
 #endif

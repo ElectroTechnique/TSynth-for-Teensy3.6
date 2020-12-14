@@ -114,6 +114,8 @@ AudioMixer4              effectMixerR;         //xy=1848,625
 AudioMixer4              effectMixerL;         //xy=1857,539
 AudioOutputI2S           i2s;            //xy=2364,547
 AudioOutputUSB           usbAudio;       //xy=2356,593
+AudioFilterBiquad        lrfilterR;      //xy=2356,593
+AudioFilterBiquad        lrfilterL;      //xy=2356,593
 AudioConnection          patchCord1(constant1Dc, filterEnvelope2);
 AudioConnection          patchCord2(constant1Dc, filterEnvelope3);
 AudioConnection          patchCord3(constant1Dc, filterEnvelope4);
@@ -241,8 +243,8 @@ AudioConnection          patchCord114(ensemble, 1, effectMixerR, 1);
 AudioConnection          patchCord115(volumeMixer, 0, effectMixerL, 0);
 AudioConnection          patchCord116(volumeMixer, 0, effectMixerR, 0);
 AudioConnection          patchCord117(effectMixerR, 0, usbAudio, 1);
-AudioConnection          patchCord118(effectMixerR, 0, i2s, 1);
-AudioConnection          patchCord119(effectMixerL, 0, i2s, 0);
+AudioConnection          patchCord118(effectMixerR, 0, lrfilterL, 0);
+AudioConnection          patchCord119(effectMixerL, 0, lrfilterR, 0);
 AudioConnection          patchCord120(effectMixerL, 0, usbAudio, 0);
 AudioConnection          patchCord121(oscModMixer1a, 0, waveformMod1a, 0);
 AudioConnection          patchCord122(oscModMixer1b, 0, waveformMod1b, 0);
@@ -331,5 +333,7 @@ AudioConnection          patchCord200(constant1Dc, filterEnvelope6);
 AudioConnection          patchCord203(voiceMixerM, 0, dcOffsetFilter, 0);
 AudioConnection          patchCord217(dcOffsetFilter, 2, volumeMixer, 0);
 AudioConnection          patchCord216(dcOffsetFilter, 2, peak, 0);
+AudioConnection          patchCord218(lrfilterL, 0, i2s, 1);
+AudioConnection          patchCord219(lrfilterR, 0, i2s, 0);
 AudioControlSGTL5000     sgtl5000_1;     //xy=2353,505
 // GUItool: end automatically generated code

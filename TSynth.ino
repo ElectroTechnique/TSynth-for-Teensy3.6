@@ -83,6 +83,8 @@ unsigned int state = PARAMETER;
 #define WAVEFORM_PARABOLIC 103
 #define WAVEFORM_HARMONIC 104
 
+#define LR_FILTER_CUTOFF_HZ 7500
+
 struct VoiceAndNote {
   int note;
   long timeOn;
@@ -353,6 +355,16 @@ void setup()
 
   //Read VU enable from EEPROM
   vuMeter = getVUEnable();
+
+  // Linkwitz-Riley filter, 48 dB/octave
+  lrfilterR.setLowpass(0, LR_FILTER_CUTOFF_HZ, 0.54);
+  lrfilterR.setLowpass(1, LR_FILTER_CUTOFF_HZ, 1.3);
+  lrfilterR.setLowpass(2, LR_FILTER_CUTOFF_HZ, 0.54);
+  lrfilterR.setLowpass(3, LR_FILTER_CUTOFF_HZ, 1.3);
+  lrfilterL.setLowpass(0, LR_FILTER_CUTOFF_HZ, 0.54);
+  lrfilterL.setLowpass(1, LR_FILTER_CUTOFF_HZ, 1.3);
+  lrfilterL.setLowpass(2, LR_FILTER_CUTOFF_HZ, 0.54);
+  lrfilterL.setLowpass(3, LR_FILTER_CUTOFF_HZ, 1.3);
 }
 
 void myNoteOn(byte channel, byte note, byte velocity)
