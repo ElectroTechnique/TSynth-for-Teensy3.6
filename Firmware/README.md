@@ -1,5 +1,7 @@
 This is the current firmware for TSynth - use the latest, earlier ones will be left here. It is a hex file that is flashed to Teensy using [Teensy Loader from PJRC](https://www.pjrc.com/teensy/loader.html) You will probably need to press the button on a the Teensy for the firmware to flash.
 
+- V1.29 - Stereo chorus improvement.
+
 - V1.28 - Mod wheel level adds to osc LFO level.
 
 - V1.27 - The volume control affects digital and analogue audio together. This can be loud on the headphone socket.
