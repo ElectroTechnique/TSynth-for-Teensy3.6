@@ -1,7 +1,7 @@
 /*
    MIT License
 
-  Copyright (c) 2020 ElectroTechnique
+  Copyright (c) 2020-21 ElectroTechnique
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,11 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-  ElectroTechnique TSynth - Firmware Rev 1.28
+  ElectroTechnique TSynth - Firmware Rev 1.29
 
   Includes code by:
     Dave Benn - Handling MUXs, a few other bits and original inspiration  https://www.notesandvolts.com/2019/01/teensy-synth-part-10-hardware.html
-    Alexander Davis - Stereo ensemble chorus effect https://github.com/quarterturn/teensy3-ensemble-chorus
+    Alexander Davis / Vince R. Pearson - Stereo ensemble chorus effect https://github.com/quarterturn/teensy3-ensemble-chorus
     Gustavo Silveira - Band limited wavetables https://forum.pjrc.com/threads/41905-Band-limited-Sawtooth-wavetable-C-generator-for-quot-Arbitrary-Waveform-quot-(and-its-use)
     Holger Wirtz - Modified library integration and special thanks https://www.parasitstudio.de/
 
@@ -38,11 +38,11 @@
 
   +++ Compiling with overclocking can lead to problems, test carefully +++
   Performance Tests   CPU  Mem
-  180Mhz Faster       81.6 44
-  180Mhz Fastest      77.8 44
-  180Mhz Fastest+PC   79.0 44
-  180Mhz Fastest+LTO  76.7 44
-  240MHz Fastest+LTO  55.9 44
+  180Mhz Faster       81.6 46
+  180Mhz Fastest      77.8 46
+  180Mhz Fastest+PC   79.0 46
+  180Mhz Fastest+LTO  76.7 46
+  240MHz Fastest+LTO  55.9 46
 
   Additional libraries:
     Agileware CircularBuffer, Adafruit_GFX (available in Arduino libraries manager)
@@ -483,27 +483,27 @@ void myNoteOn(byte channel, byte note, byte velocity)
     keytracking6.amplitude(note * DIV127 * keytrackingAmount);
     voices[0].note = note;
     voices[0].timeOn = millis();
-    voiceMixer1.gain(0, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
+    voiceMixer1.gain(0, VELOCITY[velocitySens][velocity] * UNISONVOICEMIXERLEVEL);
     updateVoice1();
     voices[1].note = note;
     voices[1].timeOn = millis();
-    voiceMixer1.gain(1, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
+    voiceMixer1.gain(1, VELOCITY[velocitySens][velocity] * UNISONVOICEMIXERLEVEL);
     updateVoice2();
     voices[2].note = note;
     voices[2].timeOn = millis();
-    voiceMixer1.gain(2, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
+    voiceMixer1.gain(2, VELOCITY[velocitySens][velocity] * UNISONVOICEMIXERLEVEL);
     updateVoice3();
     voices[3].note = note;
     voices[3].timeOn = millis();
-    voiceMixer2.gain(0, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
+    voiceMixer2.gain(0, VELOCITY[velocitySens][velocity] * UNISONVOICEMIXERLEVEL);
     updateVoice4();
     voices[4].note = note;
     voices[4].timeOn = millis();
-    voiceMixer2.gain(1, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
+    voiceMixer2.gain(1, VELOCITY[velocitySens][velocity] * UNISONVOICEMIXERLEVEL);
     updateVoice5();
     voices[5].note = note;
     voices[5].timeOn = millis();
-    voiceMixer2.gain(2, VELOCITY[velocitySens][velocity] * VOICEMIXERLEVEL);
+    voiceMixer2.gain(2, VELOCITY[velocitySens][velocity] * UNISONVOICEMIXERLEVEL);
     updateVoice6();
 
     filterEnvelope1.noteOn();
